@@ -1,0 +1,385 @@
+# -*- coding: utf-8 -*-
+"""
+«នាគហ្សង បកប្រែ» (Neak Zong Translate AI) — Cloud Backend Server
+==============================================================
+- Mobile-First AI Video Translator, Khmer Voice Dubbing Studio & Video Editor
+- 24/7 Cloud Support for Render.com, HuggingFace, and Local Runners
+- REST APIs for Upload, Translation, Neural TTS, Audio Ducking, and HD Export
+"""
+
+import os
+import sys
+import time
+import json
+import uuid
+import threading
+from pathlib import Path
+from flask import Flask, render_template, request, jsonify, send_from_directory, Response
+
+# Ensure UTF-8 output
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
+BASE_DIR = Path(__file__).resolve().parent
+UPLOADS_DIR = BASE_DIR / 'uploads'
+EXPORTS_DIR = BASE_DIR / 'exports'
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Add parent directory to sys.path for internal imports
+sys.path.insert(0, str(BASE_DIR))
+
+from core.translator import translate_single_query, translate_srt, parse_srt, format_srt
+from core.tts_engine import synthesize_khmer_voice, apply_audio_ducking
+from core.audio_separator import separate_vocals_and_bgm
+from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg
+
+app = Flask(__name__, template_folder='templates', static_folder='static')
+app.config['JSON_AS_ASCII'] = False
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB upload limit
+
+PORT = int(os.environ.get('PORT', 5060))
+START_TIME = time.time()
+PROCESSING_JOBS = {}
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
+# ══════════════════════════════════════════════════════════════
+# 🟢 1. HEALTH & KEEP-ALIVE (For Render.com 24/7)
+# ══════════════════════════════════════════════════════════════
+
+@app.route('/health')
+@app.route('/ping')
+def health():
+    uptime = int(time.time() - START_TIME)
+    h, m, s = uptime // 3600, (uptime % 3600) // 60, uptime % 60
+    return jsonify({
+        'status': 'ok',
+        'app_name': 'នាគហ្សង បកប្រែ (Neak Zong Translate AI)',
+        'version': '1.0.9-MOBILE-STUDIO',
+        'uptime': f'{h}h {m}m {s}s',
+        'ffmpeg_available': bool(find_ffmpeg()),
+        'mode': 'Cloud-24-7'
+    })
+
+# ══════════════════════════════════════════════════════════════
+# 🔵 2. PWA & WEB APP SHELL
+# ══════════════════════════════════════════════════════════════
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json')
+
+@app.route('/sw.js')
+def service_worker():
+    resp = send_from_directory('static', 'sw.js')
+    resp.headers['Service-Worker-Allowed'] = '/'
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+@app.route('/exports/<path:filename>')
+def download_export(filename):
+    return send_from_directory(EXPORTS_DIR, filename, as_attachment=True)
+
+# ══════════════════════════════════════════════════════════════
+# 🟡 3. REST APIS (Upload, Media, Translation, Voice, Render)
+# ══════════════════════════════════════════════════════════════
+
+@app.route('/api/upload', methods=['POST'])
+def api_upload():
+    """Uploads a video or subtitle file from phone/PC."""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+        
+    f = request.files['file']
+    if f.filename == '':
+        return jsonify({'error': 'Empty filename'}), 400
+        
+    ext = Path(f.filename).suffix.lower()
+    file_id = str(uuid.uuid4())[:8]
+    safe_name = f"upload_{file_id}{ext}"
+    dest_path = UPLOADS_DIR / safe_name
+    f.save(str(dest_path))
+    
+    file_url = f"/api/files/{safe_name}"
+    return jsonify({
+        'status': 'ok',
+        'filename': safe_name,
+        'original_name': f.filename,
+        'filepath': str(dest_path),
+        'file_url': file_url,
+        'size': os.path.getsize(dest_path),
+        'is_video': ext in ['.mp4', '.mov', '.mkv', '.webm', '.avi'],
+        'is_srt': ext in ['.srt', '.vtt', '.txt']
+    })
+
+@app.route('/api/files/<filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory(UPLOADS_DIR, filename)
+
+@app.route('/api/extract-audio', methods=['POST'])
+def api_extract_audio():
+    """Extracts MP3 audio track from an uploaded video."""
+    data = request.get_json() or {}
+    video_filename = data.get('filename')
+    if not video_filename:
+        return jsonify({'error': 'filename is required'}), 400
+        
+    video_path = UPLOADS_DIR / video_filename
+    if not video_path.exists():
+        return jsonify({'error': 'Video file not found'}), 404
+        
+    audio_filename = f"extracted_{video_path.stem}.mp3"
+    audio_path = EXPORTS_DIR / audio_filename
+    
+    success = extract_audio_from_video(str(video_path), str(audio_path))
+    if success:
+        return jsonify({
+            'status': 'ok',
+            'audio_filename': audio_filename,
+            'audio_url': f"/exports/{audio_filename}",
+            'size': os.path.getsize(audio_path)
+        })
+    else:
+        return jsonify({'error': 'Failed to extract audio track'}), 500
+
+@app.route('/api/translate', methods=['POST'])
+def api_translate():
+    """Translates Chinese text or entire SRT subtitle into natural Khmer."""
+    data = request.get_json() or {}
+    text = data.get('text', '')
+    srt_content = data.get('srt_content', '')
+    
+    if srt_content:
+        translated_srt, cues = translate_srt(srt_content)
+        return jsonify({
+            'status': 'ok',
+            'translated_srt': translated_srt,
+            'cues_count': len(cues),
+            'sample_cues': cues[:5]
+        })
+        
+    if text:
+        translated = translate_single_query(text, source_lang='zh-CN', target_lang='km')
+        return jsonify({
+            'status': 'ok',
+            'original': text,
+            'translated': translated
+        })
+        
+    return jsonify({'error': 'text or srt_content is required'}), 400
+
+@app.route('/api/tts', methods=['POST'])
+def api_tts():
+    """Generates natural Khmer speech audio file."""
+    data = request.get_json() or {}
+    text = data.get('text', '')
+    voice = data.get('voice', 'female') # 'male' (Piseth) or 'female' (Sreymom)
+    speed = float(data.get('speed', 1.0)) # 1.0x to 1.5x
+    pitch = int(data.get('pitch', 0))
+    
+    if not text:
+        return jsonify({'error': 'text is required'}), 400
+        
+    tts_id = str(uuid.uuid4())[:8]
+    out_filename = f"tts_{voice}_{tts_id}.mp3"
+    out_path = EXPORTS_DIR / out_filename
+    
+    success = synthesize_khmer_voice(text, str(out_path), voice_type=voice, speed=speed, pitch=pitch)
+    if success:
+        return jsonify({
+            'status': 'ok',
+            'audio_url': f"/exports/{out_filename}",
+            'filename': out_filename,
+            'voice': voice,
+            'speed': speed
+        })
+    else:
+        return jsonify({'error': 'Failed to synthesize Khmer speech'}), 500
+
+@app.route('/api/duck-audio', methods=['POST'])
+def api_duck_audio():
+    """Applies sidechain audio ducking between original audio and voiceover."""
+    data = request.get_json() or {}
+    bg_audio_name = data.get('bg_audio')
+    voice_audio_name = data.get('voice_audio')
+    duck_level = float(data.get('duck_level', 0.15)) # 10% to 15%
+    
+    bg_path = EXPORTS_DIR / bg_audio_name if (EXPORTS_DIR / bg_audio_name).exists() else UPLOADS_DIR / bg_audio_name
+    voice_path = EXPORTS_DIR / voice_audio_name if (EXPORTS_DIR / voice_audio_name).exists() else UPLOADS_DIR / voice_audio_name
+    
+    if not bg_path.exists() or not voice_path.exists():
+        return jsonify({'error': 'Audio files not found'}), 404
+        
+    out_filename = f"ducked_{str(uuid.uuid4())[:8]}.mp3"
+    out_path = EXPORTS_DIR / out_filename
+    
+    success = apply_audio_ducking(str(bg_path), str(voice_path), str(out_path), duck_level=duck_level)
+    if success:
+        return jsonify({
+            'status': 'ok',
+            'audio_url': f"/exports/{out_filename}",
+            'filename': out_filename
+        })
+    else:
+        return jsonify({'error': 'Audio ducking failed'}), 500
+
+@app.route('/api/render', methods=['POST'])
+def api_render():
+    """
+    Renders video with all professional edits applied:
+    - Flip Horizontal
+    - Crop
+    - Brightness / Contrast
+    - Blur Mask Box
+    - Logo Overlay
+    - Text Overlay
+    - Vertical Marquee Scrolling Text
+    - Final Dubbed Audio track
+    """
+    data = request.get_json() or {}
+    video_name = data.get('video_name')
+    if not video_name:
+        return jsonify({'error': 'video_name is required'}), 400
+        
+    video_path = UPLOADS_DIR / video_name
+    if not video_path.exists():
+        return jsonify({'error': 'Video file not found'}), 404
+        
+    options = data.get('options', {})
+    audio_name = data.get('audio_name')
+    audio_path = str(EXPORTS_DIR / audio_name) if audio_name and (EXPORTS_DIR / audio_name).exists() else None
+    
+    out_filename = f"NeakZong_{str(uuid.uuid4())[:8]}.mp4"
+    out_path = EXPORTS_DIR / out_filename
+    
+    job_id = str(uuid.uuid4())[:8]
+    PROCESSING_JOBS[job_id] = {'status': 'processing', 'progress': 10, 'filename': out_filename}
+    
+    def _run_render_worker():
+        try:
+            PROCESSING_JOBS[job_id]['progress'] = 30
+            success = render_final_video(str(video_path), str(out_path), audio_path=audio_path, options=options)
+            if success:
+                PROCESSING_JOBS[job_id]['status'] = 'completed'
+                PROCESSING_JOBS[job_id]['progress'] = 100
+                PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
+            else:
+                PROCESSING_JOBS[job_id]['status'] = 'failed'
+                PROCESSING_JOBS[job_id]['error'] = 'FFmpeg render error'
+        except Exception as e:
+            PROCESSING_JOBS[job_id]['status'] = 'failed'
+            PROCESSING_JOBS[job_id]['error'] = str(e)
+            
+    threading.Thread(target=_run_render_worker, daemon=True).start()
+    
+    return jsonify({
+        'status': 'started',
+        'job_id': job_id,
+        'filename': out_filename
+    })
+
+@app.route('/api/job/<job_id>')
+def api_job_status(job_id):
+    job = PROCESSING_JOBS.get(job_id)
+    if not job:
+        return jsonify({'error': 'Job not found'}), 404
+    return jsonify(job)
+
+@app.route('/api/auto-process', methods=['POST'])
+def api_auto_process():
+    """
+    1-Click End-to-End Pipeline:
+    Upload Video -> Extract Audio -> Translate Chinese to Khmer ->
+    Generate Khmer TTS -> Duck Audio -> Apply Overlays -> Export MP4 HD
+    """
+    data = request.get_json() or {}
+    video_name = data.get('video_name')
+    srt_content = data.get('srt_content')
+    voice = data.get('voice', 'female')
+    speed = float(data.get('speed', 1.0))
+    options = data.get('options', {})
+    
+    if not video_name:
+        return jsonify({'error': 'video_name is required'}), 400
+        
+    video_path = UPLOADS_DIR / video_name
+    if not video_path.exists():
+        return jsonify({'error': 'Video not found'}), 404
+        
+    job_id = f"auto_{str(uuid.uuid4())[:8]}"
+    out_filename = f"NeakZong_Auto_{job_id}.mp4"
+    out_path = EXPORTS_DIR / out_filename
+    
+    PROCESSING_JOBS[job_id] = {'status': 'processing', 'progress': 5, 'step': 'Extracting Audio...'}
+    
+    def _pipeline_worker():
+        try:
+            # 1. Extract audio
+            bg_audio = EXPORTS_DIR / f"bg_{job_id}.mp3"
+            extract_audio_from_video(str(video_path), str(bg_audio))
+            PROCESSING_JOBS[job_id]['progress'] = 25
+            PROCESSING_JOBS[job_id]['step'] = 'Translating Subtitles to Khmer...'
+            
+            # 2. Translate
+            khmer_text = ""
+            if srt_content:
+                t_srt, cues = translate_srt(srt_content)
+                khmer_text = ' '.join([c.get('text_km', '') for c in cues])
+            else:
+                khmer_text = "សូមស្វាគមន៍មកកាន់ការទស្សនារឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
+                
+            PROCESSING_JOBS[job_id]['progress'] = 50
+            PROCESSING_JOBS[job_id]['step'] = 'Generating Khmer Neural Voice...'
+            
+            # 3. Khmer TTS
+            tts_audio = EXPORTS_DIR / f"tts_{job_id}.mp3"
+            synthesize_khmer_voice(khmer_text, str(tts_audio), voice_type=voice, speed=speed)
+            
+            # 4. Ducking
+            PROCESSING_JOBS[job_id]['progress'] = 70
+            PROCESSING_JOBS[job_id]['step'] = 'Mixing Audio & Ducking BGM...'
+            ducked_audio = EXPORTS_DIR / f"ducked_{job_id}.mp3"
+            apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15)
+            
+            # 5. Render Video
+            PROCESSING_JOBS[job_id]['progress'] = 85
+            PROCESSING_JOBS[job_id]['step'] = 'Rendering Final HD Video...'
+            render_final_video(str(video_path), str(out_path), audio_path=str(ducked_audio), options=options)
+            
+            PROCESSING_JOBS[job_id]['progress'] = 100
+            PROCESSING_JOBS[job_id]['status'] = 'completed'
+            PROCESSING_JOBS[job_id]['step'] = 'Done!'
+            PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
+        except Exception as e:
+            PROCESSING_JOBS[job_id]['status'] = 'failed'
+            PROCESSING_JOBS[job_id]['error'] = str(e)
+            
+    threading.Thread(target=_pipeline_worker, daemon=True).start()
+    
+    return jsonify({
+        'status': 'started',
+        'job_id': job_id,
+        'filename': out_filename
+    })
+
+if __name__ == '__main__':
+    print("=" * 65, flush=True)
+    print("  🐉 «នាគហ្សង បកប្រែ» — NEAK ZONG TRANSLATE AI SERVER", flush=True)
+    print(f"  [>] Version : 1.0.9-MOBILE-STUDIO (Dark Cyberpunk Dragon)", flush=True)
+    print(f"  [>] Port    : {PORT}", flush=True)
+    print(f"  [>] FFmpeg  : {find_ffmpeg()}", flush=True)
+    print("=" * 65, flush=True)
+    app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)

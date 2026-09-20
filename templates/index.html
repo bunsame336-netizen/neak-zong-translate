@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>«នាគហ្សង បកប្រែ» (Neak Zong Translate AI) — AI Video Translator & Studio</title>
+  
+  <!-- PWA Meta -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#07080d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="នាគហ្សង បកប្រែ">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+  <!-- Google Fonts: Kantumruy Pro, Moul & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Custom Cyberpunk CSS -->
+  <link rel="stylesheet" href="/static/css/neak_zong.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+       ⚡ 1. HEADER (Neak Zong Dragon Cyberpunk)
+  ══════════════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="brand-wrap">
+      <div class="brand-dragon-badge">
+        <!-- Dragon Vector SVG -->
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M50 10 C32 20 20 38 25 60 C30 80 50 90 50 90 C50 90 70 80 75 60 C80 38 68 20 50 10 Z" stroke="#c084fc" stroke-width="5"/>
+          <path d="M38 32 L50 45 L62 32" stroke="#22d3ee" stroke-width="4"/>
+          <polygon points="50,22 45,30 55,30" fill="#f59e0b"/>
+        </svg>
+      </div>
+      <div class="brand-text-col">
+        <div class="brand-title-row">
+          <span class="brand-title">នាគហ្សង បកប្រែ</span>
+          <span class="brand-badge">AI v1.0.9</span>
+        </div>
+        <span class="brand-sub">AI Video Translator & Khmer Voice Studio</span>
+      </div>
+    </div>
+
+    <div class="header-status-pill">
+      <span class="status-dot"></span>
+      <span>Cloud 24/7</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════
+       ⚡ 2. WORKSPACE CONTAINER
+  ══════════════════════════════════════════════════════════ -->
+  <main class="studio-main-container">
+
+    <!-- VIDEO STAGE & CANVAS PREVIEW -->
+    <div class="video-stage-card">
+      <div class="video-stage-viewport" id="video-viewport">
+        <video id="preview-video" playsinline preload="metadata"></video>
+
+        <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
+        <div class="video-overlay-layer" id="video-overlay-layer">
+
+          <!-- 1. Blur Mask Box (STRICT: Hidden by default until toggled ON) -->
+          <div class="interactive-overlay" id="blur-overlay-box">
+            <span class="blur-watermark-label">ព្រិលបាំង Logo</span>
+            <div class="resizer-handle nw"></div>
+            <div class="resizer-handle ne"></div>
+            <div class="resizer-handle sw"></div>
+            <div class="resizer-handle se"></div>
+          </div>
+
+          <!-- 2. Logo Overlay (STRICT: Hidden by default until toggled ON) -->
+          <div class="interactive-overlay" id="logo-overlay-element">
+            <svg id="logo-overlay-img" viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="45" fill="rgba(168,85,247,0.3)" stroke="#c084fc" stroke-width="4"/>
+              <path d="M50 20 L60 40 L80 45 L65 60 L70 80 L50 70 L30 80 L35 60 L20 45 L40 40 Z" fill="#22d3ee"/>
+            </svg>
+          </div>
+
+          <!-- 3. Static Text Overlay (STRICT: Hidden by default until toggled ON) -->
+          <div class="interactive-overlay" id="text-overlay-element">
+            <div class="rendered-text-content" id="rendered-text-val">នាគហ្សង បកប្រែ</div>
+          </div>
+
+          <!-- 4. Animated Vertical Scrolling Marquee (STRICT: Hidden until toggled ON) -->
+          <div class="interactive-overlay" id="marquee-overlay-element">
+            <div class="marquee-scrolling-track" id="marquee-track">
+              សូមចុច Subscribe & Follow ដើម្បីទស្សនាភាគបន្ត «នាគហ្សង បកប្រែ AI»
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Playback Bar below Video -->
+      <div class="video-toolbar">
+        <div class="playback-controls">
+          <button type="button" class="btn-ctrl" onclick="previewVideo.paused ? previewVideo.play() : previewVideo.pause()">
+            ⏯ ចាក់/ផ្អាក
+          </button>
+          <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
+            ⏮ ដើម
+          </button>
+        </div>
+        <div class="time-display" id="video-time-display">00:00 / 00:00</div>
+      </div>
+    </div>
+
+    <!-- ⚡ 1-CLICK AUTO PROCESS BANNER -->
+    <div class="auto-process-banner">
+      <div class="auto-banner-header">
+        <div class="auto-banner-title">
+          <span>⚡ មុខងារស្វ័យប្រវត្តិ (1-Click Auto Pipeline)</span>
+        </div>
+      </div>
+      <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
+        🚀 ចាប់ផ្តើមបកប្រែ & បញ្ចូលសំឡេង & Export ស្វ័យប្រវត្តិ
+      </button>
+    </div>
+
+    <!-- ⚡ RENDER PROGRESS BAR -->
+    <div id="render-progress-wrap">
+      <div style="display: flex; justify-content: space-between; font-size: 0.82rem;">
+        <span id="render-progress-status" style="color: var(--neon-purple-bright); font-weight: 700;">កំពុងដំណើរការ...</span>
+      </div>
+      <div class="render-progress-track">
+        <div class="render-progress-bar" id="render-progress-bar"></div>
+      </div>
+      <a id="btn-download-result" class="btn-export-hd" style="display: none; text-decoration: none;" href="#">
+        📥 ទាញយកវីដេអូចូល Gallery ទូរស័ព្ទ (Download MP4 HD)
+      </a>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         ⚡ 3. STUDIO TOOL TABS (5 Drawer Tabs)
+    ══════════════════════════════════════════════════════════ -->
+    <nav class="studio-tabs-nav">
+      <button type="button" class="tab-nav-btn active" data-tab="media" onclick="switchStudioTab('media')">
+        📂 មេឌៀ & Subtitle
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
+        🎙️ សំឡេងខ្មែរ AI
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="overlays" onclick="switchStudioTab('overlays')">
+        🎨 Overlays (Logo, Text, Blur)
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="marquee" onclick="switchStudioTab('marquee')">
+        📜 អក្សររត់បញ្ឈរ
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
+        ✂️ កាត់ត & Export
+      </button>
+    </nav>
+
+    <!-- ── TAB 1: MEDIA & SUBTITLES ──────────────────────────── -->
+    <div class="tab-panel-card active" id="tab-panel-media">
+      <div class="panel-section-title">
+        <span>១. ផ្នែកផ្ទុកឯកសារ (Media & Subtitles)</span>
+      </div>
+
+      <!-- Video Upload Input -->
+      <div class="form-row">
+        <label class="form-label">រើសវីដេអូពីទូរស័ព្ទ (Pick/Upload MP4 Video)</label>
+        <input type="file" id="video-file-input" accept="video/*" class="cyber-input" style="padding-top: 7px;" onchange="handleVideoUpload(this)">
+      </div>
+
+      <!-- Subtitles Actions Grid -->
+      <div class="action-btn-grid">
+        <button type="button" class="btn-action-tile" onclick="document.getElementById('video-file-input').click()">
+          <span style="font-size: 1.3rem;">📱</span>
+          <span>រើសវីដេអូទូរស័ព្ទ</span>
+        </button>
+        <button type="button" class="btn-action-tile" onclick="document.getElementById('srt-file-input').click()">
+          <span style="font-size: 1.3rem;">📥</span>
+          <span>បញ្ចូល SRT (Import)</span>
+        </button>
+        <input type="file" id="srt-file-input" accept=".srt,.vtt,.txt" style="display: none;" onchange="handleSrtUpload(this)">
+        
+        <button type="button" class="btn-action-tile" onclick="triggerAiTranslation()">
+          <span style="font-size: 1.3rem;">🌐</span>
+          <span>បកប្រែ Chinese ➔ Khmer</span>
+        </button>
+        <button type="button" class="btn-action-tile" onclick="triggerKhmerTts()">
+          <span style="font-size: 1.3rem;">🔊</span>
+          <span>បង្កើតសំឡេងអាន</span>
+        </button>
+      </div>
+
+      <!-- Translation Preview Text Area -->
+      <div class="form-row">
+        <label class="form-label">អត្ថបទរឿងភាគចិនដែលត្រូវបកប្រែ</label>
+        <input type="text" id="translate-input-text" class="cyber-input" placeholder="ឧ. 皇上驾到，万岁万万岁！" value="皇上驾到，万岁万万岁！微臣参见陛下。">
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">លទ្ធផលបកប្រែជាភាសាខ្មែរ (Translation Result)</label>
+        <div id="translate-result-text" style="background: var(--bg-input); padding: 10px; border-radius: 8px; border: 1px solid var(--border-cyber); min-height: 40px; font-weight: 700; color: var(--neon-cyan-bright);">
+          ព្រះអង្គយាងមកដល់ហើយ សូមទ្រង់ព្រះចម្រើន! ទូលបង្គំសូមក្រាបថ្វាយបង្គំព្រះករុណា។
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">SRT Subtitles Live Viewer</label>
+        <textarea id="subtitles-preview-area" class="cyber-textarea" placeholder="បង្ហាញកម្រងអត្ថបទ Subtitle ពេល Import ឬ បកប្រែ..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── TAB 2: KHMER VOICE DUBBING (TTS) ─────────────────── -->
+    <div class="tab-panel-card" id="tab-panel-voice">
+      <div class="panel-section-title">
+        <span>២. ផ្នែកកំណត់សំឡេង (Khmer Neural TTS)</span>
+      </div>
+
+      <!-- Voice Selector -->
+      <div class="form-row">
+        <label class="form-label">ជ្រើសរើសសំឡេងអានខ្មែរ AI (Voice Model)</label>
+        <select id="voice-select" class="cyber-input" onchange="state.voice = this.value">
+          <option value="female" selected>កញ្ញា ស្រីមុំ (Female - km-KH-SreymomNeural)</option>
+          <option value="male">លោក ពិសិដ្ឋ (Male - km-KH-PisethNeural)</option>
+        </select>
+      </div>
+
+      <!-- Speed Slider (1.0x to 1.5x) -->
+      <div class="form-row">
+        <div class="form-label">
+          <span>ល្បឿនអាន (Voice Speed)</span>
+          <span class="form-label-val" id="voice-speed-val">1.0x</span>
+        </div>
+        <input type="range" min="1.0" max="1.5" step="0.05" value="1.0" class="cyber-slider" oninput="state.voiceSpeed = parseFloat(this.value); document.getElementById('voice-speed-val').innerText = this.value + 'x';">
+      </div>
+
+      <!-- Pitch Slider -->
+      <div class="form-row">
+        <div class="form-label">
+          <span>កម្រិតសំឡេង (Pitch Shift)</span>
+          <span class="form-label-val" id="voice-pitch-val">+0Hz</span>
+        </div>
+        <input type="range" min="-30" max="30" step="5" value="0" class="cyber-slider" oninput="state.pitch = parseInt(this.value); document.getElementById('voice-pitch-val').innerText = (this.value >= 0 ? '+' : '') + this.value + 'Hz';">
+      </div>
+
+      <!-- Ducking Level (10% to 15%) -->
+      <div class="form-row">
+        <div class="form-label">
+          <span>មុខងារ Ducking (បន្ទាបសំឡេងដើមនៅសល់ 10% - 15%)</span>
+          <span class="form-label-val" id="ducking-val">15%</span>
+        </div>
+        <input type="range" min="0.05" max="0.30" step="0.05" value="0.15" class="cyber-slider" oninput="state.duckLevel = parseFloat(this.value); document.getElementById('ducking-val').innerText = Math.round(this.value * 100) + '%';">
+      </div>
+
+      <!-- Test TTS text input -->
+      <div class="form-row">
+        <label class="form-label">អត្ថបទតេស្តសំឡេង</label>
+        <input type="text" id="tts-input-text" class="cyber-input" value="រឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI">
+      </div>
+
+      <button type="button" class="btn-ctrl" style="justify-content: center; padding: 10px;" onclick="triggerKhmerTts()">
+        🔊 ចាក់តេស្តសំឡេងខ្មែរ AI (Test Voice)
+      </button>
+    </div>
+
+    <!-- ── TAB 3: OVERLAYS (STRICT TOGGLES) ──────────────────── -->
+    <div class="tab-panel-card" id="tab-panel-overlays">
+      <div class="panel-section-title">
+        <span>៣. ផ្នែក Overlay បញ្ជាលើវីដេអូ (Logo, Text, Blur Mask)</span>
+      </div>
+
+      <!-- 1. Blur Mask Switch & Controls -->
+      <div class="toggle-switch-wrap">
+        <div>
+          <div class="toggle-switch-label">១. ផ្ទាំងព្រិល (Blur Mask Overlay)</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">បើកទើបផ្ទាំងព្រិលលោតឡើងលើវីដេអូ (អាចអូសបាំង Logo ចាស់)</div>
+        </div>
+        <label class="cyber-switch">
+          <input type="checkbox" id="toggle-blur" onchange="toggleBlurOverlay(this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <!-- 2. Logo Overlay Switch & Controls -->
+      <div class="toggle-switch-wrap">
+        <div>
+          <div class="toggle-switch-label">២. ដាក់ Logo លើវីដេអូ (Logo Overlay)</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">អាចយកម្រាមដៃអូសផ្លាស់ប្តូរទីតាំង និងពង្រីក-បង្រួមបាន</div>
+        </div>
+        <label class="cyber-switch">
+          <input type="checkbox" id="toggle-logo" onchange="toggleLogoOverlay(this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <!-- 3. Text Overlay Switch & Controls -->
+      <div class="toggle-switch-wrap">
+        <div>
+          <div class="toggle-switch-label">៣. ដាក់អក្សរលើវីដេអូ (Text Overlay)</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">វាយឈ្មោះ Channel, ជ្រើសពុម្ពអក្សរខ្មែរ, ប្តូរពណ៌</div>
+        </div>
+        <label class="cyber-switch">
+          <input type="checkbox" id="toggle-text" onchange="toggleTextOverlay(this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <!-- Text Overlay Settings Sub-panel -->
+      <div class="form-row" style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
+        <label class="form-label">អត្ថបទបង្ហាញ (Custom Text)</label>
+        <input type="text" id="text-overlay-input" class="cyber-input" value="នាគហ្សង បកប្រែ" oninput="state.textOverlay.text = this.value; document.getElementById('rendered-text-val').innerText = this.value;">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+          <div>
+            <label class="form-label">ពុម្ពអក្សរ (Font)</label>
+            <select class="cyber-input" onchange="document.getElementById('rendered-text-val').style.fontFamily = this.value;">
+              <option value="'Moul', serif">Moul (មូល)</option>
+              <option value="'Kantumruy Pro', sans-serif">Kantumruy Pro</option>
+              <option value="'Battambang', sans-serif">Battambang</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">ពណ៌អក្សរ</label>
+            <input type="color" value="#ffffff" class="cyber-input" style="height: 40px; padding: 2px;" onchange="document.getElementById('rendered-text-val').style.color = this.value; state.textOverlay.color = this.value;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB 4: ANIMATED VERTICAL MARQUEE ──────────────────── -->
+    <div class="tab-panel-card" id="tab-panel-marquee">
+      <div class="panel-section-title">
+        <span>៤. មុខងារអក្សររត់លើវីដេអូ (Animated Scrolling Text)</span>
+      </div>
+
+      <!-- Marquee Toggle Switch -->
+      <div class="toggle-switch-wrap">
+        <div>
+          <div class="toggle-switch-label">បើកដំណើរការអក្សររត់ (Enable Marquee)</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">អក្សររត់បញ្ឈរលើវីដេអូ</div>
+        </div>
+        <label class="cyber-switch">
+          <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeOverlay(this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <!-- Marquee Text Input -->
+      <div class="form-row">
+        <label class="form-label">អត្ថបទរត់ (Marquee Text)</label>
+        <input type="text" id="marquee-text-input" class="cyber-input" value="សូមចុច Subscribe & Follow ដើម្បីទស្សនាភាគបន្ត «នាគហ្សង បកប្រែ AI»" oninput="updateMarqueeText(this.value)">
+      </div>
+
+      <!-- Direction Selector (Vertical Up / Down) -->
+      <div class="form-row">
+        <label class="form-label">ទិសដៅនៃការរត់ (Scroll Direction)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center;" onclick="setMarqueeDirection('up')">
+            ⬆️ រត់ពីក្រោមឡើងលើ (Up)
+          </button>
+          <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeDirection('down')">
+            ⬇️ រត់ពីលើចុះក្រោម (Down)
+          </button>
+        </div>
+      </div>
+
+      <!-- Speed Presets & Slider -->
+      <div class="form-row">
+        <div class="form-label">
+          <span>ល្បឿននៃការរត់ (Scroll Speed)</span>
+          <span class="form-label-val" id="marquee-speed-val">8s</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+          <button type="button" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeSpeed('slow')">🐢 យឺត</button>
+          <button type="button" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeSpeed('normal')">🚶 មធ្យម</button>
+          <button type="button" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeSpeed('fast')">⚡ លឿន</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB 5: VIDEO TOOLS & EXPORT ──────────────────────── -->
+    <div class="tab-panel-card" id="tab-panel-tools">
+      <div class="panel-section-title">
+        <span>៥. កាត់តការពារ Copyright & Export HD</span>
+      </div>
+
+      <!-- Flip Horizontal Toggle Switch -->
+      <div class="toggle-switch-wrap">
+        <div>
+          <div class="toggle-switch-label">🔄 ត្រឡប់វីដេអូឆ្វេង-ស្តាំ (Flip Left/Right)</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">Flip 180° Mirror ការពារស្វែងរក Copyright</div>
+        </div>
+        <label class="cyber-switch">
+          <input type="checkbox" id="toggle-flip" onchange="toggleFlipHorizontal(this.checked)">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <!-- Crop Slider -->
+      <div class="form-row">
+        <div class="form-label">
+          <span>Crop Video (កាត់បង្រួមស៊ុម)</span>
+          <span class="form-label-val" id="crop-val">0%</span>
+        </div>
+        <input type="range" min="0" max="10" step="1" value="0" class="cyber-slider" oninput="updateCrop(this.value)">
+      </div>
+
+      <!-- Brightness & Contrast -->
+      <div class="form-row">
+        <div class="form-label">
+          <span>ពន្លឺ (Brightness)</span>
+          <span class="form-label-val" id="brightness-val">0.0</span>
+        </div>
+        <input type="range" min="-0.3" max="0.3" step="0.05" value="0" class="cyber-slider" oninput="updateBrightness(this.value)">
+      </div>
+
+      <div class="form-row">
+        <div class="form-label">
+          <span>កម្រិតច្បាស់ (Contrast)</span>
+          <span class="form-label-val" id="contrast-val">1.0x</span>
+        </div>
+        <input type="range" min="0.7" max="1.5" step="0.05" value="1.0" class="cyber-slider" oninput="updateContrast(this.value)">
+      </div>
+
+      <!-- Final HD Render Export Button -->
+      <button type="button" class="btn-export-hd" onclick="triggerRenderExport()">
+        🎬 Export Render HD MP4 (កាត់ត & បញ្ចូលសំឡេងពេញលេញ)
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Toast Notification Element -->
+  <div id="toast-notification"></div>
+
+  <!-- Studio Engine JS -->
+  <script src="/static/js/studio_engine.js"></script>
+</body>
+</html>
