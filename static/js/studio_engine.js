@@ -1,6 +1,6 @@
 /**
  * «នាគហ្សង បកប្រែ» (Neak Zong Translate AI)
- * Mobile Studio Engine — 50/50 Split Screen, Touch Overlays, License Management & Ultra-Fast Engine
+ * Mobile Studio Engine v2.1.0 — Dual-Tone Text, Blur/Logo Sliders, Marquee 4-Dir, Khmer Effects
  */
 
 // ── Global State ──────────────────────────────────────────
@@ -22,7 +22,7 @@ const state = {
   brightness: 0,
   contrast: 1.0,
   
-  // Overlays (STRICT: Hidden by default until toggled)
+  // Blur Mask (controlled by drag + sliders)
   blurMask: {
     enabled: false,
     x: 15,
@@ -30,6 +30,8 @@ const state = {
     w: 120,
     h: 45
   },
+
+  // Logo Overlay (controlled by drag + sliders)
   logoOverlay: {
     enabled: false,
     x: 15,
@@ -38,22 +40,43 @@ const state = {
     opacity: 0.9,
     path: null
   },
+
+  // Dual-Tone Text Overlay
   textOverlay: {
     enabled: false,
-    text: 'នាគហ្សង បកប្រែ',
-    font: 'Moul',
+    font: "'Moul', serif",
     size: 26,
-    color: '#ffffff',
     x: 15,
     y: 30
   },
+  textPart1: {
+    enabled: true,
+    text: 'នាគហ្សង',
+    color: '#f59e0b',
+    effect: 'glow',
+    outlineColor: '#000000',
+    outlineW: 2
+  },
+  textPart2: {
+    enabled: true,
+    text: 'បកប្រែ',
+    color: '#22d3ee',
+    effect: 'shadow',
+    outlineColor: '#000000',
+    outlineW: 2
+  },
+
+  // Marquee
   marquee: {
     enabled: false,
     text: 'សូមចុច Subscribe & Follow «នាគហ្សង បកប្រែ AI»',
     direction: 'up',
     speedSec: 8,
     color: '#f59e0b',
-    fontSize: 22
+    fontSize: 22,
+    font: "'Kantumruy Pro', sans-serif",
+    effect: 'none',    // 'none' | 'shadow' | 'glow' | 'outline'
+    glowColor: '#c084fc'
   },
 
   // Khmer Voice & Audio
@@ -520,15 +543,105 @@ function toggleLogoOverlay(enabled) {
 function toggleTextOverlay(enabled) {
   state.textOverlay.enabled = enabled;
   textElement.classList.toggle('active-visible', enabled);
-  showToast(enabled ? '✓ បានបើកអក្សរលើវីដេអូ' : 'បានបិទអក្សរ');
+  showToast(enabled ? '✓ បានបើកអក្សរ Dual-Tone' : 'បានបិទអក្សរ');
 }
 
-function updateOverlayText(val) {
-  state.textOverlay.text = val;
-  const target = document.getElementById('rendered-text-val');
-  if (target) target.innerText = val;
+// ── DUAL-TONE TEXT PREVIEW ─────────────────────────────────
+function updateDualTonePreview() {
+  // Read Part 1
+  state.textPart1.text = document.getElementById('text-part1-input')?.value || '';
+  state.textPart1.color = document.getElementById('text-part1-color')?.value || '#f59e0b';
+  state.textPart1.effect = document.getElementById('text-part1-effect')?.value || 'none';
+  state.textPart1.outlineColor = document.getElementById('text-part1-outline-color')?.value || '#000000';
+
+  // Read Part 2
+  state.textPart2.text = document.getElementById('text-part2-input')?.value || '';
+  state.textPart2.color = document.getElementById('text-part2-color')?.value || '#22d3ee';
+  state.textPart2.effect = document.getElementById('text-part2-effect')?.value || 'none';
+  state.textPart2.outlineColor = document.getElementById('text-part2-outline-color')?.value || '#000000';
+
+  // Read font
+  state.textOverlay.font = document.getElementById('text-font-select')?.value || "'Moul', serif";
+
+  // Show/hide outline rows
+  const p1eff = state.textPart1.effect;
+  const p1outRow = document.getElementById('part1-outline-row');
+  if (p1outRow) p1outRow.style.display = p1eff === 'outline' ? 'flex' : 'none';
+
+  const p2eff = state.textPart2.effect;
+  const p2outRow = document.getElementById('part2-outline-row');
+  if (p2outRow) p2outRow.style.display = p2eff === 'outline' ? 'flex' : 'none';
+
+  // Update preview spans
+  const p1Span = document.getElementById('text-part1-preview');
+  const p2Span = document.getElementById('text-part2-preview');
+  if (p1Span) {
+    p1Span.innerText = state.textPart1.text;
+    p1Span.style.color = state.textPart1.color;
+    p1Span.style.fontFamily = state.textOverlay.font;
+    p1Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
+    _applyEffectToSpan(p1Span, state.textPart1.effect, state.textPart1.color, state.textPart1.outlineColor);
+  }
+  if (p2Span) {
+    p2Span.innerText = ' ' + state.textPart2.text;
+    p2Span.style.color = state.textPart2.color;
+    p2Span.style.fontFamily = state.textOverlay.font;
+    p2Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
+    _applyEffectToSpan(p2Span, state.textPart2.effect, state.textPart2.color, state.textPart2.outlineColor);
+  }
 }
 
+function _applyEffectToSpan(span, effect, color, outlineColor) {
+  // Reset
+  span.style.textShadow = '';
+  span.style.webkitTextStroke = '';
+
+  switch (effect) {
+    case 'shadow':
+      span.style.textShadow = '2px 2px 4px rgba(0,0,0,0.85)';
+      break;
+    case 'glow':
+      span.style.textShadow = `0 0 8px ${color}, 0 0 20px ${color}88, 0 0 40px ${color}44`;
+      break;
+    case 'outline':
+      span.style.webkitTextStroke = `2px ${outlineColor || '#000'}`;
+      break;
+    default:
+      break;
+  }
+}
+
+// ── BLUR BOX SLIDERS ───────────────────────────────────────
+function updateBlurBoxFromSliders() {
+  const x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
+  const y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+  const w = parseInt(document.getElementById('blur-w-slider')?.value || 120);
+  const h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
+
+  state.blurMask.x = x;
+  state.blurMask.y = y;
+  state.blurMask.w = w;
+  state.blurMask.h = h;
+
+  blurBox.style.left = `${x}px`;
+  blurBox.style.top = `${y}px`;
+  blurBox.style.width = `${w}px`;
+  blurBox.style.height = `${h}px`;
+}
+
+// ── LOGO POSITION SLIDERS ──────────────────────────────────
+function updateLogoPosition() {
+  const x = parseInt(document.getElementById('logo-x-slider')?.value || 15);
+  const y = parseInt(document.getElementById('logo-y-slider')?.value || 15);
+
+  state.logoOverlay.x = x;
+  state.logoOverlay.y = y;
+
+  logoElement.style.left = `${x}px`;
+  logoElement.style.top = `${y}px`;
+}
+
+// ── MARQUEE ────────────────────────────────────────────────
 function toggleMarqueeOverlay(enabled) {
   state.marquee.enabled = enabled;
   marqueeElement.classList.toggle('active-visible', enabled);
@@ -543,16 +656,17 @@ function updateMarqueeText(val) {
 
 function setMarqueeDirection(dir) {
   state.marquee.direction = dir;
-  const upBtn = document.getElementById('marquee-dir-up');
-  const downBtn = document.getElementById('marquee-dir-down');
-  if (upBtn) upBtn.classList.toggle('active', dir === 'up');
-  if (downBtn) downBtn.classList.toggle('active', dir === 'down');
+  // Update active button states
+  ['up', 'down', 'left', 'right'].forEach(d => {
+    const btn = document.getElementById(`marquee-dir-${d}`);
+    if (btn) btn.classList.toggle('active', d === dir);
+  });
   updateMarqueeAnimation();
 }
 
 function setMarqueeSpeed(preset) {
   let sec = 8;
-  if (preset === 'slow') sec = 15;
+  if (preset === 'slow') sec = 18;
   if (preset === 'normal') sec = 8;
   if (preset === 'fast') sec = 4;
   setMarqueeSpeedSeconds(sec);
@@ -577,9 +691,62 @@ function setMarqueeSpeedSeconds(sec) {
   updateMarqueeAnimation();
 }
 
+function setMarqueeEffect(effect) {
+  state.marquee.effect = effect;
+  ['none', 'shadow', 'glow', 'outline'].forEach(e => {
+    const btn = document.getElementById(`effect-btn-${e}`);
+    if (btn) btn.classList.toggle('active', e === effect);
+  });
+
+  // Show glow color picker only for glow
+  const glowRow = document.getElementById('glow-color-row');
+  if (glowRow) glowRow.style.display = effect === 'glow' ? 'flex' : 'none';
+
+  applyMarqueeStyles();
+}
+
+function applyMarqueeStyles() {
+  const font = document.getElementById('marquee-font-select')?.value || "'Kantumruy Pro', sans-serif";
+  const color = document.getElementById('marquee-color-picker')?.value || '#f59e0b';
+  const glowColor = document.getElementById('marquee-glow-color')?.value || '#c084fc';
+  const fontSize = parseInt(document.getElementById('marquee-size-slider')?.value || 22);
+
+  state.marquee.font = font;
+  state.marquee.color = color;
+  state.marquee.glowColor = glowColor;
+  state.marquee.fontSize = fontSize;
+
+  // Apply CSS to preview marquee
+  marqueeTrack.style.fontFamily = font;
+  marqueeTrack.style.color = color;
+  marqueeTrack.style.fontSize = fontSize + 'px';
+  marqueeTrack.style.textShadow = '';
+  marqueeTrack.style.webkitTextStroke = '';
+
+  switch (state.marquee.effect) {
+    case 'shadow':
+      marqueeTrack.style.textShadow = '2px 2px 6px rgba(0,0,0,0.9)';
+      break;
+    case 'glow':
+      marqueeTrack.style.textShadow = `0 0 10px ${glowColor}, 0 0 25px ${glowColor}88`;
+      break;
+    case 'outline':
+      marqueeTrack.style.webkitTextStroke = `2px rgba(0,0,0,0.9)`;
+      break;
+  }
+}
+
 function updateMarqueeAnimation() {
-  const animName = state.marquee.direction === 'up' ? 'scrollUp' : 'scrollDown';
+  const dir = state.marquee.direction;
+  let animName;
+  switch (dir) {
+    case 'down':   animName = 'scrollDown';  break;
+    case 'left':   animName = 'scrollLeft';  break;
+    case 'right':  animName = 'scrollRight'; break;
+    default:       animName = 'scrollUp';    break;
+  }
   marqueeTrack.style.animation = `${animName} ${state.marquee.speedSec}s linear infinite`;
+  applyMarqueeStyles();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -657,6 +824,23 @@ function makeDraggable(element) {
 
     element.style.left = `${newLeft}px`;
     element.style.top = `${newTop}px`;
+
+    // Sync back to state & sliders
+    if (element === blurBox) {
+      state.blurMask.x = newLeft;
+      state.blurMask.y = newTop;
+      _syncSlider('blur-x-slider', newLeft);
+      _syncSlider('blur-y-slider', newTop);
+      document.getElementById('blur-x-val').innerText = Math.round(newLeft) + 'px';
+      document.getElementById('blur-y-val').innerText = Math.round(newTop) + 'px';
+    } else if (element === logoElement) {
+      state.logoOverlay.x = newLeft;
+      state.logoOverlay.y = newTop;
+      _syncSlider('logo-x-slider', newLeft);
+      _syncSlider('logo-y-slider', newTop);
+      document.getElementById('logo-x-val').innerText = Math.round(newLeft) + 'px';
+      document.getElementById('logo-y-val').innerText = Math.round(newTop) + 'px';
+    }
   });
 
   const onPointerEnd = (e) => {
@@ -671,6 +855,11 @@ function makeDraggable(element) {
 
   element.addEventListener('pointerup', onPointerEnd);
   element.addEventListener('pointercancel', onPointerEnd);
+}
+
+function _syncSlider(sliderId, value) {
+  const slider = document.getElementById(sliderId);
+  if (slider) slider.value = Math.round(value);
 }
 
 function makeResizable(element) {
@@ -698,8 +887,20 @@ function makeResizable(element) {
     if (!isResizing) return;
     const dw = e.clientX - startX;
     const dh = e.clientY - startY;
-    element.style.width = `${Math.max(30, startW + dw)}px`;
-    element.style.height = `${Math.max(20, startH + dh)}px`;
+    const newW = Math.max(30, startW + dw);
+    const newH = Math.max(20, startH + dh);
+    element.style.width = `${newW}px`;
+    element.style.height = `${newH}px`;
+
+    // Sync back to blur sliders
+    if (element === blurBox) {
+      state.blurMask.w = newW;
+      state.blurMask.h = newH;
+      _syncSlider('blur-w-slider', newW);
+      _syncSlider('blur-h-slider', newH);
+      document.getElementById('blur-w-val').innerText = Math.round(newW) + 'px';
+      document.getElementById('blur-h-val').innerText = Math.round(newH) + 'px';
+    }
   });
 
   const onResizeEnd = (e) => {
@@ -717,7 +918,70 @@ function makeResizable(element) {
 }
 
 // ══════════════════════════════════════════════════════════
-// ⚡ 8. 1-CLICK AUTO PIPELINE & ULTRA-FAST CHUNKED EXPORT
+// ⚡ 8. BUILD OPTIONS PAYLOAD (shared by auto-process & render)
+// ══════════════════════════════════════════════════════════
+function _buildRenderOptions() {
+  return {
+    flip_horizontal: state.flipHorizontal,
+    crop_percent: state.cropPercent,
+    brightness: state.brightness,
+    contrast: state.contrast,
+    blur_mask: {
+      enabled: state.blurMask.enabled,
+      x: blurBox.offsetLeft,
+      y: blurBox.offsetTop,
+      w: blurBox.offsetWidth,
+      h: blurBox.offsetHeight
+    },
+    marquee: {
+      enabled: state.marquee.enabled,
+      text: state.marquee.text,
+      direction: state.marquee.direction,
+      speed: Math.round(300 / state.marquee.speedSec),
+      color: state.marquee.color,
+      font_size: state.marquee.fontSize
+    },
+    // Dual-tone text
+    text_overlay: {
+      enabled: state.textOverlay.enabled,
+      text: state.textPart1.text + ' ' + state.textPart2.text,
+      x: textElement.offsetLeft,
+      y: textElement.offsetTop,
+      size: state.textOverlay.size
+    },
+    text_part1: {
+      enabled: state.textOverlay.enabled && state.textPart1.text.length > 0,
+      text: state.textPart1.text,
+      color: _hexToFFmpegColor(state.textPart1.color),
+      effect: state.textPart1.effect,
+      outline_color: _hexToFFmpegColor(state.textPart1.outlineColor),
+      outline_w: state.textPart1.outlineW,
+      x: textElement.offsetLeft,
+      y: textElement.offsetTop,
+      size: state.textOverlay.size
+    },
+    text_part2: {
+      enabled: state.textOverlay.enabled && state.textPart2.text.length > 0,
+      text: state.textPart2.text,
+      color: _hexToFFmpegColor(state.textPart2.color),
+      effect: state.textPart2.effect,
+      outline_color: _hexToFFmpegColor(state.textPart2.outlineColor),
+      outline_w: state.textPart2.outlineW,
+      x: textElement.offsetLeft,
+      y: textElement.offsetTop,
+      size: state.textOverlay.size
+    }
+  };
+}
+
+function _hexToFFmpegColor(hex) {
+  // Converts #rrggbb to 0xRRGGBB for FFmpeg drawtext color
+  if (!hex || !hex.startsWith('#')) return hex || 'white';
+  return '0x' + hex.slice(1).toUpperCase();
+}
+
+// ══════════════════════════════════════════════════════════
+// ⚡ 9. 1-CLICK AUTO PIPELINE & ULTRA-FAST CHUNKED EXPORT
 // ══════════════════════════════════════════════════════════
 async function triggerAutoProcessPipeline() {
   if (!state.licenseValid) {
@@ -772,34 +1036,7 @@ async function triggerAutoProcessPipeline() {
         srt_content: state.srtContent || '',
         voice: state.voice,
         speed: state.voiceSpeed,
-        options: {
-          flip_horizontal: state.flipHorizontal,
-          crop_percent: state.cropPercent,
-          brightness: state.brightness,
-          contrast: state.contrast,
-          blur_mask: {
-            enabled: state.blurMask.enabled,
-            x: blurBox.offsetLeft,
-            y: blurBox.offsetTop,
-            w: blurBox.offsetWidth,
-            h: blurBox.offsetHeight
-          },
-          marquee: {
-            enabled: state.marquee.enabled,
-            text: state.marquee.text,
-            direction: state.marquee.direction,
-            speed: Math.round(300 / state.marquee.speedSec),
-            color: state.marquee.color
-          },
-          text_overlay: {
-            enabled: state.textOverlay.enabled,
-            text: state.textOverlay.text,
-            x: textElement.offsetLeft,
-            y: textElement.offsetTop,
-            size: state.textOverlay.size,
-            color: state.textOverlay.color
-          }
-        }
+        options: _buildRenderOptions()
       })
     });
     const data = await res.json();
@@ -862,34 +1099,7 @@ async function triggerRenderExport() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         video_name: state.videoFilename,
-        options: {
-          flip_horizontal: state.flipHorizontal,
-          crop_percent: state.cropPercent,
-          brightness: state.brightness,
-          contrast: state.contrast,
-          blur_mask: {
-            enabled: state.blurMask.enabled,
-            x: blurBox.offsetLeft,
-            y: blurBox.offsetTop,
-            w: blurBox.offsetWidth,
-            h: blurBox.offsetHeight
-          },
-          marquee: {
-            enabled: state.marquee.enabled,
-            text: state.marquee.text,
-            direction: state.marquee.direction,
-            speed: Math.round(300 / state.marquee.speedSec),
-            color: state.marquee.color
-          },
-          text_overlay: {
-            enabled: state.textOverlay.enabled,
-            text: state.textOverlay.text,
-            x: textElement.offsetLeft,
-            y: textElement.offsetTop,
-            size: state.textOverlay.size,
-            color: state.textOverlay.color
-          }
-        }
+        options: _buildRenderOptions()
       })
     });
     const data = await res.json();
@@ -933,6 +1143,7 @@ function pollJobStatus(jobId) {
       } else if (job.status === 'failed') {
         clearInterval(interval);
         progressStatus.innerText = `⚠️ បរាជ័យ: ${job.error || 'Unknown'}`;
+        progressStatus.style.color = '#f87171';
       }
     } catch (e) {
       clearInterval(interval);
@@ -941,21 +1152,32 @@ function pollJobStatus(jobId) {
 }
 
 // ══════════════════════════════════════════════════════════
-// ⚡ 9. INITIALIZATION
+// ⚡ 10. INITIALIZATION
 // ══════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
   // Check License on startup
   checkLicenseStatus();
 
-  // Initialize draggable elements
+  // Initialize draggable elements (drag also syncs back to sliders)
   makeDraggable(blurBox);
   makeResizable(blurBox);
   makeDraggable(logoElement);
   makeDraggable(textElement);
+
+  // Initialize dual-tone preview
+  updateDualTonePreview();
 
   // Set default marquee animation
   updateMarqueeAnimation();
 
   // Video Time Update listener
   previewVideo.addEventListener('timeupdate', updateVideoTime);
+
+  // Effect button watcher: Part1 effect change
+  document.getElementById('text-part1-effect')?.addEventListener('change', () => {
+    updateDualTonePreview();
+  });
+  document.getElementById('text-part2-effect')?.addEventListener('change', () => {
+    updateDualTonePreview();
+  });
 });

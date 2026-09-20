@@ -9,8 +9,7 @@ echo.
 
 cd /d "%~dp0\.."
 
-echo [*] កំពុងវេចខ្ចប់ Folder neak_zong_translate ទៅជា ZIP...
-powershell -NoProfile -Command "Compress-Archive -Path 'neak_zong_translate\*' -DestinationPath 'NeakZong_Render_Deploy.zip' -Force"
+python package_neak_zong.py
 
 if exist "NeakZong_Render_Deploy.zip" (
     echo.

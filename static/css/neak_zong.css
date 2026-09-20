@@ -946,3 +946,141 @@ header.app-header {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   ⚡ v2.1.0 NEW: Marquee Scroll Animations (All 4 Directions)
+══════════════════════════════════════════════════════════════ */
+@keyframes scrollUp {
+  0%   { transform: translateY(100%); }
+  100% { transform: translateY(-100%); }
+}
+@keyframes scrollDown {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+@keyframes scrollLeft {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+@keyframes scrollRight {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Marquee track adjustment for horizontal scrolling */
+.marquee-scrolling-track {
+  white-space: nowrap;
+  display: inline-block;
+  width: max-content;
+  min-width: 100%;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ⚡ v2.1.0 NEW: Dual-Tone Text Overlay Styles
+══════════════════════════════════════════════════════════════ */
+.dual-tone-section {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dual-tone-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.dual-tone-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.part1-badge {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid var(--neon-gold);
+  color: var(--neon-gold);
+}
+
+.part2-badge {
+  background: rgba(34, 211, 238, 0.2);
+  border: 1px solid var(--neon-cyan-bright);
+  color: var(--neon-cyan-bright);
+}
+
+/* Text preview spans in overlay */
+.text-preview-part1,
+.text-preview-part2 {
+  display: inline;
+  font-weight: 800;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ⚡ v2.1.0 NEW: Slider Group Box (Blur/Logo Position Sliders)
+══════════════════════════════════════════════════════════════ */
+.slider-group-box {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slider-group-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--neon-cyan-bright);
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+/* Compact slider inside groups */
+.slider-group-box .cyber-slider {
+  height: 4px;
+}
+.slider-group-box .cyber-slider::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--neon-cyan-bright);
+  box-shadow: 0 0 8px var(--neon-cyan-glow);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ⚡ v2.1.0 NEW: Marquee Effect Button active states
+══════════════════════════════════════════════════════════════ */
+#effect-btn-shadow.active {
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255,255,255,0.4);
+  color: #ffffff;
+  text-shadow: 2px 2px 4px black;
+}
+#effect-btn-glow.active {
+  background: rgba(192, 132, 252, 0.25);
+  border-color: var(--neon-purple-bright);
+  color: var(--neon-purple-bright);
+  box-shadow: 0 0 10px var(--neon-purple-glow);
+}
+#effect-btn-outline.active {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.5);
+  color: #ffffff;
+}
+
+/* Marquee direction button adjustments */
+#marquee-dir-left.active,
+#marquee-dir-right.active {
+  background: linear-gradient(135deg, #06b6d4, #0284c7);
+  border-color: var(--neon-cyan-bright);
+  color: #ffffff;
+}
+

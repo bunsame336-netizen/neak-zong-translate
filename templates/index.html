@@ -13,13 +13,13 @@
   <meta name="apple-mobile-web-app-title" content="នាគហ្សង បកប្រែ">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
 
-  <!-- Google Fonts: Kantumruy Pro, Moul & Inter -->
+  <!-- Google Fonts: Kantumruy Pro, Moul, Battambang, Siemreap, Bokor, Koulen, Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=2.0.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=2.1.0">
 </head>
 <body>
 
@@ -40,7 +40,7 @@
           <span class="brand-title">នាគហ្សង បកប្រែ</span>
           <span class="brand-badge">Mobile 50/50</span>
         </div>
-        <span class="brand-sub">AI Video Translator & Khmer Voice</span>
+        <span class="brand-sub">AI Video Translator &amp; Khmer Voice</span>
       </div>
     </div>
 
@@ -101,15 +101,18 @@
               </svg>
             </div>
 
-            <!-- 3. Static Text Overlay -->
+            <!-- 3. Static Text Overlay (Dual-Tone) -->
             <div class="interactive-overlay" id="text-overlay-element" title="អូសរំកិលអក្សរលើវីដេអូ">
-              <div class="rendered-text-content" id="rendered-text-val">នាគហ្សង បកប្រែ</div>
+              <div class="rendered-text-content" id="rendered-text-val">
+                <span id="text-part1-preview" class="text-preview-part1">នាគហ្សង</span>
+                <span id="text-part2-preview" class="text-preview-part2"> បកប្រែ</span>
+              </div>
             </div>
 
             <!-- 4. Animated Vertical Scrolling Marquee -->
             <div class="interactive-overlay" id="marquee-overlay-element">
               <div class="marquee-scrolling-track" id="marquee-track">
-                សូមចុច Subscribe & Follow «នាគហ្សង បកប្រែ AI»
+                សូមចុច Subscribe &amp; Follow «នាគហ្សង បកប្រែ AI»
               </div>
             </div>
 
@@ -133,7 +136,7 @@
       <!-- ⚡ 1-CLICK AUTO PROCESS BANNER -->
       <div class="auto-process-banner">
         <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
-          🚀 បកប្រែ & បញ្ចូលសំឡេង & Export (1-Click)
+          🚀 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
         </button>
       </div>
 
@@ -178,16 +181,16 @@
         </button>
       </nav>
 
-      <!-- ── TAB 1: TEXT OVERLAY ──────────────────────────────── -->
+      <!-- ── TAB 1: TEXT OVERLAY (DUAL-TONE) ─────────────────── -->
       <div class="tab-panel-card active" id="tab-panel-text">
         <div class="panel-section-title">
-          <span>📝 ដាក់អក្សរលើវីដេអូ (Text Overlay)</span>
+          <span>📝 ដាក់អក្សរ ២ ពណ៌ (Dual-Tone Text Overlay)</span>
         </div>
 
         <div class="toggle-switch-wrap">
           <div>
             <div class="toggle-switch-label">បើកបង្ហាញអក្សរ (Show Text)</div>
-            <div style="font-size: 0.65rem; color: var(--text-muted);">អាចអូសរំកិលលើវីដេអូបាន</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">អូសផ្លាស់ប្ដូរទីតាំងលើ Preview</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-text" onchange="toggleTextOverlay(this.checked)">
@@ -195,32 +198,86 @@
           </label>
         </div>
 
-        <div class="form-row">
-          <label class="form-label">អត្ថបទ (Text Content)</label>
-          <input type="text" id="text-overlay-input" class="cyber-input" value="នាគហ្សង បកប្រែ" oninput="updateOverlayText(this.value)">
+        <!-- Dual-Tone Part 1 -->
+        <div class="dual-tone-section">
+          <div class="dual-tone-header">
+            <span class="dual-tone-badge part1-badge">ពាក្យទី ១</span>
+            <span style="font-size: 0.65rem; color: var(--text-muted);">Text Part 1</span>
+          </div>
+          <div class="form-row">
+            <input type="text" id="text-part1-input" class="cyber-input" value="នាគហ្សង" placeholder="ពាក្យ/អក្សរ ១" oninput="updateDualTonePreview()">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <div>
+              <label class="form-label">ពណ៌ Part 1</label>
+              <input type="color" id="text-part1-color" value="#f59e0b" class="cyber-input" style="height: 36px; padding: 2px;" oninput="updateDualTonePreview()">
+            </div>
+            <div>
+              <label class="form-label">Effect Part 1</label>
+              <select id="text-part1-effect" class="cyber-input" style="padding: 0 4px;" onchange="updateDualTonePreview()">
+                <option value="none">គ្មាន (None)</option>
+                <option value="shadow">ស្រមោល (Shadow)</option>
+                <option value="glow" selected>Neon Glow</option>
+                <option value="outline">ស៊ុម (Outline)</option>
+              </select>
+            </div>
+          </div>
+          <div id="part1-outline-row" style="display: none;" class="form-row">
+            <label class="form-label">ពណ៌ស៊ុម Part 1</label>
+            <input type="color" id="text-part1-outline-color" value="#000000" class="cyber-input" style="height: 32px; padding: 2px;" oninput="updateDualTonePreview()">
+          </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+        <!-- Dual-Tone Part 2 -->
+        <div class="dual-tone-section" style="margin-top: 8px;">
+          <div class="dual-tone-header">
+            <span class="dual-tone-badge part2-badge">ពាក្យទី ២</span>
+            <span style="font-size: 0.65rem; color: var(--text-muted);">Text Part 2</span>
+          </div>
+          <div class="form-row">
+            <input type="text" id="text-part2-input" class="cyber-input" value="បកប្រែ" placeholder="ពាក្យ/អក្សរ ២" oninput="updateDualTonePreview()">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <div>
+              <label class="form-label">ពណ៌ Part 2</label>
+              <input type="color" id="text-part2-color" value="#22d3ee" class="cyber-input" style="height: 36px; padding: 2px;" oninput="updateDualTonePreview()">
+            </div>
+            <div>
+              <label class="form-label">Effect Part 2</label>
+              <select id="text-part2-effect" class="cyber-input" style="padding: 0 4px;" onchange="updateDualTonePreview()">
+                <option value="none">គ្មាន (None)</option>
+                <option value="shadow" selected>ស្រមោល (Shadow)</option>
+                <option value="glow">Neon Glow</option>
+                <option value="outline">ស៊ុម (Outline)</option>
+              </select>
+            </div>
+          </div>
+          <div id="part2-outline-row" style="display: none;" class="form-row">
+            <label class="form-label">ពណ៌ស៊ុម Part 2</label>
+            <input type="color" id="text-part2-outline-color" value="#000000" class="cyber-input" style="height: 32px; padding: 2px;" oninput="updateDualTonePreview()">
+          </div>
+        </div>
+
+        <!-- Shared Font & Size -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px;">
           <div>
             <label class="form-label">ពុម្ពអក្សរ (Font)</label>
-            <select class="cyber-input" style="padding: 0 4px;" onchange="document.getElementById('rendered-text-val').style.fontFamily = this.value; state.textOverlay.font = this.value;">
+            <select id="text-font-select" class="cyber-input" style="padding: 0 4px;" onchange="updateDualTonePreview()">
               <option value="'Moul', serif">Moul (មូល)</option>
               <option value="'Kantumruy Pro', sans-serif">Kantumruy Pro</option>
               <option value="'Battambang', sans-serif">Battambang</option>
+              <option value="'Siemreap', sans-serif">Siemreap (សៀមរាប)</option>
+              <option value="'Bokor', serif">Bokor (បូកគោ)</option>
+              <option value="'Koulen', serif">Koulen (គូលេន)</option>
             </select>
           </div>
           <div>
-            <label class="form-label">ពណ៌អក្សរ</label>
-            <input type="color" value="#ffffff" class="cyber-input" style="height: 36px; padding: 2px;" onchange="document.getElementById('rendered-text-val').style.color = this.value; state.textOverlay.color = this.value;">
+            <label class="form-label">ទំហំអក្សរ</label>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="range" min="14" max="60" step="2" value="26" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
+              <span class="form-label-val" id="text-size-val">26px</span>
+            </div>
           </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-label">
-            <span>ទំហំអក្សរ (Font Size)</span>
-            <span class="form-label-val" id="text-size-val">26px</span>
-          </div>
-          <input type="range" min="14" max="50" step="2" value="26" class="cyber-slider" oninput="document.getElementById('rendered-text-val').style.fontSize = this.value + 'px'; document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value);">
         </div>
       </div>
 
@@ -233,7 +290,7 @@
         <div class="toggle-switch-wrap">
           <div>
             <div class="toggle-switch-label">បើកបង្ហាញ Logo</div>
-            <div style="font-size: 0.65rem; color: var(--text-muted);">អូសផ្លាស់ប្តូរទីតាំងលើវីដេអូ</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">អូស ឬប្រើ Sliders ខាងក្រោម</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-logo" onchange="toggleLogoOverlay(this.checked)">
@@ -256,6 +313,27 @@
           </div>
           <input type="range" min="20" max="100" step="5" value="90" class="cyber-slider" oninput="document.getElementById('logo-opacity-val').innerText = this.value + '%'; state.logoOverlay.opacity = this.value / 100; document.getElementById('logo-overlay-element').style.opacity = this.value / 100;">
         </div>
+
+        <!-- Logo Position Sliders -->
+        <div class="slider-group-box">
+          <div class="slider-group-title">📐 ទីតាំង Logo (Position Sliders)</div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង X (ឆ្វេង-ស្ដាំ)</span>
+              <span class="form-label-val" id="logo-x-val">15px</span>
+            </div>
+            <input type="range" min="0" max="400" step="5" value="15" class="cyber-slider" id="logo-x-slider"
+              oninput="document.getElementById('logo-x-val').innerText = this.value + 'px'; updateLogoPosition();">
+          </div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង Y (លើ-ក្រោម)</span>
+              <span class="form-label-val" id="logo-y-val">15px</span>
+            </div>
+            <input type="range" min="0" max="700" step="5" value="15" class="cyber-slider" id="logo-y-slider"
+              oninput="document.getElementById('logo-y-val').innerText = this.value + 'px'; updateLogoPosition();">
+          </div>
+        </div>
       </div>
 
       <!-- ── TAB 3: BLUR MASK ─────────────────────────────────── -->
@@ -267,7 +345,7 @@
         <div class="toggle-switch-wrap">
           <div>
             <div class="toggle-switch-label">បើកផ្ទាំងព្រិល (Blur Mask)</div>
-            <div style="font-size: 0.65rem; color: var(--text-muted);">អូស ឬពង្រីក-បង្រួមលើវីដេអូ</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">អូស ឬប្រើ Sliders ខាងក្រោម</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-blur" onchange="toggleBlurOverlay(this.checked)">
@@ -275,21 +353,62 @@
           </label>
         </div>
 
-        <div style="font-size: 0.72rem; color: var(--text-sub); line-height: 1.4; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
-          💡 <b>របៀបប្រើ៖</b> បើក Switch ខាងលើ រួចយកម្រាមដៃអូសប្រអប់ព្រិលលើកញ្ចក់វីដេអូចំហៀងឆ្វេង ដើម្បីបាំង Logo ចាស់របស់រឿងភាគចិន។
+        <div style="font-size: 0.72rem; color: var(--text-sub); line-height: 1.4; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; margin-bottom: 8px;">
+          💡 <b>របៀបប្រើ៖</b> បើក Switch ខាងលើ រួចប្រើ Sliders ខាងក្រោមដើម្បីបំណត់ទំហំ និងទីតាំងប្រអប់ព្រិលលើ Logo ចាស់។
+        </div>
+
+        <!-- Blur Size & Position Sliders -->
+        <div class="slider-group-box">
+          <div class="slider-group-title">📏 ទំហំ Blur Box (Size)</div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទទឹង (Width)</span>
+              <span class="form-label-val" id="blur-w-val">120px</span>
+            </div>
+            <input type="range" min="20" max="500" step="5" value="120" class="cyber-slider" id="blur-w-slider"
+              oninput="document.getElementById('blur-w-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+          </div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>កម្ពស់ (Height)</span>
+              <span class="form-label-val" id="blur-h-val">45px</span>
+            </div>
+            <input type="range" min="10" max="300" step="5" value="45" class="cyber-slider" id="blur-h-slider"
+              oninput="document.getElementById('blur-h-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+          </div>
+        </div>
+
+        <div class="slider-group-box" style="margin-top: 8px;">
+          <div class="slider-group-title">📐 ទីតាំង Blur Box (Position)</div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង X (ឆ្វេង-ស្ដាំ)</span>
+              <span class="form-label-val" id="blur-x-val">15px</span>
+            </div>
+            <input type="range" min="0" max="500" step="5" value="15" class="cyber-slider" id="blur-x-slider"
+              oninput="document.getElementById('blur-x-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+          </div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង Y (លើ-ក្រោម)</span>
+              <span class="form-label-val" id="blur-y-val">15px</span>
+            </div>
+            <input type="range" min="0" max="700" step="5" value="15" class="cyber-slider" id="blur-y-slider"
+              oninput="document.getElementById('blur-y-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+          </div>
         </div>
       </div>
 
       <!-- ── TAB 4: ANIMATED VERTICAL MARQUEE ─────────────────── -->
       <div class="tab-panel-card" id="tab-panel-marquee">
         <div class="panel-section-title">
-          <span>📜 អក្សររត់បញ្ឈរលើវីដេអូ (Marquee)</span>
+          <span>📜 អក្សររត់ (Marquee) &amp; ស្ទីល</span>
         </div>
 
         <div class="toggle-switch-wrap">
           <div>
             <div class="toggle-switch-label">បើកដំណើរការអក្សររត់</div>
-            <div style="font-size: 0.65rem; color: var(--text-muted);">អក្សររត់ពីលើ-ក្រោម ឬ ក្រោម-លើ</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">រត់ 4 ទិស + ស្ទីលអក្សរខ្មែរ</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeOverlay(this.checked)">
@@ -299,17 +418,23 @@
 
         <div class="form-row">
           <label class="form-label">អត្ថបទរត់ (Marquee Text)</label>
-          <input type="text" id="marquee-text-input" class="cyber-input" value="សូមចុច Subscribe & Follow ដើម្បីទស្សនាភាគបន្ត «នាគហ្សង បកប្រែ AI»" oninput="updateMarqueeText(this.value)">
+          <input type="text" id="marquee-text-input" class="cyber-input" value="សូមចុច Subscribe &amp; Follow ដើម្បីទស្សនាភាគបន្ត «នាគហ្សង បកប្រែ AI»" oninput="updateMarqueeText(this.value)">
         </div>
 
         <div class="form-row">
-          <label class="form-label">ទិសដៅនៃការរត់</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.7rem;" onclick="setMarqueeDirection('up')">
-              ⬆️ ក្រោមឡើងលើ
+          <label class="form-label">ទិសដៅនៃការរត់ (Direction)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('up')">
+              ⬆️ ក្រោម→លើ
             </button>
-            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.7rem;" onclick="setMarqueeDirection('down')">
-              ⬇️ លើចុះក្រោម
+            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('down')">
+              ⬇️ លើ→ក្រោម
+            </button>
+            <button type="button" id="marquee-dir-left" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('left')">
+              ⬅️ ស្ដាំ→ឆ្វេង
+            </button>
+            <button type="button" id="marquee-dir-right" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('right')">
+              ➡️ ឆ្វេង→ស្ដាំ
             </button>
           </div>
         </div>
@@ -324,7 +449,51 @@
             <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeSpeed('normal')">🚶 មធ្យម</button>
             <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeSpeed('fast')">⚡ លឿន</button>
           </div>
-          <input type="range" min="3" max="20" step="1" value="8" class="cyber-slider" id="marquee-speed-slider" oninput="setMarqueeSpeedSeconds(this.value)">
+          <input type="range" min="3" max="25" step="1" value="8" class="cyber-slider" id="marquee-speed-slider" oninput="setMarqueeSpeedSeconds(this.value)">
+        </div>
+
+        <!-- Marquee Color & Font -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <div>
+            <label class="form-label">ពណ៌អក្សររត់</label>
+            <input type="color" id="marquee-color-picker" value="#f59e0b" class="cyber-input" style="height: 36px; padding: 2px;" oninput="state.marquee.color = this.value; applyMarqueeStyles();">
+          </div>
+          <div>
+            <label class="form-label">ពុម្ពអក្សរ Marquee</label>
+            <select id="marquee-font-select" class="cyber-input" style="padding: 0 4px;" onchange="applyMarqueeStyles()">
+              <option value="'Kantumruy Pro', sans-serif">Kantumruy Pro</option>
+              <option value="'Moul', serif">Moul (មូល)</option>
+              <option value="'Battambang', sans-serif">Battambang</option>
+              <option value="'Siemreap', sans-serif">Siemreap</option>
+              <option value="'Bokor', serif">Bokor (បូកគោ)</option>
+              <option value="'Koulen', serif">Koulen (គូលេន)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Marquee Text Effects -->
+        <div class="slider-group-box" style="margin-top: 8px;">
+          <div class="slider-group-title">✨ ស្ទីលអក្សររត់ (Text Effects)</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+            <button type="button" id="effect-btn-none" class="btn-ctrl active" style="justify-content: center; font-size: 0.67rem;" onclick="setMarqueeEffect('none')">🚫 គ្មាន</button>
+            <button type="button" id="effect-btn-shadow" class="btn-ctrl" style="justify-content: center; font-size: 0.67rem;" onclick="setMarqueeEffect('shadow')">🌑 Drop Shadow</button>
+            <button type="button" id="effect-btn-glow" class="btn-ctrl" style="justify-content: center; font-size: 0.67rem;" onclick="setMarqueeEffect('glow')">💜 Neon Glow</button>
+            <button type="button" id="effect-btn-outline" class="btn-ctrl" style="justify-content: center; font-size: 0.67rem;" onclick="setMarqueeEffect('outline')">🔲 Outline</button>
+          </div>
+          <!-- Glow Color -->
+          <div class="form-row" id="glow-color-row" style="display: none; margin-top: 6px;">
+            <label class="form-label">ពណ៌ Glow</label>
+            <input type="color" id="marquee-glow-color" value="#c084fc" class="cyber-input" style="height: 32px; padding: 2px;" oninput="applyMarqueeStyles()">
+          </div>
+          <!-- Marquee Font Size -->
+          <div class="form-row" style="margin-top: 6px;">
+            <div class="form-label">
+              <span>ទំហំអក្សររត់</span>
+              <span class="form-label-val" id="marquee-size-val">22px</span>
+            </div>
+            <input type="range" min="12" max="48" step="2" value="22" class="cyber-slider" id="marquee-size-slider"
+              oninput="document.getElementById('marquee-size-val').innerText = this.value + 'px'; state.marquee.fontSize = parseInt(this.value); applyMarqueeStyles();">
+          </div>
         </div>
       </div>
 
@@ -371,7 +540,7 @@
       <!-- ── TAB 6: MEDIA & SUBTITLES ─────────────────────────── -->
       <div class="tab-panel-card" id="tab-panel-media">
         <div class="panel-section-title">
-          <span>📂 ឯកសារ & Subtitle (Media)</span>
+          <span>📂 ឯកសារ &amp; Subtitle (Media)</span>
         </div>
 
         <div class="form-row">
@@ -421,7 +590,7 @@
       <!-- ── TAB 7: TOOLS & EXPORT HD ─────────────────────────── -->
       <div class="tab-panel-card" id="tab-panel-tools">
         <div class="panel-section-title">
-          <span>✂️ ការពារ Copyright & Export HD</span>
+          <span>✂️ ការពារ Copyright &amp; Export HD</span>
         </div>
 
         <div class="toggle-switch-wrap">
@@ -460,7 +629,7 @@
         </div>
 
         <button type="button" class="btn-export-hd" onclick="triggerRenderExport()">
-          🎬 Export Render HD MP4 (កាត់ត & បញ្ចូលសំឡេង)
+          🎬 Export Render HD MP4 (កាត់ត &amp; បញ្ចូលសំឡេង)
         </button>
       </div>
 
@@ -512,7 +681,7 @@
     <div class="modal-card" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title">
-          <span>🔑 ផ្ទាំង Admin គ្រប់គ្រង & បង្កើត License Key</span>
+          <span>🔑 ផ្ទាំង Admin គ្រប់គ្រង &amp; បង្កើត License Key</span>
         </div>
         <button type="button" class="modal-close-btn" onclick="closeAdminModal()">✕</button>
       </div>
@@ -583,6 +752,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=2.0.0"></script>
+  <script src="/static/js/studio_engine.js?v=2.1.0"></script>
 </body>
 </html>
