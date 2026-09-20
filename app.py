@@ -5,6 +5,8 @@
 - Mobile-First AI Video Translator, Khmer Voice Dubbing Studio & Video Editor
 - 24/7 Cloud Support for Render.com, HuggingFace, and Local Runners
 - REST APIs for Upload, Translation, Neural TTS, Audio Ducking, and HD Export
+- Admin License Management System (Seconds, Minutes, Hours, Days, Lifetime)
+- Ultra-Fast Chunking / Segment Engine for Long Chinese Dramas (1h, 1.5h, 2h)
 """
 
 import os
@@ -35,15 +37,16 @@ sys.path.insert(0, str(BASE_DIR))
 from core.translator import translate_single_query, translate_srt, parse_srt, format_srt
 from core.tts_engine import synthesize_khmer_voice, apply_audio_ducking
 from core.audio_separator import separate_vocals_and_bgm
-from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg
+from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg, get_video_duration
 from core.asr_engine import ChineseSpeechRecognizer
+from core.license_manager import license_mgr, DEFAULT_ADMIN_PASSWORD
 
 # Global ASR Engine instance
 asr_engine = ChineseSpeechRecognizer(model_size="tiny")
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['JSON_AS_ASCII'] = False
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB upload limit
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1 GB upload limit for long drama videos
 
 PORT = int(os.environ.get('PORT', 5060))
 START_TIME = time.time()
@@ -56,6 +59,18 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
 
+def require_active_license():
+    """Validates that a valid, unexpired license is active. Returns error Response or None."""
+    valid, msg, info = license_mgr.verify_license_validity()
+    if not valid:
+        return jsonify({
+            'status': 'error',
+            'error': f'តម្រូវឱ្យមាន License Key សកម្មដើម្បីបកប្រែ ឬ Export វីដេអូ! ({msg})',
+            'license_required': True,
+            'message': msg
+        }), 403
+    return None
+
 # ══════════════════════════════════════════════════════════════
 # 🟢 1. HEALTH & KEEP-ALIVE (For Render.com 24/7)
 # ══════════════════════════════════════════════════════════════
@@ -65,17 +80,94 @@ def add_cors_headers(response):
 def health():
     uptime = int(time.time() - START_TIME)
     h, m, s = uptime // 3600, (uptime % 3600) // 60, uptime % 60
+    valid, lic_msg, lic_info = license_mgr.verify_license_validity()
     return jsonify({
         'status': 'ok',
         'app_name': 'នាគហ្សង បកប្រែ (Neak Zong Translate AI)',
         'version': '1.0.9-MOBILE-STUDIO',
         'uptime': f'{h}h {m}m {s}s',
         'ffmpeg_available': bool(find_ffmpeg()),
-        'mode': 'Cloud-24-7'
+        'mode': 'Cloud-24-7',
+        'license_active': valid,
+        'license_remaining': lic_info.get('remaining_text', lic_msg)
     })
 
 # ══════════════════════════════════════════════════════════════
-# 🔵 2. PWA & WEB APP SHELL
+# 🔑 2. LICENSE KEY MANAGEMENT & ACTIVATION APIS
+# ══════════════════════════════════════════════════════════════
+
+@app.route('/api/license/status', methods=['GET'])
+def api_license_status():
+    """Returns current active license status on this device/server."""
+    valid, msg, info = license_mgr.verify_license_validity()
+    return jsonify({
+        'status': 'ok',
+        'valid': valid,
+        'message': msg,
+        'info': info
+    })
+
+@app.route('/api/license/activate', methods=['POST'])
+def api_license_activate():
+    """Activates a License Key entered by mobile/web user."""
+    data = request.get_json() or {}
+    key_str = data.get('key', '')
+    device_id = data.get('device_id', '')
+    ok, msg, rec = license_mgr.activate_key(key_str, device_id=device_id)
+    if ok:
+        return jsonify({
+            'status': 'ok',
+            'message': msg,
+            'license': rec
+        })
+    return jsonify({
+        'status': 'error',
+        'message': msg
+    }), 400
+
+@app.route('/api/admin/license/generate', methods=['POST'])
+def api_admin_license_generate():
+    """Admin Endpoint: Creates new License Key with specific duration."""
+    data = request.get_json() or {}
+    pwd = data.get('password', '')
+    if pwd != DEFAULT_ADMIN_PASSWORD:
+        return jsonify({'status': 'error', 'message': 'Admin Password មិនត្រឹមត្រូវឡើយ'}), 401
+        
+    dtype = data.get('type', 'days') # seconds, minutes, hours, days, weeks, months, years, lifetime
+    val = data.get('value', 30)
+    note = data.get('note', '')
+    record = license_mgr.create_license(duration_type=dtype, duration_val=val, note=note)
+    return jsonify({
+        'status': 'ok',
+        'license': record,
+        'message': f"បង្កើត License Key {record['key']} ជោគជ័យ!"
+    })
+
+@app.route('/api/admin/license/list', methods=['GET'])
+def api_admin_license_list():
+    """Admin Endpoint: Lists all generated license keys."""
+    pwd = request.args.get('password', '')
+    if pwd != DEFAULT_ADMIN_PASSWORD:
+        return jsonify({'status': 'error', 'message': 'Admin Password មិនត្រឹមត្រូវឡើយ'}), 401
+    all_lic = license_mgr.load_all()
+    return jsonify({
+        'status': 'ok',
+        'licenses': all_lic
+    })
+
+@app.route('/api/admin/license/revoke', methods=['POST'])
+def api_admin_license_revoke():
+    """Admin Endpoint: Revokes or deletes a license key."""
+    data = request.get_json() or {}
+    pwd = data.get('password', '')
+    if pwd != DEFAULT_ADMIN_PASSWORD:
+        return jsonify({'status': 'error', 'message': 'Admin Password មិនត្រឹមត្រូវឡើយ'}), 401
+    key_str = data.get('key', '')
+    ok = license_mgr.revoke_license(key_str)
+    return jsonify({'status': 'ok' if ok else 'error'})
+
+# ══════════════════════════════════════════════════════════════
+# 🔵 3. PWA & WEB APP SHELL
 # ══════════════════════════════════════════════════════════════
 
 @app.route('/')
@@ -98,7 +190,7 @@ def download_export(filename):
     return send_from_directory(EXPORTS_DIR, filename, as_attachment=True)
 
 # ══════════════════════════════════════════════════════════════
-# 🟡 3. REST APIS (Upload, Media, Translation, Voice, Render)
+# 🟡 4. REST APIS (Upload, Media, Translation, Voice, Render)
 # ══════════════════════════════════════════════════════════════
 
 @app.route('/api/upload', methods=['POST'])
@@ -162,6 +254,10 @@ def api_extract_audio():
 @app.route('/api/translate', methods=['POST'])
 def api_translate():
     """Translates Chinese text, SRT subtitle, or auto-transcribes video speech into natural Khmer."""
+    lic_err = require_active_license()
+    if lic_err:
+        return lic_err
+
     data = request.get_json() or {}
     text = data.get('text', '')
     srt_content = data.get('srt_content', '')
@@ -209,6 +305,10 @@ def api_translate():
 @app.route('/api/tts', methods=['POST'])
 def api_tts():
     """Generates natural Khmer speech audio file."""
+    lic_err = require_active_license()
+    if lic_err:
+        return lic_err
+
     data = request.get_json() or {}
     text = data.get('text', '')
     voice = data.get('voice', 'female') # 'male' (Piseth) or 'female' (Sreymom)
@@ -237,10 +337,14 @@ def api_tts():
 @app.route('/api/duck-audio', methods=['POST'])
 def api_duck_audio():
     """Applies sidechain audio ducking between original audio and voiceover."""
+    lic_err = require_active_license()
+    if lic_err:
+        return lic_err
+
     data = request.get_json() or {}
     bg_audio_name = data.get('bg_audio')
     voice_audio_name = data.get('voice_audio')
-    duck_level = float(data.get('duck_level', 0.15)) # 10% to 15%
+    duck_level = float(data.get('duck_level', 0.15))
     
     bg_path = EXPORTS_DIR / bg_audio_name if (EXPORTS_DIR / bg_audio_name).exists() else UPLOADS_DIR / bg_audio_name
     voice_path = EXPORTS_DIR / voice_audio_name if (EXPORTS_DIR / voice_audio_name).exists() else UPLOADS_DIR / voice_audio_name
@@ -264,16 +368,12 @@ def api_duck_audio():
 @app.route('/api/render', methods=['POST'])
 def api_render():
     """
-    Renders video with all professional edits applied:
-    - Flip Horizontal
-    - Crop
-    - Brightness / Contrast
-    - Blur Mask Box
-    - Logo Overlay
-    - Text Overlay
-    - Vertical Marquee Scrolling Text
-    - Final Dubbed Audio track
+    Renders video with all professional edits applied (supports long chunking).
     """
+    lic_err = require_active_license()
+    if lic_err:
+        return lic_err
+
     data = request.get_json() or {}
     video_name = data.get('video_name')
     if not video_name:
@@ -291,15 +391,24 @@ def api_render():
     out_path = EXPORTS_DIR / out_filename
     
     job_id = str(uuid.uuid4())[:8]
-    PROCESSING_JOBS[job_id] = {'status': 'processing', 'progress': 10, 'filename': out_filename}
+    PROCESSING_JOBS[job_id] = {'status': 'processing', 'progress': 10, 'step': 'Starting Render...', 'filename': out_filename}
     
     def _run_render_worker():
         try:
-            PROCESSING_JOBS[job_id]['progress'] = 30
-            success = render_final_video(str(video_path), str(out_path), audio_path=audio_path, options=options)
+            def _prog_cb(pct, step_msg):
+                PROCESSING_JOBS[job_id]['progress'] = pct
+                PROCESSING_JOBS[job_id]['step'] = step_msg
+                
+            success = render_final_video(
+                str(video_path), str(out_path),
+                audio_path=audio_path,
+                options=options,
+                progress_callback=_prog_cb
+            )
             if success:
                 PROCESSING_JOBS[job_id]['status'] = 'completed'
                 PROCESSING_JOBS[job_id]['progress'] = 100
+                PROCESSING_JOBS[job_id]['step'] = 'Done!'
                 PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
             else:
                 PROCESSING_JOBS[job_id]['status'] = 'failed'
@@ -326,10 +435,14 @@ def api_job_status(job_id):
 @app.route('/api/auto-process', methods=['POST'])
 def api_auto_process():
     """
-    1-Click End-to-End Pipeline:
+    1-Click End-to-End Pipeline with Ultra-Fast Chunking for Long Videos:
     Upload Video -> Extract Audio -> Translate Chinese to Khmer ->
     Generate Khmer TTS -> Duck Audio -> Apply Overlays -> Export MP4 HD
     """
+    lic_err = require_active_license()
+    if lic_err:
+        return lic_err
+
     data = request.get_json() or {}
     video_name = data.get('video_name')
     srt_content = data.get('srt_content')
@@ -388,15 +501,29 @@ def api_auto_process():
             ducked_audio = EXPORTS_DIR / f"ducked_{job_id}.mp3"
             apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15)
             
-            # 5. Render Video
+            # 5. Render Video with Chunking Progress Callback
             PROCESSING_JOBS[job_id]['progress'] = 85
-            PROCESSING_JOBS[job_id]['step'] = 'Rendering Final HD Video...'
-            render_final_video(str(video_path), str(out_path), audio_path=str(ducked_audio), options=options)
+            PROCESSING_JOBS[job_id]['step'] = 'Rendering Final HD Video (Ultra-Fast Engine)...'
             
-            PROCESSING_JOBS[job_id]['progress'] = 100
-            PROCESSING_JOBS[job_id]['status'] = 'completed'
-            PROCESSING_JOBS[job_id]['step'] = 'Done!'
-            PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
+            def _prog_cb(pct, step_msg):
+                PROCESSING_JOBS[job_id]['progress'] = pct
+                PROCESSING_JOBS[job_id]['step'] = step_msg
+                
+            success = render_final_video(
+                str(video_path), str(out_path),
+                audio_path=str(ducked_audio),
+                options=options,
+                progress_callback=_prog_cb
+            )
+            
+            if success:
+                PROCESSING_JOBS[job_id]['progress'] = 100
+                PROCESSING_JOBS[job_id]['status'] = 'completed'
+                PROCESSING_JOBS[job_id]['step'] = 'Done!'
+                PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
+            else:
+                PROCESSING_JOBS[job_id]['status'] = 'failed'
+                PROCESSING_JOBS[job_id]['error'] = 'Video rendering failed'
         except Exception as e:
             PROCESSING_JOBS[job_id]['status'] = 'failed'
             PROCESSING_JOBS[job_id]['error'] = str(e)
