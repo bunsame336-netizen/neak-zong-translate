@@ -36,6 +36,10 @@ from core.translator import translate_single_query, translate_srt, parse_srt, fo
 from core.tts_engine import synthesize_khmer_voice, apply_audio_ducking
 from core.audio_separator import separate_vocals_and_bgm
 from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg
+from core.asr_engine import ChineseSpeechRecognizer
+
+# Global ASR Engine instance
+asr_engine = ChineseSpeechRecognizer(model_size="tiny")
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['JSON_AS_ASCII'] = False
@@ -157,11 +161,13 @@ def api_extract_audio():
 
 @app.route('/api/translate', methods=['POST'])
 def api_translate():
-    """Translates Chinese text or entire SRT subtitle into natural Khmer."""
+    """Translates Chinese text, SRT subtitle, or auto-transcribes video speech into natural Khmer."""
     data = request.get_json() or {}
     text = data.get('text', '')
     srt_content = data.get('srt_content', '')
+    video_filename = data.get('video_filename', '')
     
+    # 1. Direct SRT provided
     if srt_content:
         translated_srt, cues = translate_srt(srt_content)
         return jsonify({
@@ -171,6 +177,25 @@ def api_translate():
             'sample_cues': cues[:5]
         })
         
+    # 2. Auto-Speech-to-Text from Video if video_filename is given
+    if video_filename:
+        video_path = UPLOADS_DIR / video_filename
+        if video_path.exists():
+            print(f"[Auto-ASR] Transcribing speech from {video_filename}...", flush=True)
+            cues = asr_engine.transcribe_to_cues(str(video_path), language="zh")
+            if cues:
+                chinese_srt = ChineseSpeechRecognizer.cues_to_srt(cues)
+                translated_srt, t_cues = translate_srt(chinese_srt)
+                combined_km = ' '.join([c.get('text_km', '') for c in t_cues])
+                return jsonify({
+                    'status': 'ok',
+                    'auto_transcribed': True,
+                    'chinese_srt': chinese_srt,
+                    'translated_srt': translated_srt,
+                    'cues_count': len(t_cues),
+                    'translated_text': combined_km
+                })
+        
     if text:
         translated = translate_single_query(text, source_lang='zh-CN', target_lang='km')
         return jsonify({
@@ -179,7 +204,7 @@ def api_translate():
             'translated': translated
         })
         
-    return jsonify({'error': 'text or srt_content is required'}), 400
+    return jsonify({'error': 'text, srt_content, or video_filename is required'}), 400
 
 @app.route('/api/tts', methods=['POST'])
 def api_tts():
@@ -333,13 +358,22 @@ def api_auto_process():
             PROCESSING_JOBS[job_id]['progress'] = 25
             PROCESSING_JOBS[job_id]['step'] = 'Translating Subtitles to Khmer...'
             
-            # 2. Translate
+            # 2. Chinese Speech Recognition & Khmer Translation
             khmer_text = ""
             if srt_content:
                 t_srt, cues = translate_srt(srt_content)
                 khmer_text = ' '.join([c.get('text_km', '') for c in cues])
             else:
-                khmer_text = "សូមស្វាគមន៍មកកាន់ការទស្សនារឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
+                # 100% Auto: AI listens to Chinese speech & translates to Khmer
+                PROCESSING_JOBS[job_id]['progress'] = 30
+                PROCESSING_JOBS[job_id]['step'] = 'AI Speech-to-Text (Faster-Whisper Listening)...'
+                cues = asr_engine.transcribe_to_cues(str(video_path), language="zh")
+                if cues:
+                    chinese_srt = ChineseSpeechRecognizer.cues_to_srt(cues)
+                    t_srt, t_cues = translate_srt(chinese_srt)
+                    khmer_text = ' '.join([c.get('text_km', '') for c in t_cues])
+                else:
+                    khmer_text = "សូមស្វាគមន៍មកកាន់ការទស្សនារឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
                 
             PROCESSING_JOBS[job_id]['progress'] = 50
             PROCESSING_JOBS[job_id]['step'] = 'Generating Khmer Neural Voice...'

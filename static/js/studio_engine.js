@@ -98,11 +98,39 @@ async function handleVideoUpload(input) {
   const file = input.files[0];
   state.videoFile = file;
 
-  // Local object URL for instant preview
+  // Hide placeholder, show video element
+  const placeholder = document.getElementById('video-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+
+  // Local object URL for instant preview on phone
   const localUrl = URL.createObjectURL(file);
+  previewVideo.style.display = 'block';
   previewVideo.src = localUrl;
+  previewVideo.muted = true; // allow instant preview/autoplay on mobile
+  previewVideo.playsInline = true;
+  previewVideo.setAttribute('playsinline', '');
+  previewVideo.setAttribute('webkit-playsinline', '');
   previewVideo.load();
-  showToast('✓ វីដេអូបានផ្ទុកឡើងក្នុងកម្មវិធី');
+
+  previewVideo.onloadedmetadata = () => {
+    // Auto adjust portrait vs landscape aspect ratio
+    if (previewVideo.videoHeight > previewVideo.videoWidth) {
+      videoViewport.classList.add('portrait-mode');
+    } else {
+      videoViewport.classList.remove('portrait-mode');
+    }
+    // Seek slightly to force mobile browsers to render first frame immediately
+    try {
+      previewVideo.currentTime = 0.05;
+    } catch (err) {}
+    updateVideoTime();
+  };
+
+  previewVideo.oncanplay = () => {
+    previewVideo.play().catch(() => {});
+  };
+
+  showToast('✓ វីដេអូបានបើកក្នុង Player Preview ភ្លាមៗ!');
 
   // Upload to Cloud Server in background
   const formData = new FormData();
@@ -113,7 +141,7 @@ async function handleVideoUpload(input) {
     const data = await res.json();
     if (data.status === 'ok') {
       state.videoFilename = data.filename;
-      showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server');
+      showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)');
     }
   } catch (err) {
     console.warn('Local preview active, cloud sync note:', err);
@@ -135,12 +163,15 @@ async function handleSrtUpload(input) {
 // ── 3. Chinese-to-Khmer Translation ───────────────────────
 async function triggerAiTranslation() {
   const customText = document.getElementById('translate-input-text').value.trim();
-  showToast('⚡ កំពុងបកប្រែ Chinese ➔ Khmer AI...');
+  showToast('⚡ AI កំពុងស្ដាប់សំឡេងចិន និងបកប្រែជាភាសាខ្មែរ...');
 
   try {
     const payload = {};
     if (state.srtContent) {
       payload.srt_content = state.srtContent;
+    } else if (state.videoFilename) {
+      // 100% Auto-ASR from video!
+      payload.video_filename = state.videoFilename;
     } else if (customText) {
       payload.text = customText;
     } else {
@@ -158,7 +189,10 @@ async function triggerAiTranslation() {
       if (data.translated_srt) {
         state.translatedSrt = data.translated_srt;
         document.getElementById('subtitles-preview-area').value = data.translated_srt;
-        showToast('✓ បកប្រែរឿងភាគចិនទៅជាខ្មែរជោគជ័យ!');
+        if (data.translated_text) {
+          document.getElementById('translate-result-text').innerText = data.translated_text;
+        }
+        showToast(`✓ AI បកប្រែរឿងភាគចិនបាន ${data.cues_count || ''} ឃ្លាជោគជ័យ!`);
       } else {
         document.getElementById('translate-result-text').innerText = data.translated;
         showToast('✓ បកប្រែជោគជ័យ!');
@@ -221,6 +255,23 @@ function toggleTextOverlay(enabled) {
   showToast(enabled ? '✓ បានបើកអក្សរលើវីដេអូ' : 'បានបិទអក្សរ');
 }
 
+function updateOverlayText(val) {
+  state.textOverlay.text = val;
+  const target = document.getElementById('rendered-text-val');
+  if (target) target.innerText = val;
+}
+
+function editOverlayTextDirect() {
+  const current = state.textOverlay.text || 'នាគហ្សង បកប្រែ';
+  const newText = prompt('វាយអត្ថបទថ្មីសម្រាប់ដាក់លើវីដេអូ (Text Overlay):', current);
+  if (newText !== null && newText.trim() !== '') {
+    updateOverlayText(newText.trim());
+    const inputField = document.getElementById('text-overlay-input');
+    if (inputField) inputField.value = newText.trim();
+    showToast('✓ បានប្តូរអត្ថបទលើវីដេអូរួចរាល់');
+  }
+}
+
 function toggleMarqueeOverlay(enabled) {
   state.marquee.enabled = enabled;
   marqueeElement.classList.toggle('active-visible', enabled);
@@ -236,8 +287,10 @@ function updateMarqueeText(val) {
 
 function setMarqueeDirection(dir) {
   state.marquee.direction = dir;
-  document.getElementById('marquee-dir-up').classList.toggle('active', dir === 'up');
-  document.getElementById('marquee-dir-down').classList.toggle('active', dir === 'down');
+  const upBtn = document.getElementById('marquee-dir-up');
+  const downBtn = document.getElementById('marquee-dir-down');
+  if (upBtn) upBtn.classList.toggle('active', dir === 'up');
+  if (downBtn) downBtn.classList.toggle('active', dir === 'down');
   updateMarqueeAnimation();
 }
 
@@ -246,8 +299,25 @@ function setMarqueeSpeed(preset) {
   if (preset === 'slow') sec = 15;
   if (preset === 'normal') sec = 8;
   if (preset === 'fast') sec = 4;
-  state.marquee.speedSec = sec;
-  document.getElementById('marquee-speed-val').innerText = `${sec}s`;
+  setMarqueeSpeedSeconds(sec);
+}
+
+function setMarqueeSpeedSeconds(sec) {
+  const val = parseInt(sec) || 8;
+  state.marquee.speedSec = val;
+  const valEl = document.getElementById('marquee-speed-val');
+  if (valEl) valEl.innerText = `${val}s`;
+  const slider = document.getElementById('marquee-speed-slider');
+  if (slider && parseInt(slider.value) !== val) slider.value = val;
+
+  ['slow', 'normal', 'fast'].forEach(p => {
+    const btn = document.getElementById(`btn-speed-${p}`);
+    if (btn) btn.classList.remove('active');
+  });
+  if (val >= 14) document.getElementById('btn-speed-slow')?.classList.add('active');
+  else if (val <= 5) document.getElementById('btn-speed-fast')?.classList.add('active');
+  else document.getElementById('btn-speed-normal')?.classList.add('active');
+
   updateMarqueeAnimation();
 }
 
@@ -265,19 +335,22 @@ function toggleFlipHorizontal(flipped) {
 
 function updateBrightness(val) {
   state.brightness = parseFloat(val);
-  document.getElementById('brightness-val').innerText = val;
+  const valEl = document.getElementById('brightness-val');
+  if (valEl) valEl.innerText = val;
   updateVideoCssFilters();
 }
 
 function updateContrast(val) {
   state.contrast = parseFloat(val);
-  document.getElementById('contrast-val').innerText = `${val}x`;
+  const valEl = document.getElementById('contrast-val');
+  if (valEl) valEl.innerText = `${val}x`;
   updateVideoCssFilters();
 }
 
 function updateCrop(val) {
   state.cropPercent = parseInt(val);
-  document.getElementById('crop-val').innerText = `${val}%`;
+  const valEl = document.getElementById('crop-val');
+  if (valEl) valEl.innerText = `${val}%`;
   updateVideoCssFilters();
 }
 
@@ -291,89 +364,100 @@ function updateVideoCssFilters() {
   previewVideo.style.filter = `brightness(${b}) contrast(${c})`;
 }
 
-// ── 8. TOUCH & MOUSE DRAGGING SYSTEM ─────────────────────
+// ── 8. TOUCH & MOUSE DRAGGING SYSTEM (Mobile Optimized) ───
 function makeDraggable(element) {
   let isDragging = false;
-  let startX, startY, initialLeft, initialTop;
+  let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
 
-  function onPointerDown(e) {
+  element.addEventListener('pointerdown', (e) => {
     if (e.target.classList.contains('resizer-handle')) return;
     isDragging = true;
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    startX = clientX;
-    startY = clientY;
+    startX = e.clientX;
+    startY = e.clientY;
     initialLeft = element.offsetLeft;
     initialTop = element.offsetTop;
 
+    try {
+      element.setPointerCapture(e.pointerId);
+    } catch (err) {}
+
     document.querySelectorAll('.interactive-overlay').forEach(el => el.classList.remove('selected-focus'));
     element.classList.add('selected-focus');
+    e.preventDefault();
+  });
 
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('touchmove', onPointerMove, { passive: false });
-    window.addEventListener('touchend', onPointerUp);
-  }
-
-  function onPointerMove(e) {
+  element.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
-    if (e.cancelable) e.preventDefault();
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    const dx = clientX - startX;
-    const dy = clientY - startY;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
 
     const parent = element.parentElement;
-    const maxLeft = parent.clientWidth - element.offsetWidth;
-    const maxTop = parent.clientHeight - element.offsetHeight;
+    const maxLeft = Math.max(0, parent.clientWidth - element.offsetWidth);
+    const maxTop = Math.max(0, parent.clientHeight - element.offsetHeight);
 
     const newLeft = Math.max(0, Math.min(maxLeft, initialLeft + dx));
     const newTop = Math.max(0, Math.min(maxTop, initialTop + dy));
 
     element.style.left = `${newLeft}px`;
     element.style.top = `${newTop}px`;
-  }
+  });
 
-  function onPointerUp() {
+  const onPointerEnd = (e) => {
+    if (!isDragging) return;
     isDragging = false;
-    window.removeEventListener('pointermove', onPointerMove);
-    window.removeEventListener('pointerup', onPointerUp);
-    window.removeEventListener('touchmove', onPointerMove);
-    window.removeEventListener('touchend', onPointerUp);
-  }
+    try {
+      if (element.hasPointerCapture(e.pointerId)) {
+        element.releasePointerCapture(e.pointerId);
+      }
+    } catch (err) {}
+  };
 
-  element.addEventListener('pointerdown', onPointerDown);
-  element.addEventListener('touchstart', onPointerDown, { passive: false });
+  element.addEventListener('pointerup', onPointerEnd);
+  element.addEventListener('pointercancel', onPointerEnd);
 }
 
-// Resizable Handle for Blur Box
+// Resizable Handle for Blur Box (Touch & Pointer Safe)
 function makeResizable(element) {
   const handle = element.querySelector('.resizer-handle.se');
   if (!handle) return;
 
+  let isResizing = false;
+  let startX = 0, startY = 0, startW = 0, startH = 0;
+
   handle.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startW = element.offsetWidth;
-    const startH = element.offsetHeight;
+    isResizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startW = element.offsetWidth;
+    startH = element.offsetHeight;
 
-    function onResizeMove(em) {
-      const dw = em.clientX - startX;
-      const dh = em.clientY - startY;
-      element.style.width = `${Math.max(40, startW + dw)}px`;
-      element.style.height = `${Math.max(20, startH + dh)}px`;
-    }
-
-    function onResizeUp() {
-      window.removeEventListener('pointermove', onResizeMove);
-      window.removeEventListener('pointerup', onResizeUp);
-    }
-
-    window.addEventListener('pointermove', onResizeMove);
-    window.addEventListener('pointerup', onResizeUp);
+    try {
+      handle.setPointerCapture(e.pointerId);
+    } catch (err) {}
   });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!isResizing) return;
+    const dw = e.clientX - startX;
+    const dh = e.clientY - startY;
+    element.style.width = `${Math.max(40, startW + dw)}px`;
+    element.style.height = `${Math.max(20, startH + dh)}px`;
+  });
+
+  const onResizeEnd = (e) => {
+    if (!isResizing) return;
+    isResizing = false;
+    try {
+      if (handle.hasPointerCapture(e.pointerId)) {
+        handle.releasePointerCapture(e.pointerId);
+      }
+    } catch (err) {}
+  };
+
+  handle.addEventListener('pointerup', onResizeEnd);
+  handle.addEventListener('pointercancel', onResizeEnd);
 }
 
 // ── 9. EXPORT & AUTO PROCESS PIPELINES ────────────────────
@@ -449,13 +533,35 @@ async function triggerAutoProcessPipeline() {
     return;
   }
 
-  showToast('🚀 កំពុងចាប់ផ្តើម 1-Click Auto Process...');
+  showToast('🚀 កំពុងចាប់ផ្តើម 1-Click Auto Pipeline...');
   const progressWrap = document.getElementById('render-progress-wrap');
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
   progressWrap.style.display = 'flex';
   progressBar.style.width = '10%';
-  progressStatus.innerText = 'កំពុងដំណើរការ Pipeline តាំងពីបកប្រែដល់ Export...';
+  progressStatus.innerText = 'កំពុងភ្ជាប់វីដេអូទៅកាន់ Cloud Server...';
+
+  // Ensure video is uploaded to server
+  if (!state.videoFilename && state.videoFile) {
+    try {
+      const formData = new FormData();
+      formData.append('video', state.videoFile);
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        state.videoFilename = data.filename;
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (e) {
+      showToast('⚠️ បរាជ័យក្នុងការ Upload វីដេអូទៅ Server');
+      progressWrap.style.display = 'none';
+      return;
+    }
+  }
+
+  progressBar.style.width = '25%';
+  progressStatus.innerText = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR) & បកប្រែជាភាសាខ្មែរ...';
 
   try {
     const res = await fetch('/api/auto-process', {
@@ -463,23 +569,49 @@ async function triggerAutoProcessPipeline() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         video_name: state.videoFilename,
-        srt_content: state.srtContent,
+        srt_content: state.srtContent || '',
         voice: state.voice,
         speed: state.voiceSpeed,
         options: {
           flip_horizontal: state.flipHorizontal,
           crop_percent: state.cropPercent,
-          blur_mask: state.blurMask,
-          marquee: state.marquee
+          brightness: state.brightness,
+          contrast: state.contrast,
+          blur_mask: {
+            enabled: state.blurMask.enabled,
+            x: blurBox.offsetLeft,
+            y: blurBox.offsetTop,
+            w: blurBox.offsetWidth,
+            h: blurBox.offsetHeight
+          },
+          marquee: {
+            enabled: state.marquee.enabled,
+            text: state.marquee.text,
+            direction: state.marquee.direction,
+            speed: Math.round(300 / state.marquee.speedSec),
+            color: state.marquee.color
+          },
+          text_overlay: {
+            enabled: state.textOverlay.enabled,
+            text: state.textOverlay.text,
+            x: textElement.offsetLeft,
+            y: textElement.offsetTop,
+            size: state.textOverlay.size,
+            color: state.textOverlay.color
+          }
         }
       })
     });
     const data = await res.json();
     if (data.status === 'started') {
       pollJobStatus(data.job_id);
+    } else {
+      showToast('⚠️ បរាជ័យក្នុងការចាប់ផ្ដើម Auto Pipeline');
+      progressWrap.style.display = 'none';
     }
   } catch (err) {
-    showToast('⚠️ បរាជ័យក្នុងការដំណើរការ Auto Process');
+    showToast('⚠️ មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធបានទេ');
+    progressWrap.style.display = 'none';
   }
 }
 

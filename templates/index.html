@@ -65,7 +65,14 @@
     <!-- VIDEO STAGE & CANVAS PREVIEW -->
     <div class="video-stage-card">
       <div class="video-stage-viewport" id="video-viewport">
-        <video id="preview-video" playsinline preload="metadata"></video>
+        <!-- Tap-to-Upload Empty State Placeholder -->
+        <div class="video-upload-placeholder" id="video-placeholder" onclick="document.getElementById('video-file-input').click()">
+          <div class="placeholder-icon">🎬</div>
+          <div class="placeholder-title">ចុចទីនេះដើម្បីរើសវីដេអូចិន (MP4)</div>
+          <div class="placeholder-sub">ប៉ះដើម្បីជ្រើសវីដេអូពីទូរស័ព្ទដៃ • Instant Live Preview</div>
+        </div>
+
+        <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
 
         <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
         <div class="video-overlay-layer" id="video-overlay-layer">
@@ -88,7 +95,7 @@
           </div>
 
           <!-- 3. Static Text Overlay (STRICT: Hidden by default until toggled ON) -->
-          <div class="interactive-overlay" id="text-overlay-element">
+          <div class="interactive-overlay" id="text-overlay-element" ondblclick="editOverlayTextDirect()" title="ចុចពីរដងដើម្បីកែអត្ថបទ">
             <div class="rendered-text-content" id="rendered-text-val">នាគហ្សង បកប្រែ</div>
           </div>
 
@@ -311,14 +318,14 @@
       </div>
 
       <!-- Text Overlay Settings Sub-panel -->
-      <div class="form-row" style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
-        <label class="form-label">អត្ថបទបង្ហាញ (Custom Text)</label>
-        <input type="text" id="text-overlay-input" class="cyber-input" value="នាគហ្សង បកប្រែ" oninput="state.textOverlay.text = this.value; document.getElementById('rendered-text-val').innerText = this.value;">
+      <div class="form-row" style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border-cyber);">
+        <label class="form-label">អត្ថបទបង្ហាញ (វាយប្ដូរឈ្មោះ ឬអក្សរតាមចិត្ត)</label>
+        <input type="text" id="text-overlay-input" class="cyber-input" value="នាគហ្សង បកប្រែ" oninput="updateOverlayText(this.value)">
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
           <div>
-            <label class="form-label">ពុម្ពអក្សរ (Font)</label>
-            <select class="cyber-input" onchange="document.getElementById('rendered-text-val').style.fontFamily = this.value;">
+            <label class="form-label">ពុម្ពអក្សរ (Khmer Font)</label>
+            <select class="cyber-input" onchange="document.getElementById('rendered-text-val').style.fontFamily = this.value; state.textOverlay.font = this.value;">
               <option value="'Moul', serif">Moul (មូល)</option>
               <option value="'Kantumruy Pro', sans-serif">Kantumruy Pro</option>
               <option value="'Battambang', sans-serif">Battambang</option>
@@ -328,6 +335,14 @@
             <label class="form-label">ពណ៌អក្សរ</label>
             <input type="color" value="#ffffff" class="cyber-input" style="height: 40px; padding: 2px;" onchange="document.getElementById('rendered-text-val').style.color = this.value; state.textOverlay.color = this.value;">
           </div>
+        </div>
+
+        <div style="margin-top: 8px;">
+          <div class="form-label">
+            <span>ទំហំអក្សរ (Font Size)</span>
+            <span class="form-label-val" id="text-size-val">26px</span>
+          </div>
+          <input type="range" min="14" max="60" step="2" value="26" class="cyber-slider" oninput="document.getElementById('rendered-text-val').style.fontSize = this.value + 'px'; document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value);">
         </div>
       </div>
     </div>
@@ -361,10 +376,10 @@
         <label class="form-label">ទិសដៅនៃការរត់ (Scroll Direction)</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center;" onclick="setMarqueeDirection('up')">
-            ⬆️ រត់ពីក្រោមឡើងលើ (Up)
+            ⬆️ រត់ពីក្រោមឡើងលើ (Scroll Up)
           </button>
           <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeDirection('down')">
-            ⬇️ រត់ពីលើចុះក្រោម (Down)
+            ⬇️ រត់ពីលើចុះក្រោម (Scroll Down)
           </button>
         </div>
       </div>
@@ -376,10 +391,11 @@
           <span class="form-label-val" id="marquee-speed-val">8s</span>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
-          <button type="button" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeSpeed('slow')">🐢 យឺត</button>
-          <button type="button" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeSpeed('normal')">🚶 មធ្យម</button>
-          <button type="button" class="btn-ctrl" style="justify-content: center;" onclick="setMarqueeSpeed('fast')">⚡ លឿន</button>
+          <button type="button" class="btn-ctrl" id="btn-speed-slow" style="justify-content: center;" onclick="setMarqueeSpeed('slow')">🐢 យឺត (15s)</button>
+          <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center;" onclick="setMarqueeSpeed('normal')">🚶 មធ្យម (8s)</button>
+          <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center;" onclick="setMarqueeSpeed('fast')">⚡ លឿន (4s)</button>
         </div>
+        <input type="range" min="3" max="25" step="1" value="8" class="cyber-slider" id="marquee-speed-slider" oninput="setMarqueeSpeedSeconds(this.value)">
       </div>
     </div>
 

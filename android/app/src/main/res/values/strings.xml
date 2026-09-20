@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">នាគហ្សង បកប្រែ</string>
+    <string name="title_activity_main">នាគហ្សង បកប្រែ</string>
+    <string name="package_name">com.neakzong.translate</string>
+    <string name="custom_url_scheme">com.neakzong.translate</string>
+</resources>

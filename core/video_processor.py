@@ -19,11 +19,20 @@ import shutil
 from typing import Dict, Any, Optional
 
 def find_ffmpeg() -> str:
-    """Finds FFmpeg executable in tools, system PATH, or local environment."""
-    # Check PATH first
+    """Finds FFmpeg executable in system PATH, imageio_ffmpeg, or local tools."""
+    # 1. Check PATH first
     which_ff = shutil.which("ffmpeg")
     if which_ff:
         return which_ff
+
+    # 2. Check bundled imageio_ffmpeg
+    try:
+        import imageio_ffmpeg
+        ff_img = imageio_ffmpeg.get_ffmpeg_exe()
+        if ff_img and os.path.exists(ff_img):
+            return ff_img
+    except Exception:
+        pass
         
     candidates = [
         os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ffmpeg.exe'),
@@ -147,37 +156,50 @@ def render_final_video(
         )
         video_filters.append(draw_static)
 
-    # Compile FFmpeg Command
+    # Compile FFmpeg Command with clean multi-input stream mapping
     cmd = [ff, '-y', '-i', input_video_path]
+    next_input_idx = 1
     
     # Check Logo overlay image
     logo_opts = opts.get('logo_overlay')
     has_logo = logo_opts and logo_opts.get('enabled') and logo_opts.get('path') and os.path.exists(logo_opts['path'])
-    
+    logo_input_idx = None
     if has_logo:
         cmd.extend(['-i', logo_opts['path']])
+        logo_input_idx = next_input_idx
+        next_input_idx += 1
+        
+    has_custom_audio = audio_path and os.path.exists(audio_path)
+    audio_input_idx = None
+    if has_custom_audio:
+        cmd.extend(['-i', audio_path])
+        audio_input_idx = next_input_idx
+        next_input_idx += 1
+
+    # Filter graph
+    if has_logo:
         lx = logo_opts.get('x', '20')
         ly = logo_opts.get('y', '20')
         l_scale = logo_opts.get('scale', 0.2)
         l_opacity = logo_opts.get('opacity', 0.85)
-        
-        # Build filter complex for logo overlay
         vf_base = ','.join(video_filters) if video_filters else 'null'
         filter_complex = (
             f"[0:v]{vf_base}[vid];"
-            f"[1:v]scale=iw*{l_scale}:-1,format=rgba,colorchannelmixer=aa={l_opacity}[logo];"
+            f"[{logo_input_idx}:v]scale=iw*{l_scale}:-1,format=rgba,colorchannelmixer=aa={l_opacity}[logo];"
             f"[vid][logo]overlay={lx}:{ly}[vout]"
         )
         cmd.extend(['-filter_complex', filter_complex, '-map', '[vout]'])
+    elif video_filters:
+        filter_complex = f"[0:v]{','.join(video_filters)}[vout]"
+        cmd.extend(['-filter_complex', filter_complex, '-map', '[vout]'])
     else:
-        if video_filters:
-            cmd.extend(['-vf', ','.join(video_filters)])
-            
-    # Audio track replacement / muxing
-    if audio_path and os.path.exists(audio_path):
-        cmd.extend(['-i', audio_path, '-map', '0:v', '-map', f"{2 if has_logo else 1}:a", '-c:a', 'aac', '-b:a', '192k'])
+        cmd.extend(['-map', '0:v'])
+        
+    # Audio mapping
+    if has_custom_audio:
+        cmd.extend(['-map', f"{audio_input_idx}:a", '-c:a', 'aac', '-b:a', '192k'])
     else:
-        cmd.extend(['-c:a', 'copy'])
+        cmd.extend(['-map', '0:a?', '-c:a', 'copy'])
         
     # Standard Video Codec for maximum mobile & browser compatibility
     cmd.extend([

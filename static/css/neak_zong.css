@@ -204,6 +204,50 @@ header.app-header {
   margin: 0 auto;
 }
 
+.video-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 30px 20px;
+  text-align: center;
+  z-index: 5;
+  transition: all 0.25s ease;
+  width: 100%;
+  height: 100%;
+}
+
+.video-upload-placeholder:hover {
+  transform: scale(1.02);
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 0 15px var(--neon-purple-bright));
+  animation: pulseIcon 2s infinite alternate;
+}
+
+@keyframes pulseIcon {
+  0% { transform: scale(0.95); opacity: 0.85; }
+  100% { transform: scale(1.08); opacity: 1; }
+}
+
+.placeholder-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, var(--neon-purple-bright) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.placeholder-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 #preview-video {
   width: 100%;
   height: 100%;
@@ -216,7 +260,7 @@ header.app-header {
 .video-overlay-layer {
   position: absolute;
   inset: 0;
-  pointer-events: auto;
+  pointer-events: none; /* CRITICAL: none so clicking the video works! */
   z-index: 10;
 }
 
@@ -234,6 +278,7 @@ header.app-header {
 
 .interactive-overlay.active-visible {
   display: flex; /* Shown ONLY when toggle is ON */
+  pointer-events: auto; /* ONLY visible active overlay receives touch */
 }
 
 /* 1. Blur Mask Box */
@@ -341,13 +386,13 @@ header.app-header {
 
 /* Marquee Keyframe Animations */
 @keyframes scrollUp {
-  0% { transform: translateY(100vh); }
-  100% { transform: translateY(-120%); }
+  0% { top: 100%; transform: translateY(0); }
+  100% { top: 0%; transform: translateY(-100%); }
 }
 
 @keyframes scrollDown {
-  0% { transform: translateY(-120%); }
-  100% { transform: translateY(100vh); }
+  0% { top: 0%; transform: translateY(-100%); }
+  100% { top: 100%; transform: translateY(0); }
 }
 
 /* Resizing Handles for Blur Box */
