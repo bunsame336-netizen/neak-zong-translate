@@ -53,10 +53,80 @@ body {
   height: 100dvh;
   overflow: hidden;
   background-image: 
-    radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.04) 0%, transparent 60%);
+    radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.10) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.06) 0%, transparent 60%);
   background-attachment: fixed;
+  position: relative;
+}
+
+/* ✨ Cyberpunk Dragon Glassmorphism Ambient Glow */
+.cyber-ambient-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.cyber-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.32;
+  will-change: transform;
+}
+.orb-1 {
+  top: -10%;
+  left: 10%;
+  width: 440px;
+  height: 440px;
+  background: radial-gradient(circle, #a855f7 0%, #7e22ce 60%, transparent 80%);
+  animation: floatOrb1 18s ease-in-out infinite alternate;
+}
+.orb-2 {
+  bottom: 5%;
+  right: -5%;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, #06b6d4 0%, #0284c7 60%, transparent 80%);
+  animation: floatOrb2 22s ease-in-out infinite alternate;
+}
+.orb-3 {
+  top: 45%;
+  left: 55%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, #ec4899 0%, #be185d 60%, transparent 80%);
+  animation: floatOrb3 15s ease-in-out infinite alternate;
+}
+.cyber-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(168, 85, 247, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 85, 247, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.7;
+}
+@keyframes floatOrb1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(50px, 70px) scale(1.15); }
+  100% { transform: translate(-30px, 100px) scale(0.92); }
+}
+@keyframes floatOrb2 {
+  0% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-70px, -50px) scale(0.92); }
+  100% { transform: translate(35px, -80px) scale(1.12); }
+}
+@keyframes floatOrb3 {
+  0% { transform: translate(0, 0) scale(0.9); }
+  50% { transform: translate(-40px, 60px) scale(1.1); }
+  100% { transform: translate(60px, -40px) scale(0.95); }
+}
+
+header.app-header, main.app-main-split, .modal-backdrop {
+  position: relative;
+  z-index: 1;
 }
 
 /* ══════════════════════════════════════════════════════════════
