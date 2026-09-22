@@ -301,29 +301,30 @@ header.app-header {
    ⚡ MOBILE STUDIO LAYOUT: FIXED TOP PREVIEW + FULL-WIDTH BOTTOM CONTROLS
 ══════════════════════════════════════════════════════════════ */
 .studio-main-container {
-  width: 100vw;
-  max-width: 100%;
-  height: calc(100dvh - 52px);
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-  position: relative;
+  width: 100vw !important;
+  max-width: 100% !important;
+  height: calc(100dvh - 52px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  position: relative !important;
 }
 
-/* TOP PREVIEW STAGE: Fixed at top (never scrolls away) */
+/* TOP PREVIEW STAGE: Fixed at top, centered, never side-by-side */
 .studio-stage-col {
-  flex: 0 0 auto;
-  width: 100%;
-  max-width: 100%;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
   background: #040308;
   border-bottom: 2px solid var(--border-cyber);
   padding: 6px 10px 8px 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
   gap: 6px;
   z-index: 50;
   position: sticky;
@@ -331,19 +332,20 @@ header.app-header {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
 }
 
-/* BOTTOM CONTROLS: 100% Full-Width, Smooth Scrolling */
+/* BOTTOM CONTROLS DOCK: 100% Full-Width Below Video */
 .studio-controls-col {
-  flex: 1 1 auto;
-  width: 100%;
-  max-width: 100%;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
   height: auto;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px 14px 40px 14px;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
   gap: 10px;
   -webkit-overflow-scrolling: touch;
+  background: transparent;
 }
 
 /* Video Stage Section */
@@ -772,28 +774,28 @@ header.app-header {
 /* Range Slider - Big, Touch-Friendly for Mobile Finger Dragging */
 .cyber-slider {
   -webkit-appearance: none;
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.16);
-  border-radius: 8px;
+  width: 100% !important;
+  height: 10px !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-radius: 10px !important;
   outline: none;
   touch-action: pan-y;
   cursor: pointer;
-  margin: 6px 0;
+  margin: 8px 0 !important;
 }
 .cyber-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--neon-cyan-bright), var(--neon-purple-bright));
-  border: 2.5px solid #ffffff;
-  box-shadow: 0 0 10px var(--neon-cyan-bright), 0 2px 6px rgba(0,0,0,0.6);
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, var(--neon-cyan-bright), var(--neon-purple-bright)) !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 0 12px var(--neon-cyan-bright), 0 3px 8px rgba(0,0,0,0.7) !important;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 0.12s;
 }
 .cyber-slider::-webkit-slider-thumb:active {
-  transform: scale(1.2);
+  transform: scale(1.25);
 }
 
 /* ⚡ Cyber Toggle Switch */
@@ -905,6 +907,33 @@ header.app-header {
 .btn-export-hd:hover {
   background: linear-gradient(135deg, #34d399, #10b981);
   box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
+}
+
+/* 📥 Prominent HD Download Button */
+#btn-download-result {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  padding: 14px 20px !important;
+  border-radius: 12px !important;
+  text-decoration: none !important;
+  border: 2px solid #34d399 !important;
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.7), 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+  margin-top: 10px !important;
+  width: 100% !important;
+  max-width: 380px !important;
+  text-align: center !important;
+  animation: pulseDownloadBtn 1.8s infinite !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+@keyframes pulseDownloadBtn {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 16px rgba(16, 185, 129, 0.6); }
+  50% { transform: scale(1.03); box-shadow: 0 0 30px rgba(16, 185, 129, 0.95); }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1084,30 +1113,38 @@ header.app-header {
   top: 8px;
 }
 .sponsor-banner-bar {
-  background: rgba(8, 6, 18, 0.88);
+  background: rgba(8, 6, 18, 0.90);
   border-top: 1.5px solid var(--neon-gold);
   border-bottom: 1.5px solid var(--neon-gold);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  padding: 4px 8px;
+  padding: 6px 10px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 2px;
   text-align: center;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
 }
 .sponsor-brand-tag {
   color: var(--neon-gold);
   font-weight: 800;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   letter-spacing: 0.3px;
+  line-height: 1.25;
 }
 .sponsor-contact-tag {
   color: var(--neon-cyan-bright);
   font-weight: 700;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+.sponsor-ad-tag {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 0.70rem;
+  line-height: 1.2;
 }
 
 /* ══════════════════════════════════════════════════════════════

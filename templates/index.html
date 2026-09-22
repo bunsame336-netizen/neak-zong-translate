@@ -19,7 +19,69 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=2.1.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=3.0.0">
+
+  <!-- ⚡ CRITICAL MOBILE OVERRIDE: GUARANTEE ONE-COLUMN FIXED TOP VIDEO + FULL-WIDTH BOTTOM CONTROLS -->
+  <style>
+    html, body {
+      overflow-x: hidden !important;
+      width: 100vw !important;
+      max-width: 100% !important;
+    }
+    .studio-main-container {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100vw !important;
+      max-width: 100% !important;
+      height: calc(100dvh - 52px) !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+    .studio-stage-col {
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 6px 10px 8px 10px !important;
+      border-bottom: 2px solid rgba(168, 85, 247, 0.3) !important;
+      background: #040308 !important;
+      z-index: 50 !important;
+    }
+    .studio-controls-col {
+      flex: 1 1 auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      padding: 10px 14px 45px 14px !important;
+      background: transparent !important;
+    }
+    .video-stage-viewport {
+      height: 33vh !important;
+      max-height: 275px !important;
+      min-height: 195px !important;
+      margin: 0 auto !important;
+    }
+    .tab-panel-card {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .cyber-slider {
+      width: 100% !important;
+      height: 10px !important;
+      margin: 8px 0 !important;
+    }
+    .cyber-slider::-webkit-slider-thumb {
+      width: 28px !important;
+      height: 28px !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -46,7 +108,7 @@
       <div class="brand-text-col">
         <div class="brand-title-row">
           <span class="brand-title">នាគហ្សង បកប្រែ</span>
-          <span class="brand-badge">Mobile 50/50</span>
+          <span class="brand-badge">Studio Mobile</span>
         </div>
         <span class="brand-sub">AI Video Translator &amp; Khmer Voice</span>
       </div>
@@ -124,11 +186,12 @@
               </div>
             </div>
 
-            <!-- 5. Custom Sponsor Banner Overlay -->
+            <!-- 5. Custom Sponsor Banner Overlay (3 Lines) -->
             <div class="interactive-overlay" id="sponsor-overlay-element">
               <div class="sponsor-banner-bar" id="sponsor-banner-bar">
-                <span class="sponsor-brand-tag" id="sponsor-brand-tag">🤝 «នាគហ្សង» ឧបត្ថម្ភធំ</span>
-                <span class="sponsor-contact-tag" id="sponsor-contact-tag">☎️ 012 345 678 | Telegram: @neakzong</span>
+                <div class="sponsor-brand-tag" id="sponsor-brand-tag">🐉 «នាគហ្សង» ឧបត្ថម្ភធំ</div>
+                <div class="sponsor-contact-tag" id="sponsor-contact-tag">☎️ 012 345 678 | Telegram: @neakzong</div>
+                <div class="sponsor-ad-tag" id="sponsor-ad-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
               </div>
             </div>
 
@@ -164,8 +227,8 @@
         <div class="render-progress-track">
           <div class="render-progress-bar" id="render-progress-bar"></div>
         </div>
-        <a id="btn-download-result" class="btn-export-hd" style="display: none; text-decoration: none; padding: 8px;" href="#">
-          📥 ទាញយក MP4 HD (Download)
+        <a id="btn-download-result" href="#" download>
+          📥 ទាញយក MP4 HD (Save to Phone)
         </a>
       </div>
     </div>
@@ -416,6 +479,34 @@
               oninput="document.getElementById('blur-y-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
           </div>
         </div>
+
+        <!-- 🌫️ Blur Intensity & Black Tint -->
+        <div class="slider-group-box" style="margin-top: 8px;">
+          <div class="slider-group-title">🌫️ កម្រិតព្រាល &amp; ផ្ទៃខ្មៅងងឹត (Blur Intensity &amp; Black Tint)</div>
+          
+          <div class="form-row">
+            <div class="form-label">
+              <span>កម្រិតព្រាល (Blur Intensity)</span>
+              <span class="form-label-val" id="blur-intensity-val">25 (មធ្យម)</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 6px;">
+              <button type="button" class="btn-ctrl" id="btn-blur-light" onclick="setBlurPreset('light')">ស្រាល (10)</button>
+              <button type="button" class="btn-ctrl active" id="btn-blur-med" onclick="setBlurPreset('medium')">មធ្យម (25)</button>
+              <button type="button" class="btn-ctrl" id="btn-blur-strong" onclick="setBlurPreset('strong')">ខ្លាំង (45)</button>
+            </div>
+            <input type="range" min="5" max="60" step="5" value="25" class="cyber-slider" id="blur-intensity-slider"
+              oninput="updateBlurIntensity(this.value)">
+          </div>
+
+          <div class="form-row">
+            <div class="form-label">
+              <span>ផ្ទៃស្រអាប់ / ខ្មៅងងឹត (Black Tint Opacity)</span>
+              <span class="form-label-val" id="blur-tint-val">40%</span>
+            </div>
+            <input type="range" min="0" max="100" step="5" value="40" class="cyber-slider" id="blur-tint-slider"
+              oninput="updateBlurTint(this.value)">
+          </div>
+        </div>
       </div>
 
       <!-- ── TAB: CUSTOM SPONSOR BRANDING & PHONE ──────────────── -->
@@ -436,38 +527,65 @@
         </div>
 
         <div class="form-row">
-          <label class="form-label">ឈ្មោះយីហោ / Sponsor Name</label>
-          <input type="text" id="sponsor-brand-input" class="cyber-input" value="🤝 «នាគហ្សង» ឧបត្ថម្ភធំ" placeholder="វាយឈ្មោះយីហោ ឬក្រុមហ៊ុន..." oninput="updateSponsorContent()">
+          <label class="form-label">ជួរលើ (Top Line) — ឈ្មោះយីហោ / Brand Name</label>
+          <input type="text" id="sponsor-brand-input" class="cyber-input" value="🐉 «នាគហ្សង បកប្រែ»" placeholder="ឧ. នាគហ្សង បកប្រែ ឬ ស្ដេចហ្សង បកប្រែ" oninput="updateSponsorContent()">
         </div>
 
         <div class="form-row">
-          <label class="form-label">លេខទូរសព្ទ ឬ Telegram ID</label>
-          <input type="text" id="sponsor-contact-input" class="cyber-input" value="☎️ 012 345 678 | Telegram: @neakzong" placeholder="លេខទូរសព្ទ / Telegram..." oninput="updateSponsorContent()">
+          <label class="form-label">ជួរកណ្ដាល (Middle Line) — លេខទូរសព្ទ ឬ Telegram</label>
+          <input type="text" id="sponsor-contact-input" class="cyber-input" value="☎️ 012 345 678 | Telegram: @neakzong" placeholder="លេខទូរសព្ទ / Telegram Contact..." oninput="updateSponsorContent()">
         </div>
 
         <div class="form-row">
-          <label class="form-label">ទីតាំង Sponsor Banner</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-            <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('bottom')">
-              ⬇️ ខាងក្រោម (Bottom)
-            </button>
-            <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('top')">
-              ⬆️ ខាងលើ (Top)
-            </button>
+          <label class="form-label">ជួរក្រោម (Bottom Line) — អក្សរ Sponsor</label>
+          <input type="text" id="sponsor-ad-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor..." oninput="updateSponsorContent()">
+        </div>
+
+        <!-- Sponsor Slider Box -->
+        <div class="slider-group-box">
+          <div class="slider-group-title">📐 សារ៉េទំហំ និងទីតាំង Sponsor Banner</div>
+          
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទំហំអក្សរ Sponsor (Font Size)</span>
+              <span class="form-label-val" id="sponsor-size-val">18px</span>
+            </div>
+            <input type="range" min="12" max="32" step="1" value="18" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
+          </div>
+
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង Y លើ-ក្រោម (Position Y)</span>
+              <span class="form-label-val" id="sponsor-y-val">88%</span>
+            </div>
+            <input type="range" min="5" max="92" step="1" value="88" class="cyber-slider" id="sponsor-y-slider" oninput="document.getElementById('sponsor-y-val').innerText = this.value + '%'; updateSponsorContent();">
+          </div>
+
+          <div class="form-row" style="margin-top: 4px;">
+            <label class="form-label">ទីតាំងលឿន (Preset Positions)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('bottom')">
+                ⬇️ ខាងក្រោម (Bottom)
+              </button>
+              <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('top')">
+                ⬆️ ខាងលើ (Top)
+              </button>
+            </div>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
           <div>
-            <label class="form-label">ពណ៌អក្សរ Sponsor</label>
+            <label class="form-label">ពណ៌អក្សរ Brand</label>
             <input type="color" id="sponsor-color-picker" value="#f59e0b" class="cyber-input" style="height: 40px; padding: 2px;" oninput="updateSponsorContent()">
           </div>
           <div>
-            <label class="form-label">ទំហំអក្សរ Sponsor</label>
-            <div style="display: flex; align-items: center; gap: 4px;">
-              <input type="range" min="14" max="36" step="2" value="20" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
-              <span class="form-label-val" id="sponsor-size-val">20px</span>
-            </div>
+            <label class="form-label">ពណ៌ផ្ទៃ Background</label>
+            <select id="sponsor-bg-select" class="cyber-input" style="padding: 0 6px; height: 40px;" onchange="updateSponsorContent()">
+              <option value="rgba(8, 6, 18, 0.90)" selected>ខ្មៅងងឹត (Dark Glass)</option>
+              <option value="rgba(0, 0, 0, 0.95)">ខ្មៅសុទ្ធ (Pure Black)</option>
+              <option value="rgba(168, 85, 247, 0.3)">ស្វាយ Neon (Purple Tint)</option>
+            </select>
           </div>
         </div>
       </div>
@@ -496,18 +614,12 @@
 
         <div class="form-row">
           <label class="form-label">ទិសដៅនៃការរត់ (Direction)</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('up')">
-              ⬆️ ក្រោម→លើ
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.78rem; height: 40px;" onclick="setMarqueeDirection('up')">
+              ⬆️ ក្រោម→លើ (Bottom to Top)
             </button>
-            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('down')">
-              ⬇️ លើ→ក្រោម
-            </button>
-            <button type="button" id="marquee-dir-left" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('left')">
-              ⬅️ ស្ដាំ→ឆ្វេង
-            </button>
-            <button type="button" id="marquee-dir-right" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeDirection('right')">
-              ➡️ ឆ្វេង→ស្ដាំ
+            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.78rem; height: 40px;" onclick="setMarqueeDirection('down')">
+              ⬇️ លើ→ក្រោម (Top to Bottom)
             </button>
           </div>
         </div>
@@ -515,12 +627,12 @@
         <div class="form-row">
           <div class="form-label">
             <span>ល្បឿនរត់ (Speed)</span>
-            <span class="form-label-val" id="marquee-speed-val">8s</span>
+            <span class="form-label-val" id="marquee-speed-val">8s (ល្មម)</span>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 4px;">
-            <button type="button" class="btn-ctrl" id="btn-speed-slow" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeSpeed('slow')">🐢 យឺត</button>
-            <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeSpeed('normal')">🚶 មធ្យម</button>
-            <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center; font-size: 0.68rem;" onclick="setMarqueeSpeed('fast')">⚡ លឿន</button>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+            <button type="button" class="btn-ctrl" id="btn-speed-slow" style="justify-content: center; font-size: 0.76rem; height: 36px;" onclick="setMarqueeSpeed('slow')">🐢 យឺត (16s)</button>
+            <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center; font-size: 0.76rem; height: 36px;" onclick="setMarqueeSpeed('normal')">🚶 ល្មម (8s)</button>
+            <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center; font-size: 0.76rem; height: 36px;" onclick="setMarqueeSpeed('fast')">⚡ លឿន (4s)</button>
           </div>
           <input type="range" min="3" max="25" step="1" value="8" class="cyber-slider" id="marquee-speed-slider" oninput="setMarqueeSpeedSeconds(this.value)">
         </div>

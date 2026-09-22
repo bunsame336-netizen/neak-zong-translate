@@ -28,7 +28,9 @@ const state = {
     x: 15,
     y: 15,
     w: 120,
-    h: 45
+    h: 45,
+    intensity: 25,
+    tintOpacity: 0.40
   },
 
   // Logo Overlay (controlled by drag + sliders)
@@ -82,11 +84,14 @@ const state = {
   // Sponsor Overlay (Custom Branding & Phone/Telegram ID)
   sponsor: {
     enabled: false,
-    brand: '🤝 «នាគហ្សង» ឧបត្ថម្ភធំ',
+    brand: '🐉 «នាគហ្សង» ឧបត្ថម្ភធំ',
     contact: '☎️ 012 345 678 | Telegram: @neakzong',
+    adText: '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor',
     position: 'bottom',
+    yPercent: 88,
     color: '#f59e0b',
-    fontSize: 20
+    fontSize: 18,
+    bgColor: 'rgba(8, 6, 18, 0.90)'
   },
 
   // Khmer Voice & Audio
@@ -111,6 +116,7 @@ const marqueeTrack = document.getElementById('marquee-track');
 const sponsorElement = document.getElementById('sponsor-overlay-element');
 const sponsorBrandTag = document.getElementById('sponsor-brand-tag');
 const sponsorContactTag = document.getElementById('sponsor-contact-tag');
+const sponsorAdTag = document.getElementById('sponsor-ad-tag');
 
 // Tab Navigation Switching
 function switchStudioTab(tabId) {
@@ -694,7 +700,48 @@ function updateBlurBoxFromSliders() {
   updateBlurBoxLimits();
 }
 
-// ── SPONSOR CONTROLS (CUSTOM BRANDING & PHONE/TELEGRAM) ────
+function updateBlurIntensity(val) {
+  const intVal = parseInt(val) || 25;
+  state.blurMask.intensity = intVal;
+  let label = `${intVal}`;
+  if (intVal <= 15) label += ' (ស្រាល)';
+  else if (intVal <= 35) label += ' (មធ្យម)';
+  else label += ' (ខ្លាំង)';
+  const labelEl = document.getElementById('blur-intensity-val');
+  if (labelEl) labelEl.innerText = label;
+  if (blurBox) {
+    const px = Math.max(4, Math.round(intVal / 1.8));
+    blurBox.style.backdropFilter = `blur(${px}px)`;
+    blurBox.style.webkitBackdropFilter = `blur(${px}px)`;
+  }
+}
+
+function setBlurPreset(level) {
+  let val = 25;
+  if (level === 'light') val = 10;
+  else if (level === 'strong') val = 45;
+  const slider = document.getElementById('blur-intensity-slider');
+  if (slider) slider.value = val;
+  ['btn-blur-light', 'btn-blur-med', 'btn-blur-strong'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  if (level === 'light') document.getElementById('btn-blur-light')?.classList.add('active');
+  else if (level === 'medium') document.getElementById('btn-blur-med')?.classList.add('active');
+  else if (level === 'strong') document.getElementById('btn-blur-strong')?.classList.add('active');
+  updateBlurIntensity(val);
+}
+
+function updateBlurTint(val) {
+  const pct = parseInt(val) || 0;
+  state.blurMask.tintOpacity = pct / 100.0;
+  const tintValEl = document.getElementById('blur-tint-val');
+  if (tintValEl) tintValEl.innerText = `${pct}%`;
+  if (blurBox) {
+    blurBox.style.backgroundColor = `rgba(0, 0, 0, ${state.blurMask.tintOpacity})`;
+  }
+}
+
+// ── SPONSOR CONTROLS (3-LINE CUSTOM BRANDING & CONTACT) ────
 function toggleSponsorOverlay(enabled) {
   state.sponsor.enabled = enabled;
   if (sponsorElement) sponsorElement.classList.toggle('active-visible', enabled);
@@ -705,13 +752,19 @@ function toggleSponsorOverlay(enabled) {
 function updateSponsorContent() {
   const brand = document.getElementById('sponsor-brand-input')?.value || '';
   const contact = document.getElementById('sponsor-contact-input')?.value || '';
+  const adText = document.getElementById('sponsor-ad-input')?.value || '';
   const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
-  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 20);
+  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 18);
+  const yPercent = parseInt(document.getElementById('sponsor-y-slider')?.value || 88);
+  const bg = document.getElementById('sponsor-bg-select')?.value || 'rgba(8, 6, 18, 0.90)';
 
   state.sponsor.brand = brand;
   state.sponsor.contact = contact;
+  state.sponsor.adText = adText;
   state.sponsor.color = color;
   state.sponsor.fontSize = size;
+  state.sponsor.yPercent = yPercent;
+  state.sponsor.bgColor = bg;
 
   if (sponsorBrandTag) {
     sponsorBrandTag.innerText = brand;
@@ -720,7 +773,19 @@ function updateSponsorContent() {
   }
   if (sponsorContactTag) {
     sponsorContactTag.innerText = contact;
-    sponsorContactTag.style.fontSize = Math.max(12, size - 4) + 'px';
+    sponsorContactTag.style.fontSize = Math.max(11, size - 4) + 'px';
+  }
+  if (sponsorAdTag) {
+    sponsorAdTag.innerText = adText;
+    sponsorAdTag.style.fontSize = Math.max(10, size - 6) + 'px';
+  }
+  const bannerBar = document.getElementById('sponsor-banner-bar');
+  if (bannerBar) {
+    bannerBar.style.backgroundColor = bg;
+  }
+  if (sponsorElement) {
+    sponsorElement.style.bottom = 'auto';
+    sponsorElement.style.top = `${yPercent}%`;
   }
 }
 
@@ -728,8 +793,20 @@ function setSponsorPosition(pos) {
   state.sponsor.position = pos;
   document.getElementById('sponsor-pos-bottom')?.classList.toggle('active', pos === 'bottom');
   document.getElementById('sponsor-pos-top')?.classList.toggle('active', pos === 'top');
+  const ySlider = document.getElementById('sponsor-y-slider');
+  const yVal = document.getElementById('sponsor-y-val');
+  if (pos === 'top') {
+    state.sponsor.yPercent = 6;
+    if (ySlider) ySlider.value = 6;
+    if (yVal) yVal.innerText = '6%';
+  } else {
+    state.sponsor.yPercent = 88;
+    if (ySlider) ySlider.value = 88;
+    if (yVal) yVal.innerText = '88%';
+  }
   if (sponsorElement) {
-    sponsorElement.classList.toggle('pos-top', pos === 'top');
+    sponsorElement.style.bottom = 'auto';
+    sponsorElement.style.top = `${state.sponsor.yPercent}%`;
   }
 }
 
@@ -1035,7 +1112,9 @@ function _buildRenderOptions() {
       x: blurBox.offsetLeft,
       y: blurBox.offsetTop,
       w: blurBox.offsetWidth,
-      h: blurBox.offsetHeight
+      h: blurBox.offsetHeight,
+      intensity: state.blurMask.intensity || 25,
+      tint_opacity: state.blurMask.tintOpacity !== undefined ? state.blurMask.tintOpacity : 0.40
     },
     marquee: {
       enabled: state.marquee.enabled,
@@ -1075,14 +1154,17 @@ function _buildRenderOptions() {
       y: textElement.offsetTop,
       size: state.textOverlay.size
     },
-    // Custom sponsor branding
+    // Custom sponsor branding (3 lines + position)
     sponsor: {
       enabled: state.sponsor.enabled,
       brand: state.sponsor.brand,
       contact: state.sponsor.contact,
+      ad_text: state.sponsor.adText,
       position: state.sponsor.position,
+      y_percent: state.sponsor.yPercent,
       color: _hexToFFmpegColor(state.sponsor.color),
-      font_size: state.sponsor.fontSize
+      font_size: state.sponsor.fontSize,
+      bg_color: state.sponsor.bgColor
     }
   };
 }
@@ -1212,6 +1294,7 @@ async function triggerRenderExport() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         video_name: state.videoFilename,
+        audio_name: state.audioFilename || undefined,
         options: _buildRenderOptions()
       })
     });

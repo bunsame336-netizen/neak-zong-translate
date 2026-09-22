@@ -210,6 +210,17 @@ def extract_audio_from_video(video_path: str, output_audio_path: str, ffmpeg_bin
         print(f"[Extract Audio Error] {e}", flush=True)
         return False
 
+def has_audio_track(video_path: str, ffmpeg_bin: Optional[str] = None) -> bool:
+    """Checks if a video file contains at least one audio stream."""
+    ff = ffmpeg_bin or find_ffmpeg()
+    try:
+        cmd = [ff, '-i', video_path]
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=10)
+        err = (res.stderr or b'').decode('utf-8', errors='ignore')
+        return "Audio:" in err
+    except Exception:
+        return False
+
 def _sanitize_ffmpeg_text(text: str) -> str:
     """
     Sanitizes text for safe use in FFmpeg drawtext filter.
@@ -297,21 +308,34 @@ def _build_filter_graph(
         steps.append(f"{current_pad}eq=brightness={brightness}:contrast={contrast}{out}")
         current_pad = out
 
-    # 4. Blur Mask Box using avgblur+overlay (clamped to bounds)
+    # 4. Blur Mask Box using avgblur+overlay + optional black tint
     blur_opts = opts.get('blur_mask')
     if blur_opts and blur_opts.get('enabled'):
         bx = max(0, int(blur_opts.get('x', 10)))
         by = max(0, int(blur_opts.get('y', 10)))
         bw = max(10, min(720, int(blur_opts.get('w', 120))))
         bh = max(10, min(1280, int(blur_opts.get('h', 45))))
+        intensity = max(5, min(60, int(blur_opts.get('intensity', 25))))
+        tint_opacity = max(0.0, min(1.0, float(blur_opts.get('tint_opacity', 0.4))))
+        tint_color = blur_opts.get('tint_color', 'black')
+
         uid = f"bl{step_idx}"
-        out = next_pad()
-        # Build the split→crop→avgblur→overlay chain
-        blur_chain = (
-            f"{current_pad}split=2[base_{uid}][work_{uid}];"
-            f"[work_{uid}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeX=25:sizeY=25[blurred_{uid}];"
-            f"[base_{uid}][blurred_{uid}]overlay={bx}:{by}{out}"
-        )
+        if tint_opacity > 0.02:
+            out_blur = f"[bl_tmp_{uid}]"
+            out = next_pad()
+            blur_chain = (
+                f"{current_pad}split=2[base_{uid}][work_{uid}];"
+                f"[work_{uid}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
+                f"[base_{uid}][blurred_{uid}]overlay={bx}:{by}{out_blur};"
+                f"{out_blur}drawbox=x={bx}:y={by}:w={bw}:h={bh}:color={tint_color}@{tint_opacity:.2f}:t=fill{out}"
+            )
+        else:
+            out = next_pad()
+            blur_chain = (
+                f"{current_pad}split=2[base_{uid}][work_{uid}];"
+                f"[work_{uid}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
+                f"[base_{uid}][blurred_{uid}]overlay={bx}:{by}{out}"
+            )
         steps.append(blur_chain)
         current_pad = out
 
@@ -431,35 +455,53 @@ def _build_filter_graph(
         )
         current_pad = out
 
-    # 7. Sponsor Banner Overlay (Brand + Phone/Telegram ID)
+    # 7. Sponsor Banner Overlay (3 Lines: Brand, Contact, Ad/Sponsor text)
     sponsor_opts = opts.get('sponsor')
     if sponsor_opts and sponsor_opts.get('enabled'):
-        s_brand = _sanitize_ffmpeg_text(sponsor_opts.get('brand', ''))
-        s_contact = _sanitize_ffmpeg_text(sponsor_opts.get('contact', ''))
+        s_brand = _sanitize_ffmpeg_text(sponsor_opts.get('brand', sponsor_opts.get('top_text', '')))
+        s_contact = _sanitize_ffmpeg_text(sponsor_opts.get('contact', sponsor_opts.get('mid_text', '')))
+        s_ad = _sanitize_ffmpeg_text(sponsor_opts.get('ad_text', sponsor_opts.get('bot_text', '')))
         s_pos = sponsor_opts.get('position', 'bottom')
+        s_y_percent = sponsor_opts.get('y_percent')
         s_color = sponsor_opts.get('color', '0xF59E0B')
-        s_bg = sponsor_opts.get('bg_color', 'black@0.75')
-        s_font_size = int(sponsor_opts.get('font_size', 24))
+        s_bg = sponsor_opts.get('bg_color', 'black@0.80')
+        s_font_size = max(12, int(sponsor_opts.get('font_size', 20)))
         s_font = _resolve_font_path(sponsor_opts.get('font', 'noto'))
         font_arg = f"fontfile='{s_font}':" if s_font else ""
 
-        full_sponsor_text = f"{s_brand}  |  {s_contact}".strip(' | ')
-        if full_sponsor_text:
-            out = next_pad()
-            box_h = s_font_size + 18
-            if s_pos == 'top':
-                box_y = "10"
-                text_y = "16"
-            else:
-                box_y = f"h-{box_h + 10}"
-                text_y = f"h-{box_h + 2}"
+        lines = []
+        if s_brand:
+            lines.append({'text': s_brand, 'color': s_color, 'size': s_font_size})
+        if s_contact:
+            lines.append({'text': s_contact, 'color': '0x22D3EE', 'size': max(11, int(s_font_size * 0.9))})
+        if s_ad:
+            lines.append({'text': s_ad, 'color': '0xE2E8F0', 'size': max(10, int(s_font_size * 0.8))})
 
-            draw_sponsor = (
-                f"{current_pad}drawbox=x=0:y={box_y}:w=iw:h={box_h}:color={s_bg}:t=fill,"
-                f"drawtext={font_arg}text='{full_sponsor_text}':fontcolor={s_color}:fontsize={s_font_size}:"
-                f"x=(w-text_w)/2:y={text_y}{out}"
-            )
-            steps.append(draw_sponsor)
+        if lines:
+            line_gap = 4
+            total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap + 16
+
+            if s_y_percent is not None:
+                box_y = f"trunc((h*{float(s_y_percent)/100.0:.3f}))"
+            elif s_pos == 'top':
+                box_y = "10"
+            else:
+                box_y = f"h-{total_h + 10}"
+
+            out = next_pad()
+            sponsor_chain = f"{current_pad}drawbox=x=0:y={box_y}:w=iw:h={total_h}:color={s_bg}:t=fill"
+
+            curr_y_offset = 8
+            for l in lines:
+                s_y_expr = f"{box_y}+{curr_y_offset}"
+                sponsor_chain += (
+                    f",drawtext={font_arg}text='{l['text']}':fontcolor={l['color']}:fontsize={l['size']}:"
+                    f"x=(w-text_w)/2:y={s_y_expr}"
+                )
+                curr_y_offset += l['size'] + line_gap
+
+            sponsor_chain += f"{out}"
+            steps.append(sponsor_chain)
             current_pad = out
 
     # 8. Logo Overlay (composited last)
@@ -516,7 +558,8 @@ def render_segment(
         logo_input_idx = next_input_idx
         next_input_idx += 1
         
-    has_custom_audio = bool(audio_path and os.path.exists(audio_path))
+    orig_has_audio = has_audio_track(input_video_path, ffmpeg_bin=ff)
+    has_custom_audio = bool(audio_path and os.path.exists(audio_path) and os.path.getsize(audio_path) > 100)
     audio_input_idx = None
     if has_custom_audio:
         cmd.extend([
@@ -529,15 +572,34 @@ def render_segment(
         
     filter_complex, out_pad = _build_filter_graph(opts, has_logo, logo_input_idx, time_offset=start_time)
     
+    # Mix TTS audio with Background Music
+    has_audio_out = False
+    if has_custom_audio and orig_has_audio:
+        audio_mix = (
+            f"[0:a]volume=0.25[bgm];"
+            f"[{audio_input_idx}:a]volume=1.25[voice];"
+            f"[bgm][voice]amix=inputs=2:duration=first:dropout_transition=2[aout]"
+        )
+        filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
+        if not out_pad or out_pad == '[0:v]':
+            out_pad = '[vout]'
+        has_audio_out = True
+    elif has_custom_audio and not orig_has_audio:
+        audio_mix = f"[{audio_input_idx}:a]volume=1.25[aout]"
+        filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
+        if not out_pad or out_pad == '[0:v]':
+            out_pad = '[vout]'
+        has_audio_out = True
+
     if filter_complex:
         cmd.extend(['-filter_complex', filter_complex, '-map', out_pad])
     else:
         cmd.extend(['-map', '0:v'])
         
-    if has_custom_audio:
-        cmd.extend(['-map', f"{audio_input_idx}:a", '-c:a', 'aac', '-b:a', '192k'])
-    else:
-        cmd.extend(['-map', '0:a?', '-c:a', 'aac', '-b:a', '192k'])
+    if has_audio_out:
+        cmd.extend(['-map', '[aout]', '-c:a', 'aac', '-b:a', '192k'])
+    elif orig_has_audio:
+        cmd.extend(['-map', '0:a', '-c:a', 'aac', '-b:a', '192k'])
         
     # Ultrafast encode per segment for ultra-speed and low RAM
     cmd.extend([
@@ -688,7 +750,8 @@ def _render_direct_fast(
         logo_input_idx = next_input_idx
         next_input_idx += 1
         
-    has_custom_audio = bool(audio_path and os.path.exists(audio_path))
+    orig_has_audio = has_audio_track(input_video_path, ffmpeg_bin=ff)
+    has_custom_audio = bool(audio_path and os.path.exists(audio_path) and os.path.getsize(audio_path) > 100)
     audio_input_idx = None
     if has_custom_audio:
         cmd.extend(['-i', audio_path])
@@ -697,15 +760,34 @@ def _render_direct_fast(
 
     filter_complex, out_pad = _build_filter_graph(opts, has_logo, logo_input_idx, time_offset=0.0)
 
+    # Mix TTS audio with Background Music
+    has_audio_out = False
+    if has_custom_audio and orig_has_audio:
+        audio_mix = (
+            f"[0:a]volume=0.25[bgm];"
+            f"[{audio_input_idx}:a]volume=1.25[voice];"
+            f"[bgm][voice]amix=inputs=2:duration=first:dropout_transition=2[aout]"
+        )
+        filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
+        if not out_pad or out_pad == '[0:v]':
+            out_pad = '[vout]'
+        has_audio_out = True
+    elif has_custom_audio and not orig_has_audio:
+        audio_mix = f"[{audio_input_idx}:a]volume=1.25[aout]"
+        filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
+        if not out_pad or out_pad == '[0:v]':
+            out_pad = '[vout]'
+        has_audio_out = True
+
     if filter_complex:
         cmd.extend(['-filter_complex', filter_complex, '-map', out_pad])
     else:
         cmd.extend(['-map', '0:v'])
         
-    if has_custom_audio:
-        cmd.extend(['-map', f"{audio_input_idx}:a", '-c:a', 'aac', '-b:a', '192k'])
-    else:
-        cmd.extend(['-map', '0:a?', '-c:a', 'aac', '-b:a', '192k'])
+    if has_audio_out:
+        cmd.extend(['-map', '[aout]', '-c:a', 'aac', '-b:a', '192k'])
+    elif orig_has_audio:
+        cmd.extend(['-map', '0:a', '-c:a', 'aac', '-b:a', '192k'])
         
     cmd.extend([
         '-c:v', 'libx264',

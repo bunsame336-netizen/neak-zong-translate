@@ -386,6 +386,14 @@ def api_render():
     options = data.get('options', {})
     audio_name = data.get('audio_name')
     audio_path = str(EXPORTS_DIR / audio_name) if audio_name and (EXPORTS_DIR / audio_name).exists() else None
+    if not audio_path:
+        # Check if there is any recently generated TTS or ducked audio for this video session
+        v_stem = Path(video_name).stem
+        candidates = list(EXPORTS_DIR.glob(f"*{v_stem}*.mp3")) + list(EXPORTS_DIR.glob("ducked_*.mp3")) + list(EXPORTS_DIR.glob("tts_*.mp3"))
+        valid_candidates = [c for c in candidates if c.exists() and c.stat().st_size > 1000]
+        if valid_candidates:
+            valid_candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+            audio_path = str(valid_candidates[0])
     
     out_filename = f"NeakZong_{str(uuid.uuid4())[:8]}.mp4"
     out_path = EXPORTS_DIR / out_filename
@@ -512,7 +520,8 @@ def api_auto_process():
             PROCESSING_JOBS[job_id]['progress'] = 70
             PROCESSING_JOBS[job_id]['step'] = 'Mixing Audio & Ducking BGM...'
             ducked_audio = EXPORTS_DIR / f"ducked_{job_id}.mp3"
-            apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15, ffmpeg_bin=find_ffmpeg())
+            duck_ok = apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15, ffmpeg_bin=find_ffmpeg())
+            audio_to_use = str(ducked_audio) if (duck_ok and ducked_audio.exists() and ducked_audio.stat().st_size > 1000) else str(tts_audio)
             
             # 5. Render Video with Chunking Progress Callback
             PROCESSING_JOBS[job_id]['progress'] = 85
@@ -524,7 +533,7 @@ def api_auto_process():
                 
             success = render_final_video(
                 str(video_path), str(out_path),
-                audio_path=str(ducked_audio),
+                audio_path=audio_to_use,
                 options=options,
                 progress_callback=_prog_cb
             )
