@@ -1,12 +1,12 @@
 {
   "name": "នាគហ្សង បកប្រែ — Neak Zong Translate AI",
-  "short_name": "នាគហ្សង",
+  "short_name": "នាគហ្សង បកប្រែ",
   "description": "AI Video Translator, Khmer Voice Dubbing Studio & Anti-Copyright Video Editor",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#07080d",
-  "theme_color": "#a855f7",
+  "theme_color": "#07080d",
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
