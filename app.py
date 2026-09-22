@@ -35,7 +35,7 @@ EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
 sys.path.insert(0, str(BASE_DIR))
 
 from core.translator import translate_single_query, translate_srt, parse_srt, format_srt
-from core.tts_engine import synthesize_khmer_voice, apply_audio_ducking
+from core.tts_engine import synthesize_khmer_voice, apply_audio_ducking, generate_synced_cues_voiceover
 from core.audio_separator import separate_vocals_and_bgm
 from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg, get_video_duration
 from core.asr_engine import ChineseSpeechRecognizer
@@ -473,9 +473,10 @@ def api_auto_process():
             
             # 2. Chinese Speech Recognition & Khmer Translation
             khmer_text = ""
+            active_cues = []
             if srt_content:
-                t_srt, cues = translate_srt(srt_content)
-                khmer_text = ' '.join([c.get('text_km', '') for c in cues])
+                t_srt, active_cues = translate_srt(srt_content)
+                khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
             else:
                 # 100% Auto: AI listens to Chinese speech & translates to Khmer
                 PROCESSING_JOBS[job_id]['progress'] = 30
@@ -483,23 +484,35 @@ def api_auto_process():
                 cues = asr_engine.transcribe_to_cues(str(video_path), language="zh")
                 if cues:
                     chinese_srt = ChineseSpeechRecognizer.cues_to_srt(cues)
-                    t_srt, t_cues = translate_srt(chinese_srt)
-                    khmer_text = ' '.join([c.get('text_km', '') for c in t_cues])
+                    t_srt, active_cues = translate_srt(chinese_srt)
+                    khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
                 else:
                     khmer_text = "សូមស្វាគមន៍មកកាន់ការទស្សនារឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
                 
             PROCESSING_JOBS[job_id]['progress'] = 50
-            PROCESSING_JOBS[job_id]['step'] = 'Generating Khmer Neural Voice...'
+            PROCESSING_JOBS[job_id]['step'] = 'Generating Synced Khmer Voiceover (Lip-Sync)...'
             
-            # 3. Khmer TTS
+            # 3. Synchronized Khmer TTS (True Lip-Sync to exact character speech timestamps)
             tts_audio = EXPORTS_DIR / f"tts_{job_id}.mp3"
-            synthesize_khmer_voice(khmer_text, str(tts_audio), voice_type=voice, speed=speed)
+            total_dur = get_video_duration(str(video_path)) or 10.0
+            synced_ok = False
+            if active_cues:
+                try:
+                    synced_ok = generate_synced_cues_voiceover(
+                        active_cues, total_dur, str(tts_audio),
+                        voice_type=voice, speed=speed, ffmpeg_bin=find_ffmpeg()
+                    )
+                except Exception as e_sync:
+                    print(f"[Voice Sync Warning] {e_sync}, fallback to continuous", flush=True)
+
+            if not synced_ok or not tts_audio.exists():
+                synthesize_khmer_voice(khmer_text, str(tts_audio), voice_type=voice, speed=speed)
             
             # 4. Ducking
             PROCESSING_JOBS[job_id]['progress'] = 70
             PROCESSING_JOBS[job_id]['step'] = 'Mixing Audio & Ducking BGM...'
             ducked_audio = EXPORTS_DIR / f"ducked_{job_id}.mp3"
-            apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15)
+            apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15, ffmpeg_bin=find_ffmpeg())
             
             # 5. Render Video with Chunking Progress Callback
             PROCESSING_JOBS[job_id]['progress'] = 85

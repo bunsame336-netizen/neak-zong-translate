@@ -298,46 +298,51 @@ header.app-header {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ⚡ MOBILE SPLIT SCREEN WORKSPACE (50/50 LEFT-RIGHT)
+   ⚡ MOBILE STUDIO LAYOUT: FIXED TOP PREVIEW + FULL-WIDTH BOTTOM CONTROLS
 ══════════════════════════════════════════════════════════════ */
 .studio-main-container {
   width: 100vw;
   max-width: 100%;
   height: calc(100dvh - 52px);
   margin: 0;
-  padding: 6px 8px;
+  padding: 0;
   display: flex;
-  flex-direction: row;
-  gap: 8px;
+  flex-direction: column;
+  gap: 0;
   overflow: hidden;
+  position: relative;
 }
 
-/* LEFT COLUMN: 50% Live Preview Stage (9:16 Video + Progress) */
+/* TOP PREVIEW STAGE: Fixed at top (never scrolls away) */
 .studio-stage-col {
-  flex: 0 0 50%;
-  width: 50%;
-  max-width: 50%;
-  height: 100%;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  background: #040308;
+  border-bottom: 2px solid var(--border-cyber);
+  padding: 6px 10px 8px 10px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
+  align-items: center;
   gap: 6px;
-  -webkit-overflow-scrolling: touch;
+  z-index: 50;
+  position: sticky;
+  top: 0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
 }
 
-/* RIGHT COLUMN: 50% Compact Control Panel */
+/* BOTTOM CONTROLS: 100% Full-Width, Smooth Scrolling */
 .studio-controls-col {
-  flex: 0 0 50%;
-  width: 50%;
-  max-width: 50%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   overflow-y: auto;
   overflow-x: hidden;
-  gap: 6px;
-  padding-right: 2px;
+  padding: 10px 14px 40px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -347,19 +352,22 @@ header.app-header {
   border: 1.5px solid var(--border-cyber);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8), 0 0 12px var(--neon-purple-glow);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.9), 0 0 12px var(--neon-purple-glow);
   position: relative;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  width: auto;
+  max-width: 100%;
 }
 
-/* 9:16 Portrait Viewport strictly scaled to screen */
+/* 9:16 Portrait Viewport strictly scaled to mobile screen */
 .video-stage-viewport {
   position: relative;
-  width: 100%;
   aspect-ratio: 9 / 16;
-  max-height: calc(100dvh - 165px);
+  height: 38vh;
+  max-height: 310px;
+  min-height: 220px;
   background: #050408;
   display: flex;
   align-items: center;
@@ -761,24 +769,31 @@ header.app-header {
   box-shadow: 0 0 8px var(--neon-purple-glow);
 }
 
-/* Range Slider */
+/* Range Slider - Big, Touch-Friendly for Mobile Finger Dragging */
 .cyber-slider {
   -webkit-appearance: none;
   width: 100%;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 5px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
   outline: none;
+  touch-action: pan-y;
+  cursor: pointer;
+  margin: 6px 0;
 }
 .cyber-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--neon-purple-bright);
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 6px var(--neon-purple);
+  background: linear-gradient(135deg, var(--neon-cyan-bright), var(--neon-purple-bright));
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 10px var(--neon-cyan-bright), 0 2px 6px rgba(0,0,0,0.6);
   cursor: pointer;
+  transition: transform 0.1s;
+}
+.cyber-slider::-webkit-slider-thumb:active {
+  transform: scale(1.2);
 }
 
 /* ⚡ Cyber Toggle Switch */
@@ -1018,31 +1033,81 @@ header.app-header {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ⚡ v2.1.0 NEW: Marquee Scroll Animations (All 4 Directions)
+   ⚡ Marquee Scroll Animations (Full Viewport Seamless Traversal)
 ══════════════════════════════════════════════════════════════ */
 @keyframes scrollUp {
-  0%   { transform: translateY(100%); }
-  100% { transform: translateY(-100%); }
+  0%   { top: 100%; transform: translateY(0); }
+  100% { top: 0%; transform: translateY(-100%); }
 }
 @keyframes scrollDown {
-  0%   { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+  0%   { top: 0%; transform: translateY(-100%); }
+  100% { top: 100%; transform: translateY(0); }
 }
 @keyframes scrollLeft {
-  0%   { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0%   { left: 100%; transform: translateX(0); }
+  100% { left: 0%; transform: translateX(-100%); }
 }
 @keyframes scrollRight {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0%   { left: 0%; transform: translateX(-100%); }
+  100% { left: 100%; transform: translateX(0); }
 }
 
-/* Marquee track adjustment for horizontal scrolling */
+/* Marquee track adjustment for continuous scrolling */
 .marquee-scrolling-track {
   white-space: nowrap;
   display: inline-block;
   width: max-content;
   min-width: 100%;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ⚡ Sponsor Banner Overlay (Custom Branding)
+══════════════════════════════════════════════════════════════ */
+#sponsor-overlay-element {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  display: none;
+  pointer-events: none;
+  z-index: 15;
+  width: 100%;
+}
+#sponsor-overlay-element.active-visible {
+  display: block;
+}
+#sponsor-overlay-element.pos-top {
+  bottom: auto;
+  top: 8px;
+}
+.sponsor-banner-bar {
+  background: rgba(8, 6, 18, 0.88);
+  border-top: 1.5px solid var(--neon-gold);
+  border-bottom: 1.5px solid var(--neon-gold);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  text-align: center;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+.sponsor-brand-tag {
+  color: var(--neon-gold);
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.3px;
+}
+.sponsor-contact-tag {
+  color: var(--neon-cyan-bright);
+  font-weight: 700;
+  font-size: 0.76rem;
 }
 
 /* ══════════════════════════════════════════════════════════════

@@ -139,3 +139,136 @@ def apply_audio_ducking(
     except Exception as e:
         print(f"[Audio Ducking Error] {e}", flush=True)
         return False
+
+def _parse_cue_timestamp(val) -> float:
+    """Parses seconds float or SRT timestamp string ('00:01:23,456') to float seconds."""
+    if isinstance(val, (int, float)):
+        return float(val)
+    if not val or not isinstance(val, str):
+        return 0.0
+    s = val.strip().replace(',', '.')
+    parts = s.split(':')
+    try:
+        if len(parts) == 3:
+            return float(parts[0]) * 3600 + float(parts[1]) * 60 + float(parts[2])
+        elif len(parts) == 2:
+            return float(parts[0]) * 60 + float(parts[1])
+        return float(s)
+    except Exception:
+        return 0.0
+
+def _find_ffmpeg_bin() -> str:
+    """Finds FFmpeg executable in PATH or imageio_ffmpeg."""
+    from shutil import which
+    ff = which("ffmpeg")
+    if ff:
+        return ff
+    try:
+        import imageio_ffmpeg
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        if exe and os.path.exists(exe):
+            return exe
+    except Exception:
+        pass
+    return "ffmpeg"
+
+def generate_synced_cues_voiceover(
+    cues: list,
+    total_duration: float,
+    output_path: str,
+    voice_type: str = 'female',
+    speed: float = 1.0,
+    ffmpeg_bin: Optional[str] = None
+) -> bool:
+    """
+    Generates a synchronized Khmer voiceover track where each speech cue is placed
+    at its exact start timestamp in the video (accurate Lip-Sync alignment).
+    Uses 24kHz 16-bit PCM master buffer to mix cue audios with microsecond precision.
+    """
+    if not cues:
+        return False
+
+    total_dur = max(1.0, float(total_duration or 10.0))
+    sample_rate = 24000
+    total_samples = int(total_dur * sample_rate) + sample_rate
+    master_pcm = bytearray(total_samples * 2)  # 16-bit mono = 2 bytes per sample
+
+    ff = ffmpeg_bin or _find_ffmpeg_bin()
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_dir_p = Path(tmp_dir)
+        has_any_segment = False
+
+        for i, cue in enumerate(cues):
+            txt = (cue.get('text_km') or cue.get('text') or '').strip()
+            if not txt:
+                continue
+
+            start_t = cue.get('start')
+            if start_t is None:
+                start_t = _parse_cue_timestamp(cue.get('start_str'))
+            else:
+                start_t = float(start_t)
+
+            if start_t >= total_dur:
+                continue
+
+            seg_mp3 = str(tmp_dir_p / f"cue_{i:04d}.mp3")
+            seg_raw = str(tmp_dir_p / f"cue_{i:04d}.raw")
+
+            # Synthesize Khmer voice for this cue
+            ok = synthesize_khmer_voice(txt, seg_mp3, voice_type=voice_type, speed=speed)
+            if not ok or not os.path.exists(seg_mp3):
+                continue
+
+            # Convert to raw 24kHz 16-bit mono PCM
+            cmd_conv = [
+                ff, '-y',
+                '-i', seg_mp3,
+                '-f', 's16le',
+                '-ar', str(sample_rate),
+                '-ac', '1',
+                seg_raw
+            ]
+            res = subprocess.run(cmd_conv, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+            if res.returncode != 0 or not os.path.exists(seg_raw):
+                continue
+
+            raw_bytes = Path(seg_raw).read_bytes()
+            if not raw_bytes:
+                continue
+
+            has_any_segment = True
+            start_sample = max(0, int(start_t * sample_rate))
+            start_byte = start_sample * 2
+            num_samples = len(raw_bytes) // 2
+
+            # Mix samples with saturation clipping into master buffer
+            for s_idx in range(num_samples):
+                b_idx = start_byte + s_idx * 2
+                if b_idx + 1 >= len(master_pcm):
+                    break
+                orig_s = int.from_bytes(master_pcm[b_idx:b_idx+2], byteorder='little', signed=True)
+                new_s = int.from_bytes(raw_bytes[s_idx*2:s_idx*2+2], byteorder='little', signed=True)
+                mixed = max(-32768, min(32767, orig_s + new_s))
+                master_pcm[b_idx:b_idx+2] = mixed.to_bytes(2, byteorder='little', signed=True)
+
+        if not has_any_segment:
+            return False
+
+        # Write master PCM and encode to MP3
+        master_raw_path = tmp_dir_p / "master_synced.raw"
+        master_raw_path.write_bytes(master_pcm)
+
+        cmd_enc = [
+            ff, '-y',
+            '-f', 's16le',
+            '-ar', str(sample_rate),
+            '-ac', '1',
+            '-i', str(master_raw_path),
+            '-c:a', 'libmp3lame',
+            '-b:a', '192k',
+            output_path
+        ]
+        res_enc = subprocess.run(cmd_enc, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
+        return res_enc.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) > 0
+

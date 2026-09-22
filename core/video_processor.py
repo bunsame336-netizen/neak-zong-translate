@@ -22,6 +22,94 @@ import shutil
 from pathlib import Path
 from typing import Dict, Any, Optional, Callable, List
 
+
+def _resolve_font_path(font_name: str = '') -> str:
+    """
+    Resolve a Khmer/Latin font name to an FFmpeg-compatible fontfile= path.
+    Supports both Windows (double-escaped colon C\\\\:/...) and Linux (/usr/share/fonts/...).
+    Returns empty string if no font exists so FFmpeg can fallback safely without crashing.
+    """
+    font_key = (font_name or '').strip().lower()
+
+    # Linux fonts installed via apt (fonts-khmeros, etc.)
+    linux_candidates = [
+        '/usr/share/fonts/truetype/khmeros/KhmerOSsys.ttf',
+        '/usr/share/fonts/truetype/khmeros/KhmerOS.ttf',
+        '/usr/share/fonts/truetype/khmeros/KhmerOS_battambang.ttf',
+        '/usr/share/fonts/truetype/khmeros/KhmerOS_siemreap.ttf',
+        '/usr/share/fonts/truetype/khmeros/KhmerOS_moul.ttf',
+        '/usr/share/fonts/truetype/khmeros/KhmerOS_freehand.ttf',
+        '/usr/share/fonts/truetype/khmeros/KhmerOS_content.ttf',
+        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+        '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
+        '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
+    ]
+
+    windows_map = {
+        'moul':       ['C:/Windows/Fonts/Moul.ttf', 'C:/Windows/Fonts/KonKhmer_Moul.ttf',
+                       'C:/Windows/Fonts/Moul Pali.ttf'],
+        'moul pali':  ['C:/Windows/Fonts/Moul Pali.ttf', 'C:/Windows/Fonts/Moul.ttf'],
+        'kantumruy':  ['C:/Windows/Fonts/Kantumruy.ttf', 'C:/Windows/Fonts/Kantumruy-Regular.ttf'],
+        'battambang': ['C:/Windows/Fonts/Battambang.ttf', 'C:/Windows/Fonts/KhmerOS_battambang.ttf'],
+        'siemreap':   ['C:/Windows/Fonts/Siemreap.ttf', 'C:/Windows/Fonts/KhmerOS_siemreap.ttf'],
+        'koulen':     ['C:/Windows/Fonts/Koulen.ttf'],
+        'angkor':     ['C:/Windows/Fonts/Angkor.ttf'],
+        'noto':       ['C:/Windows/Fonts/Noto Sans Khmer Bold.ttf', 'C:/Windows/Fonts/Noto Sans Khmer.ttf',
+                       'C:/Windows/Fonts/NotoSansKhmerUI-Bold.ttf'],
+        'konkhmer':   ['C:/Windows/Fonts/KonKhmer_Moul.ttf', 'C:/Windows/Fonts/KonKhmer_ChokChey.ttf'],
+        'khmeros':    ['C:/Windows/Fonts/KhmerOS.ttf', 'C:/Windows/Fonts/KhmerOS_sys.ttf'],
+        'times':      ['C:/Windows/Fonts/timesbi.ttf', 'C:/Windows/Fonts/times.ttf'],
+        'georgia':    ['C:/Windows/Fonts/georgiaz.ttf', 'C:/Windows/Fonts/georgia.ttf'],
+    }
+
+    # Windows fallback chain
+    windows_fallbacks = [
+        'C:/Windows/Fonts/Noto Sans Khmer Bold.ttf',
+        'C:/Windows/Fonts/Noto Sans Khmer.ttf',
+        'C:/Windows/Fonts/NotoSansKhmerUI-Bold.ttf',
+        'C:/Windows/Fonts/Moul.ttf',
+        'C:/Windows/Fonts/Siemreap.ttf',
+        'C:/Windows/Fonts/KhmerOS_siemreap.ttf',
+        'C:/Windows/Fonts/KhmerOS.ttf',
+        'C:/Windows/Fonts/Koulen.ttf',
+        'C:/Windows/Fonts/Kantumruy.ttf',
+        'C:/Windows/Fonts/arial.ttf'
+    ]
+
+    candidates = []
+    # If on Linux or POSIX
+    if os.name != 'nt':
+        for lp in linux_candidates:
+            if os.path.exists(lp):
+                candidates.append(lp)
+
+    # Windows map checks
+    for k, paths in windows_map.items():
+        if k in font_key or font_key in k:
+            candidates.extend(paths)
+            break
+    candidates.extend(windows_fallbacks)
+    candidates.extend(linux_candidates)
+
+    for p in candidates:
+        if os.path.exists(p):
+            # If path has Windows drive letter like C:/, double-escape colon: C\\:/...
+            clean_p = p.replace('\\', '/')
+            if len(clean_p) > 1 and clean_p[1] == ':':
+                return clean_p.replace(':', r'\:')
+            return clean_p
+
+    # Fallback to system font if any exists in /usr/share/fonts on Linux
+    if os.name != 'nt' and os.path.exists('/usr/share/fonts'):
+        for root, _, files in os.walk('/usr/share/fonts'):
+            for f in files:
+                if f.endswith('.ttf'):
+                    return os.path.join(root, f).replace('\\', '/')
+
+    # Return empty string if no font exists on system so FFmpeg doesn't fatal crash
+    return ''
+
+
 def find_ffmpeg() -> str:
     """Finds FFmpeg executable in system PATH, imageio_ffmpeg, or local tools."""
     which_ff = shutil.which("ffmpeg")
@@ -152,7 +240,7 @@ def _build_blur_mask_filter(bx: int, by: int, bw: int, bh: int) -> str:
     by = max(0, int(by))
     return (
         f"[{{inp}}]split=2[base_{{uid}}][work_{{uid}}];"
-        f"[work_{{uid}}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeV=25:sizeH=25[blurred_{{uid}}];"
+        f"[work_{{uid}}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeX=25:sizeY=25[blurred_{{uid}}];"
         f"[base_{{uid}}][blurred_{{uid}}]overlay={bx}:{by}[{{out}}]"
     )
 
@@ -179,6 +267,11 @@ def _build_filter_graph(
     # Input source
     steps.append(f"[0:v]null{current_pad}")
 
+    # 0. Resolution Scale to max 720p (Crucial for Render.com 512MB RAM & ultrafast <30s render)
+    out = next_pad()
+    steps.append(f"{current_pad}scale='trunc(min(720,iw)/2)*2':-2:flags=fast_bilinear{out}")
+    current_pad = out
+
     # 1. Flip Horizontal
     if opts.get('flip_horizontal'):
         out = next_pad()
@@ -204,19 +297,19 @@ def _build_filter_graph(
         steps.append(f"{current_pad}eq=brightness={brightness}:contrast={contrast}{out}")
         current_pad = out
 
-    # 4. Blur Mask Box using avgblur+overlay (replaces delogo)
+    # 4. Blur Mask Box using avgblur+overlay (clamped to bounds)
     blur_opts = opts.get('blur_mask')
     if blur_opts and blur_opts.get('enabled'):
         bx = max(0, int(blur_opts.get('x', 10)))
         by = max(0, int(blur_opts.get('y', 10)))
-        bw = max(10, int(blur_opts.get('w', 120)))
-        bh = max(10, int(blur_opts.get('h', 45)))
+        bw = max(10, min(720, int(blur_opts.get('w', 120))))
+        bh = max(10, min(1280, int(blur_opts.get('h', 45))))
         uid = f"bl{step_idx}"
         out = next_pad()
         # Build the split→crop→avgblur→overlay chain
         blur_chain = (
             f"{current_pad}split=2[base_{uid}][work_{uid}];"
-            f"[work_{uid}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeV=25:sizeH=25[blurred_{uid}];"
+            f"[work_{uid}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeX=25:sizeY=25[blurred_{uid}];"
             f"[base_{uid}][blurred_{uid}]overlay={bx}:{by}{out}"
         )
         steps.append(blur_chain)
@@ -227,16 +320,22 @@ def _build_filter_graph(
     if marquee_opts and marquee_opts.get('enabled') and marquee_opts.get('text'):
         m_text = _sanitize_ffmpeg_text(marquee_opts['text'])
         direction = marquee_opts.get('direction', 'up').lower()
-        speed_px = int(marquee_opts.get('speed', 30))
+        # Clamp speed: min 20px/sec so animation is always visible, max 400
+        speed_px = max(20, min(400, int(marquee_opts.get('speed', 60))))
         font_size = int(marquee_opts.get('font_size', 28))
         font_color = marquee_opts.get('color', 'yellow')
         m_x = marquee_opts.get('x', '(w-text_w)/2')
+        # Resolve font safely
+        m_font_name = marquee_opts.get('font', 'noto')
+        m_font_path = _resolve_font_path(m_font_name)
+        m_font_arg = f"fontfile='{m_font_path}':" if m_font_path else ""
 
         # Incorporate time_offset so animation continues seamlessly across chunks
         t_expr = f"(t+{time_offset:.3f})" if time_offset > 0 else "t"
 
         if direction == 'up':
             x_expr = str(m_x)
+            # Linear scroll: text starts below frame and moves upward continuously
             y_expr = f"h-mod({t_expr}*{speed_px}\\,h+text_h)"
         elif direction == 'down':
             x_expr = str(m_x)
@@ -248,6 +347,7 @@ def _build_filter_graph(
         out = next_pad()
         draw_marquee = (
             f"{current_pad}drawtext="
+            f"{m_font_arg}"
             f"text='{m_text}':fontcolor={font_color}:fontsize={font_size}:"
             f"box=1:boxcolor=black@0.65:boxborderw=6:"
             f"x={x_expr}:y={y_expr}{out}"
@@ -256,26 +356,25 @@ def _build_filter_graph(
         current_pad = out
 
     # 6. Dual-Tone Text Overlay (Part1 + Part2 with individual color/effect)
-    # If text_part1 or text_part2 is set, use dual-tone rendering
     tp1 = opts.get('text_part1')
     tp2 = opts.get('text_part2')
 
     def _build_drawtext_with_effect(text: str, color: str, effect: str,
                                      outline_color: str, outline_w: int,
-                                     x_expr: str, y_expr: str, font_size: int) -> str:
+                                     x_expr: str, y_expr: str, font_size: int,
+                                     font_name: str = 'noto') -> str:
         """Build a drawtext filter string with optional shadow/glow/outline effect."""
         safe_text = _sanitize_ffmpeg_text(text)
+        resolved_font = _resolve_font_path(font_name)
+        font_arg = f"fontfile='{resolved_font}':" if resolved_font else ""
         base = (
+            f"{font_arg}"
             f"text='{safe_text}':fontcolor={color}:fontsize={font_size}:"
             f"x={x_expr}:y={y_expr}"
         )
         if effect == 'shadow':
-            # Simulate drop shadow by drawing dark text offset first, then colored text
-            # We chain: draw shadow then top text in separate drawtext calls
-            shadow_color = 'black@0.7'
-            base += f":shadowcolor={shadow_color}:shadowx=2:shadowy=2"
+            base += ":shadowcolor=black@0.7:shadowx=2:shadowy=2"
         elif effect == 'glow':
-            # Neon glow: use borderw with neon color + bright font
             base += f":borderw=3:bordercolor={outline_color or 'cyan'}@0.9"
         elif effect == 'outline':
             ow = max(1, int(outline_w or 2))
@@ -284,10 +383,8 @@ def _build_filter_graph(
 
     if (tp1 and tp1.get('enabled') and tp1.get('text')) or \
        (tp2 and tp2.get('enabled') and tp2.get('text')):
-        # Determine combined y position
         ty = opts.get('text_overlay', {}).get('y', 30)
         font_size = opts.get('text_overlay', {}).get('size', 26)
-        # Render Part 1
         if tp1 and tp1.get('enabled') and tp1.get('text'):
             tx1 = opts.get('text_overlay', {}).get('x', 15)
             out = next_pad()
@@ -296,14 +393,13 @@ def _build_filter_graph(
                 tp1.get('effect', 'none'),
                 tp1.get('outline_color', 'black'),
                 int(tp1.get('outline_w', 2)),
-                str(tx1), str(ty), font_size
+                str(tx1), str(ty), font_size,
+                font_name=tp1.get('font', 'noto')
             )
             steps.append(f"{current_pad}{dt1}{out}")
             current_pad = out
-        # Render Part 2 (offset x by estimated char width * len(part1))
         if tp2 and tp2.get('enabled') and tp2.get('text'):
             part1_len = len((tp1 or {}).get('text', '')) if tp1 else 0
-            # Rough estimate: Khmer char ~= font_size * 0.7 px
             x2_offset = int(opts.get('text_overlay', {}).get('x', 15)) + int(part1_len * font_size * 0.7)
             out = next_pad()
             dt2 = _build_drawtext_with_effect(
@@ -311,12 +407,12 @@ def _build_filter_graph(
                 tp2.get('effect', 'none'),
                 tp2.get('outline_color', 'black'),
                 int(tp2.get('outline_w', 2)),
-                str(x2_offset), str(ty), font_size
+                str(x2_offset), str(ty), font_size,
+                font_name=tp2.get('font', 'noto')
             )
             steps.append(f"{current_pad}{dt2}{out}")
             current_pad = out
     elif opts.get('text_overlay') and opts['text_overlay'].get('enabled') and opts['text_overlay'].get('text'):
-        # Legacy single text overlay
         text_opts = opts['text_overlay']
         s_text = _sanitize_ffmpeg_text(text_opts['text'])
         tx = text_opts.get('x', '20')
@@ -325,14 +421,48 @@ def _build_filter_graph(
         tcolor = text_opts.get('color', 'white')
         border_w = text_opts.get('border_w', 2)
         border_c = text_opts.get('border_color', 'black')
+        legacy_font = _resolve_font_path(text_opts.get('font', 'noto'))
+        font_arg = f"fontfile='{legacy_font}':" if legacy_font else ""
         out = next_pad()
         steps.append(
-            f"{current_pad}drawtext=text='{s_text}':fontcolor={tcolor}:fontsize={tsize}:"
+            f"{current_pad}drawtext={font_arg}"
+            f"text='{s_text}':fontcolor={tcolor}:fontsize={tsize}:"
             f"borderw={border_w}:bordercolor={border_c}:x={tx}:y={ty}{out}"
         )
         current_pad = out
 
-    # 7. Logo Overlay (composited last)
+    # 7. Sponsor Banner Overlay (Brand + Phone/Telegram ID)
+    sponsor_opts = opts.get('sponsor')
+    if sponsor_opts and sponsor_opts.get('enabled'):
+        s_brand = _sanitize_ffmpeg_text(sponsor_opts.get('brand', ''))
+        s_contact = _sanitize_ffmpeg_text(sponsor_opts.get('contact', ''))
+        s_pos = sponsor_opts.get('position', 'bottom')
+        s_color = sponsor_opts.get('color', '0xF59E0B')
+        s_bg = sponsor_opts.get('bg_color', 'black@0.75')
+        s_font_size = int(sponsor_opts.get('font_size', 24))
+        s_font = _resolve_font_path(sponsor_opts.get('font', 'noto'))
+        font_arg = f"fontfile='{s_font}':" if s_font else ""
+
+        full_sponsor_text = f"{s_brand}  |  {s_contact}".strip(' | ')
+        if full_sponsor_text:
+            out = next_pad()
+            box_h = s_font_size + 18
+            if s_pos == 'top':
+                box_y = "10"
+                text_y = "16"
+            else:
+                box_y = f"h-{box_h + 10}"
+                text_y = f"h-{box_h + 2}"
+
+            draw_sponsor = (
+                f"{current_pad}drawbox=x=0:y={box_y}:w=iw:h={box_h}:color={s_bg}:t=fill,"
+                f"drawtext={font_arg}text='{full_sponsor_text}':fontcolor={s_color}:fontsize={s_font_size}:"
+                f"x=(w-text_w)/2:y={text_y}{out}"
+            )
+            steps.append(draw_sponsor)
+            current_pad = out
+
+    # 8. Logo Overlay (composited last)
     if has_logo and logo_input_idx is not None:
         logo_opts = opts.get('logo_overlay', {})
         lx = logo_opts.get('x', '20')
@@ -353,6 +483,7 @@ def _build_filter_graph(
 
     filter_complex = ';'.join(steps)
     return filter_complex, current_pad
+
 
 
 def render_segment(
@@ -412,7 +543,8 @@ def render_segment(
     cmd.extend([
         '-c:v', 'libx264',
         '-preset', 'ultrafast',
-        '-crf', '22',
+        '-threads', '1',
+        '-crf', '23',
         '-pix_fmt', 'yuv420p',
         output_segment_path
     ])
@@ -577,8 +709,9 @@ def _render_direct_fast(
         
     cmd.extend([
         '-c:v', 'libx264',
-        '-preset', 'fast',
-        '-crf', '22',
+        '-preset', 'ultrafast',
+        '-threads', '1',
+        '-crf', '23',
         '-pix_fmt', 'yuv420p',
         '-movflags', '+faststart',
         output_video_path

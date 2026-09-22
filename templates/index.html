@@ -124,6 +124,14 @@
               </div>
             </div>
 
+            <!-- 5. Custom Sponsor Banner Overlay -->
+            <div class="interactive-overlay" id="sponsor-overlay-element">
+              <div class="sponsor-banner-bar" id="sponsor-banner-bar">
+                <span class="sponsor-brand-tag" id="sponsor-brand-tag">🤝 «នាគហ្សង» ឧបត្ថម្ភធំ</span>
+                <span class="sponsor-contact-tag" id="sponsor-contact-tag">☎️ 012 345 678 | Telegram: @neakzong</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -174,6 +182,9 @@
         </button>
         <button type="button" class="tab-nav-btn" data-tab="blur" onclick="switchStudioTab('blur')">
           🌫️ ព្រិល Blur
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
+          🤝 Sponsor
         </button>
         <button type="button" class="tab-nav-btn" data-tab="marquee" onclick="switchStudioTab('marquee')">
           📜 Marquee
@@ -403,6 +414,60 @@
             </div>
             <input type="range" min="0" max="700" step="5" value="15" class="cyber-slider" id="blur-y-slider"
               oninput="document.getElementById('blur-y-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: CUSTOM SPONSOR BRANDING & PHONE ──────────────── -->
+      <div class="tab-panel-card" id="tab-panel-sponsor">
+        <div class="panel-section-title">
+          <span>🤝 ឈ្មោះយីហោ &amp; Sponsor (Custom Branding)</span>
+        </div>
+
+        <div class="toggle-switch-wrap">
+          <div>
+            <div class="toggle-switch-label">បើកបង្ហាញ Sponsor Banner</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">បង្ហាញឈ្មោះយីហោ និងលេខទូរស័ព្ទលើវីដេអូ</div>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggle-sponsor" onchange="toggleSponsorOverlay(this.checked)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">ឈ្មោះយីហោ / Sponsor Name</label>
+          <input type="text" id="sponsor-brand-input" class="cyber-input" value="🤝 «នាគហ្សង» ឧបត្ថម្ភធំ" placeholder="វាយឈ្មោះយីហោ ឬក្រុមហ៊ុន..." oninput="updateSponsorContent()">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">លេខទូរសព្ទ ឬ Telegram ID</label>
+          <input type="text" id="sponsor-contact-input" class="cyber-input" value="☎️ 012 345 678 | Telegram: @neakzong" placeholder="លេខទូរសព្ទ / Telegram..." oninput="updateSponsorContent()">
+        </div>
+
+        <div class="form-row">
+          <label class="form-label">ទីតាំង Sponsor Banner</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('bottom')">
+              ⬇️ ខាងក្រោម (Bottom)
+            </button>
+            <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('top')">
+              ⬆️ ខាងលើ (Top)
+            </button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label class="form-label">ពណ៌អក្សរ Sponsor</label>
+            <input type="color" id="sponsor-color-picker" value="#f59e0b" class="cyber-input" style="height: 40px; padding: 2px;" oninput="updateSponsorContent()">
+          </div>
+          <div>
+            <label class="form-label">ទំហំអក្សរ Sponsor</label>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="range" min="14" max="36" step="2" value="20" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
+              <span class="form-label-val" id="sponsor-size-val">20px</span>
+            </div>
           </div>
         </div>
       </div>

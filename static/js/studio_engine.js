@@ -79,6 +79,16 @@ const state = {
     glowColor: '#c084fc'
   },
 
+  // Sponsor Overlay (Custom Branding & Phone/Telegram ID)
+  sponsor: {
+    enabled: false,
+    brand: '🤝 «នាគហ្សង» ឧបត្ថម្ភធំ',
+    contact: '☎️ 012 345 678 | Telegram: @neakzong',
+    position: 'bottom',
+    color: '#f59e0b',
+    fontSize: 20
+  },
+
   // Khmer Voice & Audio
   voice: 'female', // 'male' (Piseth) or 'female' (Sreymom)
   voiceSpeed: 1.0,
@@ -97,6 +107,28 @@ const logoElement = document.getElementById('logo-overlay-element');
 const textElement = document.getElementById('text-overlay-element');
 const marqueeElement = document.getElementById('marquee-overlay-element');
 const marqueeTrack = document.getElementById('marquee-track');
+
+const sponsorElement = document.getElementById('sponsor-overlay-element');
+const sponsorBrandTag = document.getElementById('sponsor-brand-tag');
+const sponsorContactTag = document.getElementById('sponsor-contact-tag');
+
+// Tab Navigation Switching
+function switchStudioTab(tabId) {
+  state.activeTab = tabId;
+  document.querySelectorAll('.tab-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+  });
+  document.querySelectorAll('.tab-panel-card').forEach(panel => {
+    panel.classList.remove('active');
+  });
+  const targetPanel = document.getElementById(`tab-panel-${tabId}`);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+  }
+  if (tabId === 'blur') {
+    updateBlurBoxLimits();
+  }
+}
 
 // Toast Notification
 function showToast(text, duration = 3000) {
@@ -611,12 +643,34 @@ function _applyEffectToSpan(span, effect, color, outlineColor) {
   }
 }
 
-// ── BLUR BOX SLIDERS ───────────────────────────────────────
+// ── BLUR BOX SLIDERS (STRICTLY CLAMPED TO VIDEO BOUNDS) ──────
+function updateBlurBoxLimits() {
+  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 500;
+  const wSlider = document.getElementById('blur-w-slider');
+  const hSlider = document.getElementById('blur-h-slider');
+  const xSlider = document.getElementById('blur-x-slider');
+  const ySlider = document.getElementById('blur-y-slider');
+  if (wSlider) wSlider.max = vpW;
+  if (hSlider) hSlider.max = vpH;
+  if (xSlider) xSlider.max = Math.max(0, vpW - state.blurMask.w);
+  if (ySlider) ySlider.max = Math.max(0, vpH - state.blurMask.h);
+}
+
 function updateBlurBoxFromSliders() {
-  const x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
-  const y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
-  const w = parseInt(document.getElementById('blur-w-slider')?.value || 120);
-  const h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
+  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 500;
+
+  let w = parseInt(document.getElementById('blur-w-slider')?.value || 120);
+  let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
+  let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
+  let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+
+  // Strictly clamp to video bounds
+  w = Math.max(10, Math.min(w, vpW));
+  h = Math.max(10, Math.min(h, vpH));
+  x = Math.max(0, Math.min(x, vpW - w));
+  y = Math.max(0, Math.min(y, vpH - h));
 
   state.blurMask.x = x;
   state.blurMask.y = y;
@@ -627,6 +681,56 @@ function updateBlurBoxFromSliders() {
   blurBox.style.top = `${y}px`;
   blurBox.style.width = `${w}px`;
   blurBox.style.height = `${h}px`;
+
+  const wVal = document.getElementById('blur-w-val');
+  const hVal = document.getElementById('blur-h-val');
+  const xVal = document.getElementById('blur-x-val');
+  const yVal = document.getElementById('blur-y-val');
+  if (wVal) wVal.innerText = `${w}px`;
+  if (hVal) hVal.innerText = `${h}px`;
+  if (xVal) xVal.innerText = `${x}px`;
+  if (yVal) yVal.innerText = `${y}px`;
+
+  updateBlurBoxLimits();
+}
+
+// ── SPONSOR CONTROLS (CUSTOM BRANDING & PHONE/TELEGRAM) ────
+function toggleSponsorOverlay(enabled) {
+  state.sponsor.enabled = enabled;
+  if (sponsorElement) sponsorElement.classList.toggle('active-visible', enabled);
+  updateSponsorContent();
+  showToast(enabled ? '✓ បានបើកបង្ហាញ Sponsor Banner' : 'បានបិទ Sponsor');
+}
+
+function updateSponsorContent() {
+  const brand = document.getElementById('sponsor-brand-input')?.value || '';
+  const contact = document.getElementById('sponsor-contact-input')?.value || '';
+  const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
+  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 20);
+
+  state.sponsor.brand = brand;
+  state.sponsor.contact = contact;
+  state.sponsor.color = color;
+  state.sponsor.fontSize = size;
+
+  if (sponsorBrandTag) {
+    sponsorBrandTag.innerText = brand;
+    sponsorBrandTag.style.color = color;
+    sponsorBrandTag.style.fontSize = size + 'px';
+  }
+  if (sponsorContactTag) {
+    sponsorContactTag.innerText = contact;
+    sponsorContactTag.style.fontSize = Math.max(12, size - 4) + 'px';
+  }
+}
+
+function setSponsorPosition(pos) {
+  state.sponsor.position = pos;
+  document.getElementById('sponsor-pos-bottom')?.classList.toggle('active', pos === 'bottom');
+  document.getElementById('sponsor-pos-top')?.classList.toggle('active', pos === 'top');
+  if (sponsorElement) {
+    sponsorElement.classList.toggle('pos-top', pos === 'top');
+  }
 }
 
 // ── LOGO POSITION SLIDERS ──────────────────────────────────
@@ -970,6 +1074,15 @@ function _buildRenderOptions() {
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
       size: state.textOverlay.size
+    },
+    // Custom sponsor branding
+    sponsor: {
+      enabled: state.sponsor.enabled,
+      brand: state.sponsor.brand,
+      contact: state.sponsor.contact,
+      position: state.sponsor.position,
+      color: _hexToFFmpegColor(state.sponsor.color),
+      font_size: state.sponsor.fontSize
     }
   };
 }
@@ -1166,6 +1279,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Initialize dual-tone preview
   updateDualTonePreview();
+
+  // Initialize sponsor preview
+  updateSponsorContent();
+
+  // Initialize and clamp blur box limits
+  updateBlurBoxLimits();
+  window.addEventListener('resize', () => {
+    updateBlurBoxLimits();
+  });
 
   // Set default marquee animation
   updateMarqueeAnimation();
