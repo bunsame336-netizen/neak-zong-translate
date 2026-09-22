@@ -552,11 +552,16 @@ def api_auto_process():
             
     threading.Thread(target=_pipeline_worker, daemon=True).start()
     
-    return jsonify({
-        'status': 'started',
-        'job_id': job_id,
-        'filename': out_filename
-    })
+@app.route('/apk')
+@app.route('/download/apk')
+@app.route('/download-apk')
+def direct_download_apk():
+    apk_name = 'NeakZong_Translate_v1.0.apk'
+    apk_path = BASE_DIR / 'static' / apk_name
+    if not apk_path.exists():
+        # Fallback to root if needed
+        apk_path = BASE_DIR.parent / apk_name
+    return send_from_directory(apk_path.parent, apk_path.name, as_attachment=True)
 
 if __name__ == '__main__':
     print("=" * 65, flush=True)

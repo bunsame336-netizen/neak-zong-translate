@@ -22,12 +22,12 @@ const state = {
   brightness: 0,
   contrast: 1.0,
   
-  // Blur Mask (controlled by drag + sliders)
+  // Blur Mask (Horizontal Rectangle for Watermark/Logo)
   blurMask: {
     enabled: false,
     x: 15,
     y: 15,
-    w: 120,
+    w: 140,
     h: 45,
     intensity: 25,
     tintOpacity: 0.40
@@ -122,7 +122,13 @@ const sponsorAdTag = document.getElementById('sponsor-ad-tag');
 function switchStudioTab(tabId) {
   state.activeTab = tabId;
   document.querySelectorAll('.tab-nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+    const isTarget = btn.getAttribute('data-tab') === tabId;
+    btn.classList.toggle('active', isTarget);
+    if (isTarget) {
+      try {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch (e) {}
+    }
   });
   document.querySelectorAll('.tab-panel-card').forEach(panel => {
     panel.classList.remove('active');
@@ -649,34 +655,40 @@ function _applyEffectToSpan(span, effect, color, outlineColor) {
   }
 }
 
-// ── BLUR BOX SLIDERS (STRICTLY CLAMPED TO VIDEO BOUNDS) ──────
+// ── BLUR BOX SLIDERS (HORIZONTAL RECTANGLE: W: 50-280px, H: 20-80px) ──────
 function updateBlurBoxLimits() {
   const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 500;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
   const wSlider = document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blur-h-slider');
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
-  if (wSlider) wSlider.max = vpW;
-  if (hSlider) hSlider.max = vpH;
-  if (xSlider) xSlider.max = Math.max(0, vpW - state.blurMask.w);
-  if (ySlider) ySlider.max = Math.max(0, vpH - state.blurMask.h);
+  if (wSlider) {
+    wSlider.min = 50;
+    wSlider.max = 280;
+  }
+  if (hSlider) {
+    hSlider.min = 20;
+    hSlider.max = 80;
+  }
+  if (xSlider) xSlider.max = Math.max(0, vpW - (state.blurMask.w || 140));
+  if (ySlider) ySlider.max = Math.max(0, vpH - (state.blurMask.h || 45));
 }
 
 function updateBlurBoxFromSliders() {
   const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 500;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
 
-  let w = parseInt(document.getElementById('blur-w-slider')?.value || 120);
+  let w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
   let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
   let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
   let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
 
-  // Strictly clamp to video bounds
-  w = Math.max(10, Math.min(w, vpW));
-  h = Math.max(10, Math.min(h, vpH));
-  x = Math.max(0, Math.min(x, vpW - w));
-  y = Math.max(0, Math.min(y, vpH - h));
+  // Strictly clamp to Horizontal Rectangle constraints
+  w = Math.max(50, Math.min(280, w));
+  h = Math.max(20, Math.min(80, h));
+  x = Math.max(0, Math.min(x, Math.max(0, vpW - w)));
+  y = Math.max(0, Math.min(y, Math.max(0, vpH - h)));
 
   state.blurMask.x = x;
   state.blurMask.y = y;
@@ -847,7 +859,7 @@ function setMarqueeDirection(dir) {
 
 function setMarqueeSpeed(preset) {
   let sec = 8;
-  if (preset === 'slow') sec = 18;
+  if (preset === 'slow') sec = 15;
   if (preset === 'normal') sec = 8;
   if (preset === 'fast') sec = 4;
   setMarqueeSpeedSeconds(sec);
@@ -1068,8 +1080,8 @@ function makeResizable(element) {
     if (!isResizing) return;
     const dw = e.clientX - startX;
     const dh = e.clientY - startY;
-    const newW = Math.max(30, startW + dw);
-    const newH = Math.max(20, startH + dh);
+    const newW = Math.max(50, Math.min(280, startW + dw));
+    const newH = Math.max(20, Math.min(80, startH + dh));
     element.style.width = `${newW}px`;
     element.style.height = `${newH}px`;
 
@@ -1366,7 +1378,22 @@ window.addEventListener('DOMContentLoaded', () => {
   // Initialize sponsor preview
   updateSponsorContent();
 
-  // Initialize and clamp blur box limits
+  // Initialize and clamp blur box limits & default horizontal shape
+  if (blurBox) {
+    blurBox.style.width = '140px';
+    blurBox.style.height = '45px';
+    blurBox.style.left = '15px';
+    blurBox.style.top = '15px';
+  }
+  const initWSlider = document.getElementById('blur-w-slider');
+  const initHSlider = document.getElementById('blur-h-slider');
+  if (initWSlider) initWSlider.value = 140;
+  if (initHSlider) initHSlider.value = 45;
+  const initWVal = document.getElementById('blur-w-val');
+  const initHVal = document.getElementById('blur-h-val');
+  if (initWVal) initWVal.innerText = '140px';
+  if (initHVal) initHVal.innerText = '45px';
+
   updateBlurBoxLimits();
   window.addEventListener('resize', () => {
     updateBlurBoxLimits();

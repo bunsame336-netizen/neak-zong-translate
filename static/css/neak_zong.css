@@ -363,13 +363,12 @@ header.app-header {
   max-width: 100%;
 }
 
-/* 9:16 Portrait Viewport strictly scaled to mobile screen */
+/* 9:16 Portrait Viewport strictly scaled to mobile screen (max-height: 36vh) */
 .video-stage-viewport {
   position: relative;
   aspect-ratio: 9 / 16;
-  height: 38vh;
-  max-height: 310px;
-  min-height: 220px;
+  height: 36vh;
+  max-height: 36vh;
   background: #050408;
   display: flex;
   align-items: center;
@@ -445,9 +444,9 @@ header.app-header {
   display: block;
 }
 
-/* 1. Blur Box */
+/* 1. Blur Box (Horizontal Rectangle for corner Watermark/Logo) */
 #blur-overlay-box {
-  width: 120px;
+  width: 140px;
   height: 45px;
   top: 15px;
   left: 15px;
@@ -654,10 +653,12 @@ header.app-header {
 ══════════════════════════════════════════════════════════════ */
 .studio-tabs-nav {
   display: flex;
-  gap: 4px;
+  gap: 5px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   scrollbar-width: none;
-  padding-bottom: 2px;
+  padding: 4px 2px 6px 2px;
   flex-shrink: 0;
 }
 .studio-tabs-nav::-webkit-scrollbar {
@@ -668,17 +669,23 @@ header.app-header {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-sub);
-  padding: 6px 10px;
+  padding: 7px 11px;
   border-radius: 10px;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   transition: all 0.2s;
   flex-shrink: 0;
+}
+
+.tab-nav-btn[data-tab="marquee"] {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
 }
 
 .tab-nav-btn.active {
@@ -686,6 +693,13 @@ header.app-header {
   border-color: var(--neon-purple-bright);
   color: #ffffff;
   box-shadow: 0 0 10px var(--neon-purple-glow);
+}
+
+.tab-nav-btn[data-tab="marquee"].active {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  border-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
 }
 
 .tab-panel-card {
