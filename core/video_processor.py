@@ -331,19 +331,27 @@ def _build_filter_graph(
         steps.append(f"{current_pad}eq=brightness={brightness}:contrast={contrast}{out}")
         current_pad = out
 
-    # 4. Blur Mask Box using avgblur+overlay + optional black tint
+    # 4. Blur Mask Box using avgblur+overlay + optional pure/dark/white tint
     blur_opts = opts.get('blur_mask')
     if blur_opts and blur_opts.get('enabled'):
-        bx = max(0, int(blur_opts.get('x', 10)))
-        by = max(0, int(blur_opts.get('y', 10)))
-        bw = max(10, min(720, int(blur_opts.get('w', 120))))
-        bh = max(10, min(1280, int(blur_opts.get('h', 45))))
+        bx = max(0, min(710, int(blur_opts.get('x', 10))))
+        by = max(0, min(1270, int(blur_opts.get('y', 10))))
+        bw = max(10, min(720 - bx, int(blur_opts.get('w', 120))))
+        bh = max(10, min(1280 - by, int(blur_opts.get('h', 45))))
         intensity = max(5, min(60, int(blur_opts.get('intensity', 25))))
+        tint_mode = str(blur_opts.get('tint_mode', 'dark')).lower()
         tint_opacity = max(0.0, min(1.0, float(blur_opts.get('tint_opacity', 0.4))))
-        tint_color = blur_opts.get('tint_color', 'black')
+        
+        if tint_mode == 'white':
+            tint_color = 'white'
+        elif tint_mode == 'pure':
+            tint_opacity = 0.0
+            tint_color = 'black'
+        else:
+            tint_color = blur_opts.get('tint_color', 'black')
 
         uid = f"bl{step_idx}"
-        if tint_opacity > 0.02:
+        if tint_mode != 'pure' and tint_opacity > 0.02:
             out_blur = f"[bl_tmp_{uid}]"
             out = next_pad()
             blur_chain = (
@@ -362,14 +370,14 @@ def _build_filter_graph(
         steps.append(blur_chain)
         current_pad = out
 
-    # 5. Animated Vertical Scrolling Marquee Text (Up, Down, or Left)
+    # 5. Animated Vertical / Horizontal Scrolling Marquee Text (Up, Down, Left, Right)
     marquee_opts = opts.get('marquee')
     if marquee_opts and marquee_opts.get('enabled') and marquee_opts.get('text'):
         m_raw_text = str(marquee_opts['text'])
         m_tf_path = _write_temp_text_file(m_raw_text)
         direction = marquee_opts.get('direction', 'up').lower()
 
-        # Compute traversal speed in seconds (Slow: 15s, Normal: 8s, Fast: 4s)
+        # Compute traversal speed in seconds (Slow: 15s, Normal: 8s, Fast: 3.5s)
         speed_sec = float(marquee_opts.get('speed_sec') or 0)
         if speed_sec <= 0:
             raw_s = float(marquee_opts.get('speed', 60))
@@ -399,6 +407,10 @@ def _build_filter_graph(
             x_expr = str(m_x)
             # Full traversal from top to bottom in speed_sec seconds
             y_expr = f"-text_h+mod({t_expr}*((h+text_h)/{speed_sec:.2f})\\,h+text_h)"
+        elif direction == 'right':
+            # Full traversal from left to right in speed_sec seconds
+            x_expr = f"-text_w+mod({t_expr}*((w+text_w)/{speed_sec:.2f})\\,w+text_w)"
+            y_expr = "(h-text_h)/2"
         else:  # 'left' (right-to-left scrolling)
             x_expr = f"w-mod({t_expr}*((w+text_w)/{speed_sec:.2f})\\,w+text_w)"
             y_expr = "(h-text_h)/2"

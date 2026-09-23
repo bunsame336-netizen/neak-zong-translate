@@ -67,14 +67,10 @@
       margin: 0 !important;
       padding: 3px 5px 4px 5px !important;
       overflow: hidden !important;
-      box-sizing: border-box !important;
-      gap: 3px !important;
-    }
-
-    /* ════ 1. TOP SPLIT ROW: 68% LEFT (VIDEO) / 32% RIGHT (BUTTONS) ════ */
+     /* ════ 1. TOP SPLIT ROW: 70% LEFT (VIDEO) / 30% RIGHT (BUTTONS) ════ */
     .studio-top-split-row {
       display: grid !important;
-      grid-template-columns: 68% calc(32% - 4px) !important;
+      grid-template-columns: 70% calc(30% - 4px) !important;
       gap: 4px !important;
       width: 100% !important;
       min-width: 100% !important;
@@ -85,7 +81,7 @@
       overflow: hidden !important;
     }
 
-    /* 1.1 TOP-LEFT (68% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
+    /* 1.1 TOP-LEFT (70% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
     .top-video-col {
       width: 100% !important;
       min-width: 100% !important;
@@ -179,40 +175,44 @@
       transform: scale(0.97) !important;
     }
 
-    /* 1.2 TOP-RIGHT (32% LOCKED): COMPACT BUTTONS ALIGNED FULL HEIGHT */
+    /* 1.2 TOP-RIGHT (30% LOCKED): 2-COLUMN FULL HEIGHT ACTION MENU */
     .top-action-menu-col {
       width: 100% !important;
       min-width: 100% !important;
       max-width: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: space-between !important;
+      justify-content: stretch !important;
       height: 100% !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
-      gap: 2px !important;
+      gap: 0px !important;
     }
 
     .action-menu-grid {
       display: grid !important;
       grid-template-columns: 1fr 1fr !important;
-      gap: 5px !important;
+      grid-template-rows: repeat(5, 1fr) !important;
+      gap: 3px !important;
       width: 100% !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
     }
     .action-menu-btn {
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 2px !important;
-      height: 44px !important;
-      padding: 3px 2px !important;
-      font-size: 0.54rem !important;
+      gap: 1px !important;
+      height: 100% !important;
+      min-height: 34px !important;
+      padding: 2px 2px !important;
+      font-size: 0.53rem !important;
       font-weight: 700 !important;
       color: var(--text-main) !important;
-      background: rgba(18, 14, 32, 0.9) !important;
+      background: rgba(18, 14, 32, 0.92) !important;
       border: 1px solid rgba(168, 85, 247, 0.25) !important;
-      border-radius: 7px !important;
+      border-radius: 6px !important;
       cursor: pointer !important;
       transition: background 0.15s ease, border-color 0.15s ease !important;
       white-space: nowrap !important;
@@ -221,14 +221,14 @@
       box-sizing: border-box !important;
     }
     .action-menu-btn .btn-ico {
-      font-size: 0.84rem !important;
+      font-size: 0.80rem !important;
       flex-shrink: 0 !important;
       line-height: 1 !important;
     }
     .action-menu-btn .btn-lbl {
       overflow: hidden !important;
       text-overflow: ellipsis !important;
-      font-size: 0.54rem !important;
+      font-size: 0.53rem !important;
       line-height: 1 !important;
       letter-spacing: -0.2px !important;
     }
@@ -244,31 +244,21 @@
       box-shadow: 0 0 8px rgba(34, 211, 238, 0.4) !important;
     }
 
-    /* Download Action Button */
+    /* Download Action Button in 2-Column Grid */
     .btn-action-download {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 4px !important;
-      height: 36px !important;
-      width: 100% !important;
-      padding: 2px 4px !important;
-      font-size: 0.64rem !important;
-      font-weight: 800 !important;
       color: #10b981 !important;
       background: rgba(16, 185, 129, 0.14) !important;
-      border: 1.2px solid rgba(16, 185, 129, 0.55) !important;
-      border-radius: 7px !important;
-      cursor: pointer !important;
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.25) !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      box-sizing: border-box !important;
+      border-color: rgba(16, 185, 129, 0.55) !important;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.25) !important;
     }
     .btn-action-download:active {
       transform: scale(0.97) !important;
-      background: rgba(16, 185, 129, 0.25) !important;
+    }
+    .voice-pill-btn.active {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(168, 85, 247, 0.35)) !important;
+      border-color: #ec4899 !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
     }
 
     /* Voice Model Selector (Sreymom / Piseth) */
@@ -428,7 +418,8 @@
       width: 100% !important;
       flex: 1 1 0 !important;
       min-height: 0 !important;
-      overflow-y: auto !important;
+      overflow-y: scroll !important;
+      scrollbar-gutter: stable !important;
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch !important;
       box-sizing: border-box !important;
@@ -684,7 +675,7 @@
               <!-- 4. Animated Vertical Scrolling Marquee -->
               <div class="interactive-overlay" id="marquee-overlay-element">
                 <div class="marquee-scrolling-track" id="marquee-track">
-                  សូមចុច Subscribe &amp; Follow «នាគហ្សង បកប្រែ AI»
+                  រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ
                 </div>
               </div>
 
@@ -721,71 +712,57 @@
         </div>
       </div>
 
-      <!-- 1.2 ផ្នែកខាងលើស្ដាំ (Top-Right Action Menu Area: Clean Buttons, NO SLIDERS HERE!) -->
+      <!-- 1.2 ផ្នែកខាងលើស្ដាំ (Top-Right Action Menu Area: 2 Columns Full Height) -->
       <div class="top-action-menu-col">
         <div class="action-menu-grid">
-          <!-- 1. Clone សំឡេង -->
+          <!-- Row 1: Clone & Text -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
             <span class="btn-ico">🎙️</span>
             <span class="btn-lbl">Clone</span>
           </button>
-
-          <!-- 2. Text (អក្សរ) -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
             <span class="btn-ico">📝</span>
             <span class="btn-lbl">Text</span>
           </button>
 
-          <!-- 3. Blur (ព្រាល) -->
+          <!-- Row 2: Blur & Sponsor -->
           <button type="button" class="action-menu-btn tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
             <span class="btn-ico">🌫️</span>
             <span class="btn-lbl">Blur</span>
           </button>
-
-          <!-- 4. Sponsor (ពាណិជ្ជកម្ម) -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
             <span class="btn-ico">🤝</span>
             <span class="btn-lbl">Sponsor</span>
           </button>
 
-          <!-- 5. Logo -->
+          <!-- Row 3: Logo & Media -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
             <span class="btn-ico">🖼️</span>
             <span class="btn-lbl">Logo</span>
           </button>
-
-          <!-- 6. Media (ឯកសារ & SRT) -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="media" id="tab-nav-media" onclick="switchStudioTab('media')">
             <span class="btn-ico">📂</span>
             <span class="btn-lbl">Media</span>
           </button>
-        </div>
 
-        <!-- 7. ទាញយកវីដេអូបកប្រែរួច Action Button -->
-        <button type="button" class="btn-action-download" id="top-download-btn" onclick="handleTopDownloadAction()">
-          <span class="btn-ico">📥</span>
-          <span class="btn-lbl">ទាញយក MP4</span>
-        </button>
+          <!-- Row 4: Tools & Download -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
+            <span class="btn-ico">✂️</span>
+            <span class="btn-lbl">Tools</span>
+          </button>
+          <button type="button" class="action-menu-btn btn-action-download" id="top-download-btn" onclick="handleTopDownloadAction()">
+            <span class="btn-ico">📥</span>
+            <span class="btn-lbl">ទាញយក</span>
+          </button>
 
-        <!-- 8. កន្លែងរើសម៉ូដែលសំឡេងពិសិដ្ឋ/ស្រីមុំ -->
-        <div class="top-voice-selector-box">
-          <div class="top-voice-header">
-            <span>🗣️ សំឡេង AI:</span>
-          </div>
-          <div class="top-voice-pill-group">
-            <button type="button" class="voice-pill-btn active" id="btn-voice-female" onclick="selectQuickVoice('female')">
-              <span>👩 ស្រីមុំ</span>
-            </button>
-            <button type="button" class="voice-pill-btn" id="btn-voice-male" onclick="selectQuickVoice('male')">
-              <span>👨 ពិសិដ្ឋ</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Secondary Quick Pill: Tools (Flip/Crop/Filters) -->
-        <div class="top-extra-pills-row">
-          <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="tools" onclick="switchStudioTab('tools')" style="width: 100%;">
-            ✂️ Tools (Flip / Filters)
+          <!-- Row 5: Voice Selector (ស្រីមុំ / ពិសិដ្ឋ) -->
+          <button type="button" class="action-menu-btn voice-pill-btn active" id="btn-voice-female" onclick="selectQuickVoice('female')">
+            <span class="btn-ico">👩</span>
+            <span class="btn-lbl">ស្រីមុំ</span>
+          </button>
+          <button type="button" class="action-menu-btn voice-pill-btn" id="btn-voice-male" onclick="selectQuickVoice('male')">
+            <span class="btn-ico">👨</span>
+            <span class="btn-lbl">ពិសិដ្ឋ</span>
           </button>
         </div>
       </div>
@@ -954,14 +931,14 @@
           <div style="margin-top: 3px;">
             <div style="font-size: 0.60rem; color: var(--text-muted); font-weight: 700; margin-bottom: 2px;">⚡ Preset រហ័ស (ចុចជ្រើសរើស):</div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 3px;">
+              <button type="button" class="btn-ctrl active" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ')">
+                🐉 [Preset 1]: រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ
+              </button>
               <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ')">
-                👑 រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ
+                👑 [Preset 2]: រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ
               </button>
               <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴')">
-                🎬 𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴
-              </button>
-              <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('នាគហ្សង បកប្រែ')">
-                🐉 នាគហ្សង បកប្រែ
+                🎬 [Preset 3]: 𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴
               </button>
             </div>
           </div>
@@ -969,7 +946,7 @@
           <!-- Custom Marquee Text Edit Input -->
           <div class="form-row" style="margin-top: 4px;">
             <label class="form-label">អត្ថបទរត់ (Custom Text Edit)</label>
-            <input type="text" id="marquee-text-input" class="cyber-input" value="👑 រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ" placeholder="វាយអក្សររត់នៅទីនេះ..." oninput="updateMarqueeCustomText(this.value)">
+            <input type="text" id="marquee-text-input" class="cyber-input" value="រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ" placeholder="វាយអក្សររត់នៅទីនេះ..." oninput="updateMarqueeCustomText(this.value)">
           </div>
 
           <!-- Natural Speed Slider: Right = Fast, Left = Slow -->

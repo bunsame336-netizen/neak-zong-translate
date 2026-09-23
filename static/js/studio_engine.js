@@ -72,7 +72,7 @@ const state = {
   // Marquee
   marquee: {
     enabled: false,
-    text: 'សូមចុច Subscribe & Follow «នាគហ្សង បកប្រែ AI»',
+    text: 'រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ',
     direction: 'up',
     speedSec: 8,
     color: '#f59e0b',
@@ -1339,10 +1339,11 @@ function makeResizable(element) {
 
   handle.addEventListener('pointermove', (e) => {
     if (!isResizing) return;
-    const dw = e.clientX - startX;
-    const dh = e.clientY - startY;
-    const newW = Math.max(50, Math.min(280, startW + dw));
-    const newH = Math.max(20, Math.min(80, startH + dh));
+    const parent = element.parentElement;
+    const maxW = parent ? Math.max(30, parent.clientWidth - element.offsetLeft) : 280;
+    const maxH = parent ? Math.max(15, parent.clientHeight - element.offsetTop) : 280;
+    const newW = Math.max(30, Math.min(maxW, startW + dw));
+    const newH = Math.max(15, Math.min(maxH, startH + dh));
     element.style.width = `${newW}px`;
     element.style.height = `${newH}px`;
 
@@ -1387,11 +1388,12 @@ function _buildRenderOptions() {
       w: blurBox.offsetWidth,
       h: blurBox.offsetHeight,
       intensity: state.blurMask.intensity || 25,
-      tint_opacity: state.blurMask.tintOpacity !== undefined ? state.blurMask.tintOpacity : 0.40
+      tint_opacity: state.blurMask.tintOpacity !== undefined ? state.blurMask.tintOpacity : 0.40,
+      tint_mode: state.blurMask.tintMode || 'dark'
     },
     marquee: {
       enabled: state.marquee.enabled,
-      text: state.marquee.text,
+      text: state.marquee.text || 'រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ',
       direction: state.marquee.direction || 'up',
       speed_sec: state.marquee.speedSec || 8,
       speed: Math.round(300 / (state.marquee.speedSec || 8)),
@@ -1504,9 +1506,9 @@ async function triggerAutoProcessPipeline() {
     }
   }
 
-  progressBar.style.width = '25%';
-  if (progressPercent) progressPercent.innerText = '25%';
-  progressStatus.innerText = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR) & បកប្រែជាភាសាខ្មែរ...';
+  progressBar.style.width = '15%';
+  if (progressPercent) progressPercent.innerText = '15%';
+  progressStatus.innerText = 'កំពុងចាប់ផ្ដើម Auto Pipeline (Audio Extract & ASR)...';
 
   try {
     const res = await fetch('/api/auto-process', {
@@ -1602,12 +1604,19 @@ function pollJobStatus(jobId) {
   const progressPercent = document.getElementById('render-progress-percent');
   const downloadBtn = document.getElementById('btn-download-result');
 
+  let failCount = 0;
   const interval = setInterval(async () => {
     try {
       const res = await fetch(`/api/job/${jobId}`);
+      if (!res.ok) {
+        failCount++;
+        if (failCount > 10) clearInterval(interval);
+        return;
+      }
+      failCount = 0;
       const job = await res.json();
 
-      const pct = job.progress || 30;
+      const pct = job.progress !== undefined ? job.progress : 15;
       progressBar.style.width = `${pct}%`;
       if (progressPercent) progressPercent.innerText = `${pct}%`;
       if (job.step) progressStatus.innerText = job.step;
@@ -1620,16 +1629,17 @@ function pollJobStatus(jobId) {
         downloadBtn.style.display = 'flex';
         downloadBtn.href = job.download_url;
         downloadBtn.setAttribute('download', job.filename);
-        showToast('✓ វីដេអូ Render ចប់សព្វគ្រប់!');
+        showToast('✓ វីដេអូ Render ចប់សព្វគ្រប់ ១០០%!');
       } else if (job.status === 'failed') {
         clearInterval(interval);
         progressStatus.innerText = `⚠️ បរាជ័យ: ${job.error || 'Unknown'}`;
         progressStatus.style.color = '#f87171';
       }
     } catch (e) {
-      clearInterval(interval);
+      failCount++;
+      if (failCount > 10) clearInterval(interval);
     }
-  }, 1500);
+  }, 1200);
 }
 
 // ══════════════════════════════════════════════════════════

@@ -204,6 +204,26 @@ def _find_ffmpeg_bin() -> str:
         pass
     return "ffmpeg"
 
+def _build_atempo_filter_chain(tempo: float) -> str:
+    """
+    Builds a chained FFmpeg atempo filter string for any speed ratio.
+    FFmpeg atempo only supports values in [0.5, 2.0] per filter instance.
+    For ratios outside this range, multiple atempo filters are chained:
+    e.g. tempo 2.4 -> atempo=2.0,atempo=1.2
+    e.g. tempo 0.3 -> atempo=0.5,atempo=0.6
+    """
+    tempo = max(0.25, min(4.0, float(tempo)))
+    filters = []
+    curr = tempo
+    while curr > 2.0:
+        filters.append("atempo=2.0")
+        curr /= 2.0
+    while curr < 0.5:
+        filters.append("atempo=0.5")
+        curr /= 0.5
+    filters.append(f"atempo={curr:.3f}")
+    return ",".join(filters)
+
 def generate_synced_cues_voiceover(
     cues: list,
     total_duration: float,
@@ -216,6 +236,7 @@ def generate_synced_cues_voiceover(
     Generates a synchronized Khmer voiceover track where each speech cue is placed
     at its exact start timestamp in the video (accurate Lip-Sync alignment).
     Uses 24kHz 16-bit PCM master buffer to mix cue audios with microsecond precision.
+    Uses FFmpeg atempo time-stretching (both speed-up and slow-down) to match character mouth movements.
     """
     if not cues:
         return False
@@ -292,15 +313,19 @@ def generate_synced_cues_voiceover(
 
             actual_dur = (len(raw_bytes) // 2) / float(sample_rate)
 
-            # Strict Lip-Sync: if synthesized speech exceeds dialogue window by > 0.12s,
-            # time-stretch audio using FFmpeg atempo filter to match the actor's mouth movement
-            if actual_dur > (target_dur + 0.12):
-                tempo = min(2.0, max(0.5, actual_dur / target_dur))
+            # Strict Lip-Sync with FFmpeg atempo:
+            # Match synthesized speech duration to the character's speaking duration (target_dur)
+            # Speeds up if speech is longer, slows down if speech is shorter (bidirectional stretching)
+            if abs(actual_dur - target_dur) > 0.08 and target_dur >= 0.35:
+                raw_tempo = actual_dur / target_dur
+                # Clamped to [0.65, 1.85] for natural acoustic clarity and speech intelligibility
+                tempo = max(0.65, min(1.85, raw_tempo))
+                atempo_filter = _build_atempo_filter_chain(tempo)
                 seg_stretched = str(tmp_dir_p / f"cue_{i:04d}_stretched.raw")
                 cmd_stretch = [
                     ff, '-y',
                     '-i', seg_mp3,
-                    '-filter:a', f"atempo={tempo:.3f}",
+                    '-filter:a', atempo_filter,
                     '-f', 's16le',
                     '-ar', str(sample_rate),
                     '-ac', '1',

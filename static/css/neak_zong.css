@@ -322,10 +322,10 @@ header.app-header {
   gap: 3px !important;
 }
 
-/* 1. TOP SPLIT ROW: LEFT VIDEO (68%) / RIGHT ACTION MENU (32%) */
+/* 1. TOP SPLIT ROW: LEFT VIDEO (70%) / RIGHT ACTION MENU (30%) */
 .studio-top-split-row {
   display: grid !important;
-  grid-template-columns: 68% calc(32% - 4px) !important;
+  grid-template-columns: 70% calc(30% - 4px) !important;
   gap: 4px !important;
   width: 100% !important;
   min-width: 100% !important;
@@ -336,7 +336,7 @@ header.app-header {
   overflow: hidden !important;
 }
 
-/* 1.1 TOP-LEFT (68% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
+/* 1.1 TOP-LEFT (70% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
 .top-video-col {
   width: 100% !important;
   min-width: 100% !important;
@@ -348,18 +348,28 @@ header.app-header {
   box-sizing: border-box !important;
 }
 
-/* 1.2 TOP-RIGHT (32% LOCKED): ACTION MENU AREA (NO SLIDERS HERE!) */
+/* 1.2 TOP-RIGHT (30% LOCKED): 2-COLUMN FULL HEIGHT ACTION MENU */
 .top-action-menu-col {
   width: 100% !important;
   min-width: 100% !important;
   max-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: space-between !important;
+  justify-content: stretch !important;
   height: 100% !important;
-  gap: 2px !important;
+  gap: 0px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+}
+
+.action-menu-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: repeat(5, 1fr) !important;
+  gap: 3px !important;
+  width: 100% !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* 2. MIDDLE STATUS AREA (PROGRESS BAR & STATUS) */
@@ -376,12 +386,13 @@ header.app-header {
   box-sizing: border-box !important;
 }
 
-/* 3. BOTTOM FULL-WIDTH DYNAMIC SLIDER/CONTROL AREA */
+/* 3. BOTTOM FULL-WIDTH DYNAMIC SLIDER/CONTROL AREA (NO JITTER / SCROLLBAR STABLE) */
 .studio-bottom-panel-area {
   width: 100% !important;
   flex: 1 1 0 !important;
   min-height: 0 !important;
-  overflow-y: auto !important;
+  overflow-y: scroll !important;
+  scrollbar-gutter: stable !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
   box-sizing: border-box !important;

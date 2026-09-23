@@ -474,13 +474,13 @@ def api_auto_process():
     
     def _pipeline_worker():
         try:
-            # 1. Extract audio
+            # 1. Extract audio (10% -> 25%)
             bg_audio = EXPORTS_DIR / f"bg_{job_id}.mp3"
             extract_audio_from_video(str(video_path), str(bg_audio))
             PROCESSING_JOBS[job_id]['progress'] = 25
             PROCESSING_JOBS[job_id]['step'] = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR)...'
             
-            # 2. Chinese Speech Recognition & Khmer Translation
+            # 2. Chinese Speech Recognition & Khmer Translation (30% -> 50%)
             khmer_text = ""
             active_cues = []
             if srt_content:
@@ -488,10 +488,11 @@ def api_auto_process():
                 PROCESSING_JOBS[job_id]['step'] = 'កំពុងបកប្រែ Subtitles ជាភាសាខ្មែរ...'
                 t_srt, active_cues = translate_srt(srt_content)
                 khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
+                PROCESSING_JOBS[job_id]['progress'] = 50
             else:
                 # 100% Auto: AI listens to Chinese speech & translates to Khmer
                 PROCESSING_JOBS[job_id]['progress'] = 30
-                PROCESSING_JOBS[job_id]['step'] = 'AI Faster-Whisper (Int8) កំពុងសម្គាល់ការសន្ទនា...'
+                PROCESSING_JOBS[job_id]['step'] = 'AI Faster-Whisper កំពុងសម្គាល់ការសន្ទនាតួអង្គ...'
                 cues = asr_engine.transcribe_to_cues(str(video_path), language="zh", timeout_sec=18.0)
                 PROCESSING_JOBS[job_id]['progress'] = 45
                 PROCESSING_JOBS[job_id]['step'] = 'កំពុងបកប្រែការសន្ទនាចិនជាភាសាខ្មែរ...'
@@ -500,12 +501,13 @@ def api_auto_process():
                     t_srt, active_cues = translate_srt(chinese_srt)
                     khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
                 else:
-                    khmer_text = "សូមស្វាគមន៍មកកាន់ការទស្សនារឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
+                    khmer_text = "រឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
+                PROCESSING_JOBS[job_id]['progress'] = 50
                 
-            PROCESSING_JOBS[job_id]['progress'] = 60
-            PROCESSING_JOBS[job_id]['step'] = 'កំពុងបង្កើតសំឡេងខ្មែរ AI Neural (ស្រីមុំ/ពិសិដ្ឋ)...'
+            # 3. Synchronized Khmer TTS with Lip-Sync atempo (50% -> 70%)
+            PROCESSING_JOBS[job_id]['progress'] = 55
+            PROCESSING_JOBS[job_id]['step'] = 'កំពុងបង្កើតសំឡេងខ្មែរ AI Neural & សមកាលកម្មមាត់ (Lip-Sync)...'
             
-            # 3. Synchronized Khmer TTS (True Lip-Sync to exact character speech timestamps)
             tts_audio = EXPORTS_DIR / f"tts_{job_id}.mp3"
             total_dur = get_video_duration(str(video_path)) or 10.0
             synced_ok = False
@@ -521,15 +523,16 @@ def api_auto_process():
             if not synced_ok or not tts_audio.exists():
                 synthesize_khmer_voice(khmer_text, str(tts_audio), voice_type=voice, speed=speed)
             
-            # 4. Ducking
-            PROCESSING_JOBS[job_id]['progress'] = 70
-            PROCESSING_JOBS[job_id]['step'] = 'Mixing Audio & Ducking BGM...'
+            PROCESSING_JOBS[job_id]['progress'] = 68
+            # 4. Ducking (70% -> 75%)
+            PROCESSING_JOBS[job_id]['progress'] = 75
+            PROCESSING_JOBS[job_id]['step'] = 'Mixing Audio & Ducking BGM (75%)...'
             ducked_audio = EXPORTS_DIR / f"ducked_{job_id}.mp3"
             duck_ok = apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15, ffmpeg_bin=find_ffmpeg())
             audio_to_use = str(ducked_audio) if (duck_ok and ducked_audio.exists() and ducked_audio.stat().st_size > 1000) else str(tts_audio)
             
-            # 5. Render Video with Chunking Progress Callback
-            PROCESSING_JOBS[job_id]['progress'] = 85
+            # 5. Render Video with Chunking Progress Callback (80% -> 100%)
+            PROCESSING_JOBS[job_id]['progress'] = 80
             PROCESSING_JOBS[job_id]['step'] = 'Rendering Final HD Video (Ultra-Fast Engine)...'
             
             def _prog_cb(pct, step_msg):
@@ -546,7 +549,7 @@ def api_auto_process():
             if success:
                 PROCESSING_JOBS[job_id]['progress'] = 100
                 PROCESSING_JOBS[job_id]['status'] = 'completed'
-                PROCESSING_JOBS[job_id]['step'] = 'Done!'
+                PROCESSING_JOBS[job_id]['step'] = '✓ ជោគជ័យ ១០០%!'
                 PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
             else:
                 PROCESSING_JOBS[job_id]['status'] = 'failed'
@@ -556,6 +559,11 @@ def api_auto_process():
             PROCESSING_JOBS[job_id]['error'] = str(e)
             
     threading.Thread(target=_pipeline_worker, daemon=True).start()
+    return jsonify({
+        'status': 'started',
+        'job_id': job_id,
+        'filename': out_filename
+    })
     
 @app.route('/apk')
 @app.route('/download/apk')
