@@ -612,20 +612,10 @@ def render_segment(
         
     filter_complex, out_pad = _build_filter_graph(opts, has_logo, logo_input_idx, time_offset=start_time)
     
-    # Mix TTS audio with Background Music
+    # Audio handling: When custom audio (Khmer TTS / ducked soundtrack) is present, map it directly
     has_audio_out = False
-    if has_custom_audio and orig_has_audio:
-        audio_mix = (
-            f"[0:a]volume=0.25[bgm];"
-            f"[{audio_input_idx}:a]volume=1.25[voice];"
-            f"[bgm][voice]amix=inputs=2:duration=first:dropout_transition=2[aout]"
-        )
-        filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
-        if not out_pad or out_pad == '[0:v]':
-            out_pad = '[vout]'
-        has_audio_out = True
-    elif has_custom_audio and not orig_has_audio:
-        audio_mix = f"[{audio_input_idx}:a]volume=1.25[aout]"
+    if has_custom_audio:
+        audio_mix = f"[{audio_input_idx}:a]volume=1.3[aout]"
         filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
         if not out_pad or out_pad == '[0:v]':
             out_pad = '[vout]'
@@ -800,20 +790,10 @@ def _render_direct_fast(
 
     filter_complex, out_pad = _build_filter_graph(opts, has_logo, logo_input_idx, time_offset=0.0)
 
-    # Mix TTS audio with Background Music
+    # Audio handling: When custom audio (Khmer TTS / ducked soundtrack) is present, map it directly
     has_audio_out = False
-    if has_custom_audio and orig_has_audio:
-        audio_mix = (
-            f"[0:a]volume=0.25[bgm];"
-            f"[{audio_input_idx}:a]volume=1.25[voice];"
-            f"[bgm][voice]amix=inputs=2:duration=first:dropout_transition=2[aout]"
-        )
-        filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
-        if not out_pad or out_pad == '[0:v]':
-            out_pad = '[vout]'
-        has_audio_out = True
-    elif has_custom_audio and not orig_has_audio:
-        audio_mix = f"[{audio_input_idx}:a]volume=1.25[aout]"
+    if has_custom_audio:
+        audio_mix = f"[{audio_input_idx}:a]volume=1.3[aout]"
         filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
         if not out_pad or out_pad == '[0:v]':
             out_pad = '[vout]'

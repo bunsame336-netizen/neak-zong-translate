@@ -591,11 +591,48 @@ function toggleTextOverlay(enabled) {
   showToast(enabled ? '✓ បានបើកអក្សរ Dual-Tone' : 'បានបិទអក្សរ');
 }
 
+function setQuickTextColor(colorHex) {
+  const p1Col = document.getElementById('text-part1-color');
+  const p2Col = document.getElementById('text-part2-color');
+  if (p1Col) p1Col.value = colorHex;
+  if (p2Col) p2Col.value = colorHex;
+  state.textPart1.color = colorHex;
+  state.textPart2.color = colorHex;
+  updateDualTonePreview();
+  showToast(`✓ បានប្ដូរពណ៌អក្សរ: ${colorHex}`);
+}
+
+function setTextPartColor(partNum, colorHex) {
+  if (partNum === 1) {
+    const p1Col = document.getElementById('text-part1-color');
+    if (p1Col) p1Col.value = colorHex;
+    state.textPart1.color = colorHex;
+  } else {
+    const p2Col = document.getElementById('text-part2-color');
+    if (p2Col) p2Col.value = colorHex;
+    state.textPart2.color = colorHex;
+  }
+  updateDualTonePreview();
+  showToast(`✓ ពណ៌ពាក្យ ${partNum}: ${colorHex}`);
+}
+
 function toggleTextTransparentMode(enabled) {
   state.textOverlay.transparentMode = enabled;
   const rendered = document.getElementById('rendered-text-val');
+  const txtEl = document.getElementById('text-overlay-element');
   if (rendered) {
     rendered.classList.toggle('transparent-mode', enabled);
+  }
+  if (txtEl) {
+    txtEl.classList.toggle('transparent-mode', enabled);
+  }
+  const p1Span = document.getElementById('text-part1-preview');
+  const p2Span = document.getElementById('text-part2-preview');
+  if (enabled) {
+    if (p1Span) { p1Span.style.textShadow = 'none'; p1Span.style.webkitTextStroke = 'none'; }
+    if (p2Span) { p2Span.style.textShadow = 'none'; p2Span.style.webkitTextStroke = 'none'; }
+  } else {
+    updateDualTonePreview();
   }
   showToast(enabled ? '✓ បានដោះផ្ទៃខាងក្រោយ (Transparent Mode)' : 'បានបិទ Transparent Mode');
 }
@@ -657,9 +694,12 @@ function updateDualTonePreview() {
 }
 
 function _applyEffectToSpan(span, effect, color, outlineColor) {
-  // Reset
   span.style.textShadow = '';
   span.style.webkitTextStroke = '';
+
+  if (state.textOverlay.transparentMode) {
+    return;
+  }
 
   switch (effect) {
     case 'shadow':
@@ -675,6 +715,7 @@ function _applyEffectToSpan(span, effect, color, outlineColor) {
       break;
   }
 }
+
 
 // ── BLUR BOX SLIDERS (HORIZONTAL RECTANGLE: W: 50-280px, H: 20-80px) ──────
 function updateBlurBoxLimits() {
@@ -876,14 +917,17 @@ function updateLogoPosition() {
 // ── MARQUEE ────────────────────────────────────────────────
 function toggleMarqueeOverlay(enabled) {
   state.marquee.enabled = enabled;
-  marqueeElement.classList.toggle('active-visible', enabled);
+  if (marqueeElement) {
+    marqueeElement.classList.toggle('active-visible', enabled);
+    marqueeElement.style.display = enabled ? 'block' : 'none';
+  }
   updateMarqueeAnimation();
   showToast(enabled ? '✓ បានបើកអក្សររត់ (Marquee)' : 'បានបិទអក្សររត់');
 }
 
 function updateMarqueeText(val) {
   state.marquee.text = val;
-  marqueeTrack.innerText = val;
+  if (marqueeTrack) marqueeTrack.innerText = val;
 }
 
 function setMarqueeDirection(dir) {
@@ -938,6 +982,7 @@ function setMarqueeEffect(effect) {
 }
 
 function applyMarqueeStyles() {
+  if (!marqueeTrack) return;
   const font = document.getElementById('marquee-font-select')?.value || "'Kantumruy Pro', sans-serif";
   const color = document.getElementById('marquee-color-picker')?.value || '#f59e0b';
   const glowColor = document.getElementById('marquee-glow-color')?.value || '#c084fc';
@@ -969,15 +1014,43 @@ function applyMarqueeStyles() {
 }
 
 function updateMarqueeAnimation() {
-  const dir = state.marquee.direction;
-  let animName;
+  if (!marqueeElement || !marqueeTrack) return;
+
+  const dir = state.marquee.direction || 'up';
+  const speedSec = parseFloat(state.marquee.speedSec) || 8.0;
+
+  if (!state.marquee.enabled) {
+    marqueeElement.classList.remove('active-visible');
+    marqueeElement.style.display = 'none';
+    marqueeTrack.style.animation = 'none';
+    return;
+  }
+
+  marqueeElement.classList.add('active-visible');
+  marqueeElement.style.display = 'block';
+
+  // Toggle directional classes
+  if (dir === 'left' || dir === 'right') {
+    marqueeTrack.classList.add('dir-horizontal');
+    marqueeTrack.classList.remove('dir-vertical');
+  } else {
+    marqueeTrack.classList.add('dir-vertical');
+    marqueeTrack.classList.remove('dir-horizontal');
+  }
+
+  let animName = 'scrollUp';
   switch (dir) {
     case 'down':   animName = 'scrollDown';  break;
     case 'left':   animName = 'scrollLeft';  break;
     case 'right':  animName = 'scrollRight'; break;
     default:       animName = 'scrollUp';    break;
   }
-  marqueeTrack.style.animation = `${animName} ${state.marquee.speedSec}s linear infinite`;
+
+  // Force reflow to immediately restart animation seamlessly
+  marqueeTrack.style.animation = 'none';
+  void marqueeTrack.offsetHeight;
+  marqueeTrack.style.animation = `${animName} ${speedSec}s linear infinite`;
+
   applyMarqueeStyles();
 }
 
@@ -1170,11 +1243,11 @@ function _buildRenderOptions() {
     marquee: {
       enabled: state.marquee.enabled,
       text: state.marquee.text,
-      direction: state.marquee.direction,
+      direction: state.marquee.direction || 'up',
       speed_sec: state.marquee.speedSec || 8,
       speed: Math.round(300 / (state.marquee.speedSec || 8)),
-      color: state.marquee.color,
-      font_size: state.marquee.fontSize,
+      color: _hexToFFmpegColor(state.marquee.color),
+      font_size: state.marquee.fontSize || 24,
       font: 'kantumruy'
     },
     // Dual-tone text
@@ -1183,13 +1256,14 @@ function _buildRenderOptions() {
       text: state.textPart1.text + ' ' + state.textPart2.text,
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
-      size: state.textOverlay.size
+      size: state.textOverlay.size,
+      transparent_mode: state.textOverlay.transparentMode || false
     },
     text_part1: {
       enabled: state.textOverlay.enabled && state.textPart1.text.length > 0,
       text: state.textPart1.text,
       color: _hexToFFmpegColor(state.textPart1.color),
-      effect: state.textPart1.effect,
+      effect: state.textOverlay.transparentMode ? 'none' : state.textPart1.effect,
       outline_color: _hexToFFmpegColor(state.textPart1.outlineColor),
       outline_w: state.textPart1.outlineW,
       x: textElement.offsetLeft,
@@ -1200,7 +1274,7 @@ function _buildRenderOptions() {
       enabled: state.textOverlay.enabled && state.textPart2.text.length > 0,
       text: state.textPart2.text,
       color: _hexToFFmpegColor(state.textPart2.color),
-      effect: state.textPart2.effect,
+      effect: state.textOverlay.transparentMode ? 'none' : state.textPart2.effect,
       outline_color: _hexToFFmpegColor(state.textPart2.outlineColor),
       outline_w: state.textPart2.outlineW,
       x: textElement.offsetLeft,

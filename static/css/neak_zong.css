@@ -512,32 +512,40 @@ header.app-header {
 
 /* 4. Animated Vertical Scrolling Marquee */
 #marquee-overlay-element {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 14;
+  position: absolute !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  z-index: 15 !important;
   display: none;
 }
 
 #marquee-overlay-element.active-visible {
-  display: block;
+  display: block !important;
 }
 
 .marquee-scrolling-track {
-  position: absolute;
-  width: 100%;
-  text-align: center;
-  font-weight: 800;
-  font-size: 0.88rem;
-  color: var(--neon-gold);
-  background: rgba(0, 0, 0, 0.65);
-  padding: 4px 8px;
-  border-top: 1px solid rgba(245, 158, 11, 0.4);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.4);
-  text-shadow: 0 2px 4px #000;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  font-size: 0.88rem !important;
+  color: var(--neon-gold) !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  padding: 4px 8px !important;
+  border-top: 1px solid rgba(245, 158, 11, 0.4) !important;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.4) !important;
+  text-shadow: 0 2px 4px #000 !important;
+  will-change: top, transform, left !important;
 }
 
 /* Resizing Handles for Blur Box */
@@ -1100,31 +1108,37 @@ header.app-header {
    ⚡ Marquee Scroll Animations (Full Viewport Seamless Traversal)
 ══════════════════════════════════════════════════════════════ */
 @keyframes scrollUp {
-  0%   { top: 100%; transform: translateY(0); }
+  0%   { top: 100%; transform: translateY(0%); }
   100% { top: 0%; transform: translateY(-100%); }
 }
 @keyframes scrollDown {
   0%   { top: 0%; transform: translateY(-100%); }
-  100% { top: 100%; transform: translateY(0); }
+  100% { top: 100%; transform: translateY(0%); }
 }
 @keyframes scrollLeft {
-  0%   { left: 100%; transform: translateX(0); }
+  0%   { left: 100%; transform: translateX(0%); }
   100% { left: 0%; transform: translateX(-100%); }
 }
 @keyframes scrollRight {
   0%   { left: 0%; transform: translateX(-100%); }
-  100% { left: 100%; transform: translateX(0); }
+  100% { left: 100%; transform: translateX(0%); }
 }
 
-/* Marquee track adjustment for continuous scrolling */
 .marquee-scrolling-track {
-  white-space: nowrap;
-  display: inline-block;
-  width: max-content;
-  min-width: 100%;
-  position: absolute;
-  left: 0;
-  right: 0;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+.marquee-scrolling-track.dir-horizontal {
+  white-space: nowrap !important;
+  width: max-content !important;
+  min-width: 100% !important;
+}
+.marquee-scrolling-track.dir-vertical {
+  white-space: normal !important;
+  width: 100% !important;
 }
 
 /* ══════════════════════════════════════════════════════════════
