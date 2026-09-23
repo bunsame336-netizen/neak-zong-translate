@@ -21,7 +21,7 @@
   <!-- Custom Mobile Split Cyberpunk CSS -->
   <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.0.0">
 
-  <!-- ⚡ CRITICAL MOBILE OVERRIDE: 2-COLUMN SIDE-BY-SIDE MOBILE GRID (NO PAGE SCROLL) -->
+  <!-- ⚡ CRITICAL MOBILE STUDIO 3-TIER RESTRUCTURE (NO WHOLE-PAGE SCROLL / 100dvh LOCK) -->
   <style>
     html, body {
       margin: 0 !important;
@@ -37,60 +37,59 @@
       left: 0 !important;
       right: 0 !important;
       bottom: 0 !important;
+      touch-action: manipulation;
     }
     header.app-header {
-      height: 44px !important;
-      min-height: 44px !important;
-      max-height: 44px !important;
-      flex: 0 0 44px !important;
+      height: 42px !important;
+      min-height: 42px !important;
+      max-height: 42px !important;
+      flex: 0 0 42px !important;
       padding: 2px 8px !important;
       z-index: 100 !important;
       box-sizing: border-box !important;
     }
     .brand-title {
-      font-size: 0.85rem !important;
+      font-size: 0.82rem !important;
     }
     .brand-dragon-badge {
-      width: 28px !important;
-      height: 28px !important;
+      width: 26px !important;
+      height: 26px !important;
     }
 
-    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID (MATCH USER SCREENSHOT EXACTLY) ════ */
+    /* ════ 3-TIER MOBILE STUDIO CONTAINER (FITS 100dvh PERFECTLY) ════ */
     .studio-main-container {
-      display: grid !important;
-      grid-template-columns: 46% 54% !important;
-      width: 100vw !important;
-      max-width: 100% !important;
-      height: calc(100dvh - 44px) !important;
-      max-height: calc(100dvh - 44px) !important;
-      margin: 0 !important;
-      padding: 3px 4px 6px 4px !important;
-      overflow: hidden !important;
-      box-sizing: border-box !important;
-      gap: 5px !important;
-    }
-
-    /* ── LEFT COLUMN (46%): VIDEO PREVIEW + PLAYBACK + 1-CLICK ACTION ── */
-    .studio-stage-col {
-      width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-items: stretch !important;
-      padding: 0 3px 0 0 !important;
-      border: none !important;
-      border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
-      background: transparent !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
+      width: 100vw !important;
+      max-width: 100% !important;
+      height: calc(100dvh - 42px) !important;
+      max-height: calc(100dvh - 42px) !important;
+      margin: 0 !important;
+      padding: 3px 5px 4px 5px !important;
+      overflow: hidden !important;
       box-sizing: border-box !important;
-      gap: 4px !important;
-      scrollbar-width: none !important;
+      gap: 3px !important;
     }
-    .studio-stage-col::-webkit-scrollbar {
-      display: none !important;
+
+    /* ════ 1. TOP SPLIT ROW: LEFT VIDEO (46%) / RIGHT ACTION MENU (54%) ════ */
+    .studio-top-split-row {
+      display: grid !important;
+      grid-template-columns: 46% 54% !important;
+      gap: 5px !important;
+      width: 100% !important;
+      flex: 0 0 auto !important;
+      max-height: 42dvh !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 1.1 TOP-LEFT: VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
+    .top-video-col {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 3px !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
     }
 
     .video-stage-card {
@@ -99,21 +98,16 @@
       border-radius: 8px !important;
       overflow: hidden !important;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9) !important;
-      position: relative !important;
       display: flex !important;
       flex-direction: column !important;
-      flex-shrink: 0 !important;
       width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      max-height: none !important;
     }
 
     .video-stage-viewport {
       position: relative !important;
       aspect-ratio: 9 / 16 !important;
       width: 100% !important;
-      max-height: 48vh !important;
+      max-height: calc(42dvh - 60px) !important;
       background: #050408 !important;
       display: flex !important;
       align-items: center !important;
@@ -123,8 +117,8 @@
     }
 
     .video-toolbar {
-      height: 24px !important;
-      min-height: 24px !important;
+      height: 22px !important;
+      min-height: 22px !important;
       padding: 1px 4px !important;
       flex-shrink: 0 !important;
       display: flex !important;
@@ -138,174 +132,379 @@
       gap: 3px !important;
     }
     .video-toolbar .btn-ctrl {
-      font-size: 0.62rem !important;
-      padding: 2px 5px !important;
-      height: 20px !important;
+      font-size: 0.60rem !important;
+      padding: 1px 4px !important;
+      height: 18px !important;
     }
     .video-toolbar .time-display {
-      font-size: 0.58rem !important;
+      font-size: 0.55rem !important;
     }
 
     .auto-process-banner {
       width: 100% !important;
-      margin: 2px 0 0 0 !important;
+      margin: 0 !important;
       padding: 0 !important;
       flex-shrink: 0 !important;
-      border-radius: 6px !important;
     }
     .btn-auto-process {
-      padding: 6px 4px !important;
-      font-size: 0.68rem !important;
+      padding: 5px 3px !important;
+      font-size: 0.63rem !important;
       font-weight: 800 !important;
       width: 100% !important;
-      min-height: 32px !important;
+      min-height: 30px !important;
       height: auto !important;
+      display: flex !important;
+      align-items: center !important;
       justify-content: center !important;
       letter-spacing: 0px !important;
       border-radius: 6px !important;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      box-shadow: 0 2px 10px rgba(168, 85, 247, 0.5) !important;
+      cursor: pointer !important;
       text-align: center !important;
       white-space: normal !important;
-      line-height: 1.25 !important;
+      line-height: 1.15 !important;
+    }
+    .btn-auto-process:active {
+      transform: scale(0.97) !important;
     }
 
-    /* ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── */
-    .studio-controls-col {
+    /* 1.2 TOP-RIGHT: ACTION MENU AREA (NO SLIDERS HERE!) */
+    .top-action-menu-col {
       width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
+      gap: 3px !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+    }
+
+    .action-menu-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 3px !important;
+      width: 100% !important;
+    }
+    .action-menu-btn {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 3px !important;
+      height: 27px !important;
+      padding: 1px 3px !important;
+      font-size: 0.60rem !important;
+      font-weight: 700 !important;
+      color: var(--text-main) !important;
+      background: rgba(18, 14, 32, 0.9) !important;
+      border: 1px solid rgba(168, 85, 247, 0.25) !important;
+      border-radius: 5px !important;
+      cursor: pointer !important;
+      transition: all 0.15s ease !important;
+      white-space: nowrap !important;
+    }
+    .action-menu-btn .btn-ico {
+      font-size: 0.72rem !important;
+    }
+    .action-menu-btn:hover {
+      background: rgba(30, 22, 54, 0.95) !important;
+      border-color: rgba(168, 85, 247, 0.5) !important;
+    }
+    .action-menu-btn.active {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(6, 182, 212, 0.25)) !important;
+      border-color: var(--neon-cyan-bright) !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.4) !important;
+    }
+
+    /* Download Action Button */
+    .btn-action-download {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      height: 27px !important;
+      width: 100% !important;
+      padding: 1px 4px !important;
+      font-size: 0.62rem !important;
+      font-weight: 800 !important;
+      color: #10b981 !important;
+      background: rgba(16, 185, 129, 0.12) !important;
+      border: 1.2px solid rgba(16, 185, 129, 0.5) !important;
+      border-radius: 5px !important;
+      cursor: pointer !important;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.2) !important;
+      transition: all 0.15s ease !important;
+    }
+    .btn-action-download:active {
+      transform: scale(0.97) !important;
+      background: rgba(16, 185, 129, 0.25) !important;
+    }
+
+    /* Voice Model Selector (Sreymom / Piseth) */
+    .top-voice-selector-box {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      background: rgba(12, 9, 24, 0.92) !important;
+      border: 1px solid rgba(245, 158, 11, 0.3) !important;
+      border-radius: 5px !important;
+      padding: 2px 4px !important;
+    }
+    .top-voice-header {
+      font-size: 0.55rem !important;
+      color: var(--neon-gold) !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.2px !important;
+    }
+    .top-voice-pill-group {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 3px !important;
+    }
+    .voice-pill-btn {
+      height: 20px !important;
+      padding: 0 2px !important;
+      font-size: 0.56rem !important;
+      font-weight: 700 !important;
+      border-radius: 4px !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      color: var(--text-sub) !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      white-space: nowrap !important;
+    }
+    .voice-pill-btn.active {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(217, 119, 6, 0.45)) !important;
+      border-color: var(--neon-gold) !important;
+      color: #fbbf24 !important;
+      font-weight: 800 !important;
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.4) !important;
+    }
+
+    /* Extra secondary pills */
+    .top-extra-pills-row {
+      display: flex !important;
+      gap: 3px !important;
+      width: 100% !important;
+    }
+    .extra-pill-btn {
+      flex: 1 !important;
+      height: 18px !important;
+      font-size: 0.54rem !important;
+      font-weight: 600 !important;
+      color: var(--text-muted) !important;
+      background: rgba(255, 255, 255, 0.04) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 4px !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      white-space: nowrap !important;
+    }
+    .extra-pill-btn.active {
+      border-color: var(--neon-purple-bright) !important;
+      color: var(--neon-purple-bright) !important;
+      background: rgba(168, 85, 247, 0.2) !important;
+      font-weight: 700 !important;
+    }
+
+    /* ════ 2. MIDDLE STATUS AREA (PROGRESS BAR & STATUS) ════ */
+    .studio-middle-status-row {
+      width: 100% !important;
+      flex: 0 0 auto !important;
+      background: rgba(12, 8, 26, 0.95) !important;
+      border: 1px solid rgba(168, 85, 247, 0.35) !important;
+      border-radius: 6px !important;
+      padding: 3px 6px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      box-sizing: border-box !important;
+    }
+    .middle-status-bar {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      width: 100% !important;
+    }
+    .status-indicator-left {
+      display: flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      overflow: hidden !important;
+    }
+    .status-live-text {
+      font-size: 0.63rem !important;
+      font-weight: 800 !important;
+      color: var(--neon-purple-bright) !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    .status-indicator-right {
+      font-size: 0.58rem !important;
+      font-weight: 800 !important;
+      color: var(--neon-cyan-bright) !important;
+    }
+    .pulse-live-dot {
+      width: 6px !important;
+      height: 6px !important;
+      border-radius: 50% !important;
+      background: var(--neon-cyan-bright) !important;
+      box-shadow: 0 0 6px var(--neon-cyan-bright) !important;
+      animation: pulseDot 1.5s infinite !important;
+      flex-shrink: 0 !important;
+    }
+    .render-progress-track {
+      width: 100% !important;
+      height: 5px !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-radius: 4px !important;
+      overflow: hidden !important;
+    }
+    .render-progress-bar {
+      width: 0% !important;
+      height: 100% !important;
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan)) !important;
+      box-shadow: 0 0 8px var(--neon-purple-bright) !important;
+      transition: width 0.3s ease !important;
+    }
+    #btn-download-result {
+      display: none;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      padding: 3px 6px !important;
+      margin-top: 2px !important;
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+      color: #ffffff !important;
+      font-size: 0.66rem !important;
+      font-weight: 800 !important;
+      border-radius: 5px !important;
+      text-decoration: none !important;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+    }
+
+    /* ════ 3. BOTTOM FULL-WIDTH DYNAMIC SLIDER/CONTROL AREA ════ */
+    .studio-bottom-panel-area {
+      width: 100% !important;
+      flex: 1 1 0 !important;
+      min-height: 0 !important;
       overflow-y: auto !important;
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch !important;
-      padding: 0 2px 40px 2px !important;
-      background: transparent !important;
       box-sizing: border-box !important;
-      gap: 4px !important;
+      padding-bottom: 6px !important;
       scrollbar-width: thin !important;
     }
-
-    /* Tabs Bar at top of Controls */
-    .studio-tabs-nav {
-      display: flex !important;
-      flex-direction: row !important;
-      flex-wrap: nowrap !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      -webkit-overflow-scrolling: touch !important;
-      white-space: nowrap !important;
-      width: 100% !important;
-      background: rgba(14, 10, 26, 0.95) !important;
-      border: 1px solid rgba(168, 85, 247, 0.3) !important;
-      border-radius: 6px !important;
-      padding: 2px !important;
-      gap: 3px !important;
-      flex-shrink: 0 !important;
-      height: 32px !important;
-      min-height: 32px !important;
-      max-height: 32px !important;
-      scrollbar-width: none !important;
+    .studio-bottom-panel-area::-webkit-scrollbar {
+      width: 4px !important;
     }
-    .studio-tabs-nav::-webkit-scrollbar {
-      display: none !important;
-    }
-
-    .tab-nav-btn {
-      flex: 0 0 auto !important;
-      padding: 0 7px !important;
-      font-size: 0.68rem !important;
-      font-weight: 700 !important;
+    .studio-bottom-panel-area::-webkit-scrollbar-thumb {
+      background: rgba(168, 85, 247, 0.4) !important;
       border-radius: 4px !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 2px !important;
-      white-space: nowrap !important;
-      cursor: pointer !important;
-      height: 26px !important;
-      min-height: 26px !important;
-    }
-    .tab-nav-btn[data-tab="marquee"] {
-      border-color: rgba(245, 158, 11, 0.5) !important;
-      background: rgba(245, 158, 11, 0.15) !important;
-      color: #fbbf24 !important;
-      font-weight: 800 !important;
     }
 
-    /* Active Tab Panel */
+    /* Active Tab Panel Cards (100% Full Width!) */
     .tab-panel-card {
       width: 100% !important;
-      padding: 5px 6px !important;
-      background: rgba(15, 11, 26, 0.96) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      border-radius: 6px !important;
+      padding: 5px 7px !important;
+      background: rgba(14, 10, 26, 0.96) !important;
+      border: 1px solid rgba(168, 85, 247, 0.25) !important;
+      border-radius: 8px !important;
       box-sizing: border-box !important;
       gap: 4px !important;
       display: none !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
     }
     .tab-panel-card.active {
       display: flex !important;
       flex-direction: column !important;
+      animation: fadeInPanel 0.18s ease-in-out !important;
     }
+    @keyframes fadeInPanel {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .panel-section-title {
-      font-size: 0.7rem !important;
+      font-size: 0.70rem !important;
+      font-weight: 800 !important;
       padding: 1px 0 !important;
       margin: 0 !important;
+      color: var(--neon-cyan-bright) !important;
     }
     .form-row {
       margin: 0 !important;
       gap: 1px !important;
     }
     .form-label {
-      font-size: 0.62rem !important;
+      font-size: 0.60rem !important;
       margin-bottom: 1px !important;
+      display: flex !important;
+      justify-content: space-between !important;
     }
     .form-label-val {
-      font-size: 0.6rem !important;
+      font-size: 0.58rem !important;
+      font-weight: 700 !important;
+      color: var(--neon-cyan-bright) !important;
     }
     .cyber-input {
-      font-size: 0.68rem !important;
+      font-size: 0.65rem !important;
       padding: 2px 4px !important;
-      height: 28px !important;
+      height: 26px !important;
     }
     .slider-group-box {
       padding: 4px 6px !important;
       gap: 2px !important;
       border-radius: 5px !important;
+      background: rgba(18, 13, 34, 0.75) !important;
+      border: 1px solid rgba(168, 85, 247, 0.15) !important;
     }
     .slider-group-title {
-      font-size: 0.62rem !important;
+      font-size: 0.60rem !important;
+      font-weight: 700 !important;
+      color: var(--neon-gold) !important;
       margin-bottom: 2px !important;
     }
 
-    /* Touch-friendly Sliders */
+    /* Touch-friendly Sliders (Full-Width, High Precision) */
     .cyber-slider {
       width: 100% !important;
-      height: 6px !important;
-      margin: 2px 0 !important;
+      height: 7px !important;
+      margin: 3px 0 !important;
       touch-action: pan-x !important;
       -webkit-appearance: none !important;
       appearance: none !important;
       cursor: pointer !important;
+      background: rgba(255, 255, 255, 0.12) !important;
+      border-radius: 4px !important;
     }
     .cyber-slider::-webkit-slider-thumb {
       -webkit-appearance: none !important;
       appearance: none !important;
-      width: 20px !important;
-      height: 20px !important;
+      width: 22px !important;
+      height: 22px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
       border: 2px solid #ffffff !important;
-      box-shadow: 0 0 6px rgba(168, 85, 247, 0.8) !important;
+      box-shadow: 0 0 8px rgba(168, 85, 247, 0.9) !important;
       cursor: pointer !important;
     }
     .cyber-slider::-moz-range-thumb {
-      width: 20px !important;
-      height: 20px !important;
+      width: 22px !important;
+      height: 22px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
       border: 2px solid #ffffff !important;
-      box-shadow: 0 0 6px rgba(168, 85, 247, 0.8) !important;
+      box-shadow: 0 0 8px rgba(168, 85, 247, 0.9) !important;
       cursor: pointer !important;
     }
 
@@ -314,16 +513,15 @@
       display: flex !important;
       align-items: center !important;
       gap: 4px !important;
-      padding: 3px 0 !important;
+      padding: 2px 0 !important;
     }
     .btn-color-quick {
       border: none !important;
-      padding: 2px 7px !important;
-      font-size: 0.62rem !important;
+      padding: 2px 6px !important;
+      font-size: 0.60rem !important;
       font-weight: 700 !important;
       border-radius: 4px !important;
       cursor: pointer !important;
-      transition: transform 0.15s !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -408,129 +606,186 @@
   ══════════════════════════════════════════════════════════ -->
   <main class="studio-main-container">
 
-    <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
-    <div class="studio-stage-col">
-      <!-- VIDEO STAGE & CANVAS PREVIEW (Sticky 9:16) -->
-      <div class="video-stage-card">
-        <div class="video-stage-viewport" id="video-viewport">
-          <!-- Tap-to-Upload Empty State Placeholder -->
-          <div class="video-upload-placeholder" id="video-placeholder" onclick="document.getElementById('video-file-input').click()">
-            <div class="placeholder-icon">🎬</div>
-            <div class="placeholder-title">ចុចរើសវីដេអូចិន (MP4)</div>
-            <div class="placeholder-sub">Live Preview 9:16 បញ្ឈរធំច្បាស់</div>
+    <!-- ══════════════════════════════════════════════════════════
+         ⚡ 1. TOP SPLIT ROW: LEFT VIDEO (46%) / RIGHT ACTION MENU (54%)
+    ══════════════════════════════════════════════════════════ -->
+    <section class="studio-top-split-row">
+
+      <!-- 1.1 ផ្នែកខាងលើឆ្វេង (Top-Left Video Area) -->
+      <div class="top-video-col">
+        <div class="video-stage-card">
+          <div class="video-stage-viewport" id="video-viewport">
+            <!-- Tap-to-Upload Empty State Placeholder -->
+            <div class="video-upload-placeholder" id="video-placeholder" onclick="document.getElementById('video-file-input').click()">
+              <div class="placeholder-icon">🎬</div>
+              <div class="placeholder-title">ចុចរើសវីដេអូចិន (MP4)</div>
+              <div class="placeholder-sub">Live Preview 9:16 បញ្ឈរធំច្បាស់</div>
+            </div>
+
+            <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
+
+            <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
+            <div class="video-overlay-layer" id="video-overlay-layer">
+              <!-- 1. Blur Mask Box (Pure Blur, zero text) -->
+              <div class="interactive-overlay" id="blur-overlay-box">
+                <div class="resizer-handle nw"></div>
+                <div class="resizer-handle ne"></div>
+                <div class="resizer-handle sw"></div>
+                <div class="resizer-handle se"></div>
+              </div>
+
+              <!-- 2. Logo Overlay -->
+              <div class="interactive-overlay" id="logo-overlay-element">
+                <svg id="logo-overlay-img" viewBox="0 0 100 100" fill="none">
+                  <circle cx="50" cy="50" r="45" fill="rgba(168,85,247,0.3)" stroke="#c084fc" stroke-width="4"/>
+                  <path d="M50 20 L60 40 L80 45 L65 60 L70 80 L50 70 L30 80 L35 60 L20 45 L40 40 Z" fill="#22d3ee"/>
+                </svg>
+              </div>
+
+              <!-- 3. Static Text Overlay (Dual-Tone) -->
+              <div class="interactive-overlay" id="text-overlay-element" title="អូសរំកិលអក្សរលើវីដេអូ">
+                <div class="rendered-text-content" id="rendered-text-val">
+                  <span id="text-part1-preview" class="text-preview-part1">នាគហ្សង</span>
+                  <span id="text-part2-preview" class="text-preview-part2"> បកប្រែ</span>
+                </div>
+              </div>
+
+              <!-- 4. Animated Vertical Scrolling Marquee -->
+              <div class="interactive-overlay" id="marquee-overlay-element">
+                <div class="marquee-scrolling-track" id="marquee-track">
+                  សូមចុច Subscribe &amp; Follow «នាគហ្សង បកប្រែ AI»
+                </div>
+              </div>
+
+              <!-- 5. Custom Sponsor Banner Overlay (2 Lines) -->
+              <div class="interactive-overlay" id="sponsor-overlay-element">
+                <div class="sponsor-banner-bar" id="sponsor-banner-bar">
+                  <div class="sponsor-top-tag" id="sponsor-top-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
+                  <div class="sponsor-bottom-tag" id="sponsor-bottom-tag">📱 012 345 678 | Telegram</div>
+                </div>
+              </div>
+
+            </div>
           </div>
 
-          <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
-
-          <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
-          <div class="video-overlay-layer" id="video-overlay-layer">
-
-            <!-- 1. Blur Mask Box (Pure Blur, zero text) -->
-            <div class="interactive-overlay" id="blur-overlay-box">
-              <div class="resizer-handle nw"></div>
-              <div class="resizer-handle ne"></div>
-              <div class="resizer-handle sw"></div>
-              <div class="resizer-handle se"></div>
+          <!-- Playback Bar below Video -->
+          <div class="video-toolbar">
+            <div class="playback-controls">
+              <button type="button" class="btn-ctrl" onclick="previewVideo.paused ? previewVideo.play() : previewVideo.pause()">
+                ⏯ ចាក់
+              </button>
+              <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
+                ⏮ ដើម
+              </button>
             </div>
-
-            <!-- 2. Logo Overlay -->
-            <div class="interactive-overlay" id="logo-overlay-element">
-              <svg id="logo-overlay-img" viewBox="0 0 100 100" fill="none">
-                <circle cx="50" cy="50" r="45" fill="rgba(168,85,247,0.3)" stroke="#c084fc" stroke-width="4"/>
-                <path d="M50 20 L60 40 L80 45 L65 60 L70 80 L50 70 L30 80 L35 60 L20 45 L40 40 Z" fill="#22d3ee"/>
-              </svg>
-            </div>
-
-            <!-- 3. Static Text Overlay (Dual-Tone) -->
-            <div class="interactive-overlay" id="text-overlay-element" title="អូសរំកិលអក្សរលើវីដេអូ">
-              <div class="rendered-text-content" id="rendered-text-val">
-                <span id="text-part1-preview" class="text-preview-part1">នាគហ្សង</span>
-                <span id="text-part2-preview" class="text-preview-part2"> បកប្រែ</span>
-              </div>
-            </div>
-
-            <!-- 4. Animated Vertical Scrolling Marquee -->
-            <div class="interactive-overlay" id="marquee-overlay-element">
-              <div class="marquee-scrolling-track" id="marquee-track">
-                សូមចុច Subscribe &amp; Follow «នាគហ្សង បកប្រែ AI»
-              </div>
-            </div>
-
-            <!-- 5. Custom Sponsor Banner Overlay (2 Lines) -->
-            <div class="interactive-overlay" id="sponsor-overlay-element">
-              <div class="sponsor-banner-bar" id="sponsor-banner-bar">
-                <div class="sponsor-top-tag" id="sponsor-top-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
-                <div class="sponsor-bottom-tag" id="sponsor-bottom-tag">📱 012 345 678 | Telegram</div>
-              </div>
-            </div>
-
+            <div class="time-display" id="video-time-display">00:00 / 00:00</div>
           </div>
         </div>
 
-        <!-- Playback Bar below Video -->
-        <div class="video-toolbar">
-          <div class="playback-controls">
-            <button type="button" class="btn-ctrl" onclick="previewVideo.paused ? previewVideo.play() : previewVideo.pause()">
-              ⏯ ចាក់
+        <!-- ⚡ 1-CLICK AUTO PROCESS BUTTON DIRECTLY UNDER VIDEO -->
+        <div class="auto-process-banner">
+          <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
+            🪄 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
+          </button>
+        </div>
+      </div>
+
+      <!-- 1.2 ផ្នែកខាងលើស្ដាំ (Top-Right Action Menu Area: Clean Buttons, NO SLIDERS HERE!) -->
+      <div class="top-action-menu-col">
+        <div class="action-menu-grid">
+          <!-- 1. Clone សំឡេង -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
+            <span class="btn-ico">🎙️</span>
+            <span class="btn-lbl">Clone សំឡេង</span>
+          </button>
+
+          <!-- 2. Text (អក្សរ) -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
+            <span class="btn-ico">📝</span>
+            <span class="btn-lbl">Text (អក្សរ)</span>
+          </button>
+
+          <!-- 3. Blur (ព្រាល) -->
+          <button type="button" class="action-menu-btn tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
+            <span class="btn-ico">🌫️</span>
+            <span class="btn-lbl">Blur (ព្រាល)</span>
+          </button>
+
+          <!-- 4. Sponsor (ពាណិជ្ជកម្ម) -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
+            <span class="btn-ico">🤝</span>
+            <span class="btn-lbl">Sponsor</span>
+          </button>
+
+          <!-- 5. Logo -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
+            <span class="btn-ico">🖼️</span>
+            <span class="btn-lbl">Logo</span>
+          </button>
+
+          <!-- 6. Marquee (អក្សររត់ ⬆️/⬇️) -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
+            <span class="btn-ico">🎬</span>
+            <span class="btn-lbl">Marquee ⬆️⬇️</span>
+          </button>
+        </div>
+
+        <!-- 7. ទាញយកវីដេអូបកប្រែរួច Action Button -->
+        <button type="button" class="btn-action-download" id="top-download-btn" onclick="handleTopDownloadAction()">
+          <span class="btn-ico">📥</span>
+          <span class="btn-lbl">ទាញយកវីដេអូបកប្រែរួច</span>
+        </button>
+
+        <!-- 8. កន្លែងរើសម៉ូដែលសំឡេងពិសិដ្ឋ/ស្រីមុំ -->
+        <div class="top-voice-selector-box">
+          <div class="top-voice-header">
+            <span>🗣️ ម៉ូដែលសំឡេង AI:</span>
+          </div>
+          <div class="top-voice-pill-group">
+            <button type="button" class="voice-pill-btn active" id="btn-voice-female" onclick="selectQuickVoice('female')">
+              <span>👩 កញ្ញា ស្រីមុំ</span>
             </button>
-            <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
-              ⏮ ដើម
+            <button type="button" class="voice-pill-btn" id="btn-voice-male" onclick="selectQuickVoice('male')">
+              <span>👨 លោក ពិសិដ្ឋ</span>
             </button>
           </div>
-          <div class="time-display" id="video-time-display">00:00 / 00:00</div>
+        </div>
+
+        <!-- Secondary Quick Pills: Media & Flip/Crop Export -->
+        <div class="top-extra-pills-row">
+          <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="media" onclick="switchStudioTab('media')">
+            📂 Media/SRT
+          </button>
+          <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="tools" onclick="switchStudioTab('tools')">
+            ✂️ Flip/Crop
+          </button>
         </div>
       </div>
+    </section>
 
-      <!-- ⚡ 1-CLICK AUTO PROCESS BANNER -->
-      <div class="auto-process-banner">
-        <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
-          🪄 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
-        </button>
-      </div>
-
-      <!-- ⚡ RENDER PROGRESS BAR -->
-      <div id="render-progress-wrap">
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-          <span id="render-progress-status" style="color: var(--neon-purple-bright); font-weight: 700;">កំពុងដំណើរការ...</span>
+    <!-- ══════════════════════════════════════════════════════════
+         ⚡ 2. ផ្នែកកណ្ដាល (Middle Status Area: Progress Bar & Status)
+    ══════════════════════════════════════════════════════════ -->
+    <section class="studio-middle-status-row" id="render-progress-wrap">
+      <div class="middle-status-bar">
+        <div class="status-indicator-left">
+          <span class="pulse-live-dot"></span>
+          <span id="render-progress-status" class="status-live-text">⚡ ស្ថានភាព៖ រង់ចាំដំណើរការបកប្រែ...</span>
         </div>
-        <div class="render-progress-track">
-          <div class="render-progress-bar" id="render-progress-bar"></div>
-        </div>
-        <a id="btn-download-result" href="#" download>
-          📥 ទាញយក MP4 HD (Save to Phone)
-        </a>
+        <div class="status-indicator-right" id="render-progress-percent">0%</div>
       </div>
-    </div>
+      <div class="render-progress-track">
+        <div class="render-progress-bar" id="render-progress-bar" style="width: 0%;"></div>
+      </div>
+      <a id="btn-download-result" href="#" download style="display:none;">
+        📥 ទាញយក MP4 HD រួចរាល់ (Save to Phone)
+      </a>
+    </section>
 
-    <!-- ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── -->
-    <div class="studio-controls-col">
-      <!-- Tabs Bar at Top of Controls Column (Logo, Blur, Text, Sponsor, Marquee) -->
-      <nav class="studio-tabs-nav">
-        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
-          🖼️ Logo
-        </button>
-        <button type="button" class="tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
-          🌫️ ព្រាល Blur
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
-          📝 Text
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
-          🤝 Sponsor
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
-          🎬 Marquee
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
-          🎙️ សំឡេង
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
-          📂 Media
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
-          ✂️ Export
-        </button>
-      </nav>
+    <!-- ══════════════════════════════════════════════════════════
+         ⚡ 3. ផ្នែកខាងក្រោមទាំងមូល (Bottom Dynamic Slider/Control Area)
+    ══════════════════════════════════════════════════════════ -->
+    <section class="studio-bottom-panel-area" id="studio-dynamic-controls-area">
 
       <!-- ── TAB 1: TEXT OVERLAY (DUAL-TONE) ─────────────────── -->
       <div class="tab-panel-card" id="tab-panel-text">
@@ -1105,7 +1360,7 @@
         </button>
       </div>
 
-    </div>
+    </section>
   </main>
 
   <!-- ══════════════════════════════════════════════════════════

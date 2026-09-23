@@ -141,6 +141,38 @@ function switchStudioTab(tabId) {
   }
 }
 
+// Quick Voice Model Selection (Sreymom / Piseth)
+function selectQuickVoice(voiceId) {
+  state.voice = voiceId;
+  const selectElem = document.getElementById('voice-select');
+  if (selectElem) selectElem.value = voiceId;
+  const btnFemale = document.getElementById('btn-voice-female');
+  const btnMale = document.getElementById('btn-voice-male');
+  if (btnFemale && btnMale) {
+    btnFemale.classList.toggle('active', voiceId === 'female');
+    btnMale.classList.toggle('active', voiceId === 'male');
+  }
+  showToast(voiceId === 'female' ? '🎙️ ជ្រើសរើសសំឡេង៖ កញ្ញា ស្រីមុំ' : '🎙️ ជ្រើសរើសសំឡេង៖ លោក ពិសិដ្ឋ');
+}
+
+// Download Translated Video Action Handler in Top Menu
+function handleTopDownloadAction() {
+  const downloadBtn = document.getElementById('btn-download-result');
+  if (downloadBtn && downloadBtn.href && downloadBtn.href !== '#' && !downloadBtn.href.endsWith('#') && downloadBtn.style.display !== 'none') {
+    downloadBtn.click();
+    showToast('📥 កំពុងទាញយកវីដេអូបកប្រែរួច...');
+  } else {
+    if (!state.videoFile && !state.videoFilename) {
+      showToast('⚠️ សូមរើសវីដេអូចិន (MP4) និងចុច 1-Click បកប្រែជាមុនសិន!');
+      const fileInput = document.getElementById('video-file-input');
+      if (fileInput) fileInput.click();
+    } else {
+      showToast('⚡ ចាប់ផ្ដើមដំណើរការ Export វីដេអូ...');
+      triggerAutoProcessPipeline();
+    }
+  }
+}
+
 // Toast Notification
 function showToast(text, duration = 3000) {
   const t = document.getElementById('toast-notification');
@@ -1328,11 +1360,13 @@ async function triggerAutoProcessPipeline() {
   const progressWrap = document.getElementById('render-progress-wrap');
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
+  const progressPercent = document.getElementById('render-progress-percent');
   const downloadBtn = document.getElementById('btn-download-result');
 
   progressWrap.style.display = 'flex';
   downloadBtn.style.display = 'none';
   progressBar.style.width = '10%';
+  if (progressPercent) progressPercent.innerText = '10%';
   progressStatus.innerText = 'កំពុង Upload វីដេអូទៅ Server...';
 
   if (!state.videoFilename && state.videoFile) {
@@ -1348,12 +1382,12 @@ async function triggerAutoProcessPipeline() {
       }
     } catch (e) {
       showToast('⚠️ បរាជ័យក្នុងការ Upload វីដេអូទៅ Server');
-      progressWrap.style.display = 'none';
       return;
     }
   }
 
   progressBar.style.width = '25%';
+  if (progressPercent) progressPercent.innerText = '25%';
   progressStatus.innerText = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR) & បកប្រែជាភាសាខ្មែរ...';
 
   try {
@@ -1373,15 +1407,12 @@ async function triggerAutoProcessPipeline() {
       pollJobStatus(data.job_id);
     } else if (data.license_required) {
       showToast('🔐 ' + data.error);
-      progressWrap.style.display = 'none';
       openLicenseModal();
     } else {
       showToast('⚠️ បរាជ័យក្នុងការចាប់ផ្ដើម Auto Pipeline');
-      progressWrap.style.display = 'none';
     }
   } catch (err) {
     showToast('⚠️ មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធបានទេ');
-    progressWrap.style.display = 'none';
   }
 }
 
@@ -1401,11 +1432,13 @@ async function triggerRenderExport() {
   const progressWrap = document.getElementById('render-progress-wrap');
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
+  const progressPercent = document.getElementById('render-progress-percent');
   const downloadBtn = document.getElementById('btn-download-result');
 
   progressWrap.style.display = 'flex';
   downloadBtn.style.display = 'none';
   progressBar.style.width = '15%';
+  if (progressPercent) progressPercent.innerText = '15%';
   progressStatus.innerText = 'កំពុងចាប់ផ្ដើម Render HD Video (Ultra-Fast Engine)...';
 
   if (!state.videoFilename && state.videoFile) {
@@ -1417,7 +1450,6 @@ async function triggerRenderExport() {
       if (data.status === 'ok') state.videoFilename = data.filename;
     } catch (e) {
       showToast('⚠️ បរាជ័យក្នុងការ Upload');
-      progressWrap.style.display = 'none';
       return;
     }
   }
@@ -1437,21 +1469,19 @@ async function triggerRenderExport() {
       pollJobStatus(data.job_id);
     } else if (data.license_required) {
       showToast('🔐 ' + data.error);
-      progressWrap.style.display = 'none';
       openLicenseModal();
     } else {
       showToast('⚠️ កំហុសក្នុងការ Render');
-      progressWrap.style.display = 'none';
     }
   } catch (err) {
     showToast('⚠️ កំហុស Server');
-    progressWrap.style.display = 'none';
   }
 }
 
 function pollJobStatus(jobId) {
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
+  const progressPercent = document.getElementById('render-progress-percent');
   const downloadBtn = document.getElementById('btn-download-result');
 
   const interval = setInterval(async () => {
@@ -1459,12 +1489,15 @@ function pollJobStatus(jobId) {
       const res = await fetch(`/api/job/${jobId}`);
       const job = await res.json();
 
-      progressBar.style.width = `${job.progress || 30}%`;
+      const pct = job.progress || 30;
+      progressBar.style.width = `${pct}%`;
+      if (progressPercent) progressPercent.innerText = `${pct}%`;
       if (job.step) progressStatus.innerText = job.step;
 
       if (job.status === 'completed') {
         clearInterval(interval);
         progressBar.style.width = '100%';
+        if (progressPercent) progressPercent.innerText = '100%';
         progressStatus.innerText = '✓ ជោគជ័យ ១០០%! វីដេអូរួចរាល់សម្រាប់ការទាញយក។';
         downloadBtn.style.display = 'flex';
         downloadBtn.href = job.download_url;

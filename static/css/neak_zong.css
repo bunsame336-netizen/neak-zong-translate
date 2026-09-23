@@ -306,59 +306,77 @@ header.app-header {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ⚡ MOBILE STUDIO LAYOUT: 2-COLUMN SIDE-BY-SIDE MOBILE GRID
+   ⚡ MOBILE STUDIO LAYOUT: 3-TIER RESTRUCTURE (100dvh LOCK)
 ══════════════════════════════════════════════════════════════ */
 .studio-main-container {
-  display: grid !important;
-  grid-template-columns: 46% 54% !important;
+  display: flex !important;
+  flex-direction: column !important;
   width: 100vw !important;
   max-width: 100% !important;
-  height: calc(100dvh - 44px) !important;
-  max-height: calc(100dvh - 44px) !important;
+  height: calc(100dvh - 42px) !important;
+  max-height: calc(100dvh - 42px) !important;
   margin: 0 !important;
-  padding: 4px 4px 6px 4px !important;
+  padding: 3px 5px 4px 5px !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
-  gap: 4px !important;
+  gap: 3px !important;
 }
 
-/* LEFT COLUMN: VIDEO PREVIEW + CONTROLS + EXPORT */
-.studio-stage-col {
+/* 1. TOP SPLIT ROW: LEFT VIDEO (46%) / RIGHT ACTION MENU (54%) */
+.studio-top-split-row {
+  display: grid !important;
+  grid-template-columns: 46% 54% !important;
+  gap: 5px !important;
   width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-start !important;
-  align-items: stretch !important;
-  padding: 0 3px 0 0 !important;
-  border: none !important;
-  border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
-  background: transparent !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  flex: 0 0 auto !important;
+  max-height: 42dvh !important;
   box-sizing: border-box !important;
-  gap: 4px !important;
-  scrollbar-width: none !important;
-}
-.studio-stage-col::-webkit-scrollbar {
-  display: none !important;
 }
 
-/* RIGHT COLUMN: CONTROLS & SLIDERS BESIDE VIDEO */
-.studio-controls-col {
+/* 1.1 TOP-LEFT: VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
+.top-video-col {
   width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
+  gap: 3px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* 1.2 TOP-RIGHT: ACTION MENU AREA (NO SLIDERS HERE!) */
+.top-action-menu-col {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* 2. MIDDLE STATUS AREA (PROGRESS BAR & STATUS) */
+.studio-middle-status-row {
+  width: 100% !important;
+  flex: 0 0 auto !important;
+  background: rgba(12, 8, 26, 0.95) !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
+  border-radius: 6px !important;
+  padding: 3px 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  box-sizing: border-box !important;
+}
+
+/* 3. BOTTOM FULL-WIDTH DYNAMIC SLIDER/CONTROL AREA */
+.studio-bottom-panel-area {
+  width: 100% !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  padding: 0 2px 40px 2px !important;
-  background: transparent !important;
   box-sizing: border-box !important;
-  gap: 5px !important;
+  padding-bottom: 6px !important;
   scrollbar-width: thin !important;
 }
 
