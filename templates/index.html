@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=7.0.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.0.0">
 
   <!-- ⚡ CRITICAL MOBILE OVERRIDE: 2-COLUMN SIDE-BY-SIDE MOBILE GRID (NO PAGE SCROLL) -->
   <style>
@@ -55,58 +55,73 @@
       height: 28px !important;
     }
 
-    /* ════ COMPACT SINGLE-SCREEN MOBILE LAYOUT (FIT 100dvh) ════ */
+    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID (MATCH USER SCREENSHOT EXACTLY) ════ */
     .studio-main-container {
-      display: flex !important;
-      flex-direction: column !important;
+      display: grid !important;
+      grid-template-columns: 46% 54% !important;
       width: 100vw !important;
       max-width: 100% !important;
       height: calc(100dvh - 44px) !important;
       max-height: calc(100dvh - 44px) !important;
       margin: 0 !important;
-      padding: 2px 4px 4px 4px !important;
+      padding: 3px 4px 6px 4px !important;
       overflow: hidden !important;
       box-sizing: border-box !important;
-      gap: 3px !important;
+      gap: 5px !important;
     }
 
-    /* ── TOP SECTION: VIDEO PREVIEW + PLAYBACK + 1-CLICK ACTION ── */
+    /* ── LEFT COLUMN (46%): VIDEO PREVIEW + PLAYBACK + 1-CLICK ACTION ── */
     .studio-stage-col {
       width: 100% !important;
-      max-width: 480px !important;
-      margin: 0 auto !important;
+      height: 100% !important;
+      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      align-items: center !important;
       justify-content: flex-start !important;
-      flex-shrink: 0 !important;
-      padding: 0 !important;
+      align-items: stretch !important;
+      padding: 0 3px 0 0 !important;
       border: none !important;
-      gap: 2px !important;
+      border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
+      background: transparent !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      box-sizing: border-box !important;
+      gap: 4px !important;
+      scrollbar-width: none !important;
+    }
+    .studio-stage-col::-webkit-scrollbar {
+      display: none !important;
     }
 
     .video-stage-card {
-      width: auto !important;
-      max-width: 100% !important;
-      height: 30vh !important;
-      max-height: 32vh !important;
-      aspect-ratio: 9 / 16 !important;
-      margin: 0 auto !important;
+      background: #000000 !important;
+      border: 1.5px solid var(--border-cyber) !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9) !important;
+      position: relative !important;
       display: flex !important;
       flex-direction: column !important;
-      border-radius: 6px !important;
-      overflow: hidden !important;
-      background: #000000 !important;
-      border: 1px solid var(--border-cyber) !important;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85) !important;
       flex-shrink: 0 !important;
-    }
-    .video-stage-viewport {
       width: 100% !important;
-      height: calc(100% - 24px) !important;
-      position: relative !important;
-      overflow: hidden !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: none !important;
     }
+
+    .video-stage-viewport {
+      position: relative !important;
+      aspect-ratio: 9 / 16 !important;
+      width: 100% !important;
+      max-height: 48vh !important;
+      background: #050408 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+      margin: 0 auto !important;
+    }
+
     .video-toolbar {
       height: 24px !important;
       min-height: 24px !important;
@@ -118,6 +133,8 @@
       background: #080612 !important;
     }
     .video-toolbar .playback-controls {
+      display: flex !important;
+      align-items: center !important;
       gap: 3px !important;
     }
     .video-toolbar .btn-ctrl {
@@ -131,40 +148,40 @@
 
     .auto-process-banner {
       width: 100% !important;
-      max-width: 480px !important;
-      margin: 1px auto 0 auto !important;
+      margin: 2px 0 0 0 !important;
       padding: 0 !important;
       flex-shrink: 0 !important;
       border-radius: 6px !important;
     }
     .btn-auto-process {
-      padding: 4px 6px !important;
+      padding: 6px 4px !important;
       font-size: 0.68rem !important;
       font-weight: 800 !important;
       width: 100% !important;
-      height: 28px !important;
-      min-height: 28px !important;
+      min-height: 32px !important;
+      height: auto !important;
       justify-content: center !important;
-      letter-spacing: 0.1px !important;
+      letter-spacing: 0px !important;
       border-radius: 6px !important;
+      text-align: center !important;
+      white-space: normal !important;
+      line-height: 1.25 !important;
     }
 
-    /* ── BOTTOM SECTION: TABS & COMPACT CONTROLS ── */
+    /* ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── */
     .studio-controls-col {
       width: 100% !important;
-      max-width: 480px !important;
-      margin: 0 auto !important;
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       overflow-y: auto !important;
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch !important;
-      padding: 0 2px 20px 2px !important;
+      padding: 0 2px 40px 2px !important;
       background: transparent !important;
       box-sizing: border-box !important;
-      gap: 3px !important;
+      gap: 4px !important;
       scrollbar-width: thin !important;
     }
 
@@ -224,6 +241,7 @@
       border-radius: 6px !important;
       box-sizing: border-box !important;
       gap: 4px !important;
+      display: none !important;
     }
     .tab-panel-card.active {
       display: flex !important;
@@ -471,7 +489,7 @@
       <!-- ⚡ 1-CLICK AUTO PROCESS BANNER -->
       <div class="auto-process-banner">
         <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
-          🚀 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
+          🪄 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
         </button>
       </div>
 
@@ -496,10 +514,10 @@
         <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
           🖼️ Logo
         </button>
-        <button type="button" class="tab-nav-btn" data-tab="blur" onclick="switchStudioTab('blur')">
-          🌫️ Blur
+        <button type="button" class="tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
+          🌫️ ព្រាល Blur
         </button>
-        <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
+        <button type="button" class="tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
           📝 Text
         </button>
         <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
@@ -520,7 +538,7 @@
       </nav>
 
       <!-- ── TAB 1: TEXT OVERLAY (DUAL-TONE) ─────────────────── -->
-      <div class="tab-panel-card active" id="tab-panel-text">
+      <div class="tab-panel-card" id="tab-panel-text">
         <div class="panel-section-title">
           <span>📝 ដាក់អក្សរ ២ ពណ៌ (Dual-Tone Text Overlay)</span>
         </div>
@@ -703,7 +721,7 @@
       </div>
 
       <!-- ── TAB 3: BLUR MASK ─────────────────────────────────── -->
-      <div class="tab-panel-card" id="tab-panel-blur">
+      <div class="tab-panel-card active" id="tab-panel-blur">
         <div class="panel-section-title">
           <span>🌫️ ផ្ទាំងព្រិលបាំង Watermark / Logo ចាស់</span>
         </div>
@@ -1212,6 +1230,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=7.0.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.0.0"></script>
 </body>
 </html>

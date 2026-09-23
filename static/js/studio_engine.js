@@ -10,7 +10,7 @@ const state = {
   videoUrl: null,
   srtContent: null,
   translatedSrt: null,
-  activeTab: 'text',
+  activeTab: 'blur',
   licenseValid: false,
   licenseInfo: null,
   adminAuthenticated: false,
