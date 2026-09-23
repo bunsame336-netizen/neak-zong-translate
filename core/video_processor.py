@@ -125,8 +125,8 @@ def find_ffmpeg() -> str:
         pass
         
     candidates = [
-        os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ffmpeg.exe'),
-        os.path.join(os.path.dirname(__file__), '..', '..', 'bin', 'ffmpeg.exe'),
+        os.path.join(os.path.dirname(__file__), '..', 'tools', 'ffmpeg.exe'),
+        os.path.join(os.path.dirname(__file__), '..', 'bin', 'ffmpeg.exe'),
         r'C:\ffmpeg\bin\ffmpeg.exe',
         r'C:\Program Files\ffmpeg\bin\ffmpeg.exe',
     ]
@@ -150,8 +150,8 @@ def find_ffprobe() -> str:
             return candidate
             
     candidates = [
-        os.path.join(os.path.dirname(__file__), '..', '..', 'tools', 'ffprobe.exe'),
-        os.path.join(os.path.dirname(__file__), '..', '..', 'bin', 'ffprobe.exe'),
+        os.path.join(os.path.dirname(__file__), '..', 'tools', 'ffprobe.exe'),
+        os.path.join(os.path.dirname(__file__), '..', 'bin', 'ffprobe.exe'),
         r'C:\ffmpeg\bin\ffprobe.exe',
     ]
     for c in candidates:
