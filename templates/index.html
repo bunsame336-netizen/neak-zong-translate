@@ -19,9 +19,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=4.0.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=5.0.0">
 
-  <!-- ⚡ CRITICAL MOBILE OVERRIDE: GUARANTEE VERTICAL 3-TIER MOBILE ARCHITECTURE (NO PAGE SCROLL) -->
+  <!-- ⚡ CRITICAL MOBILE OVERRIDE: 2-COLUMN SIDE-BY-SIDE MOBILE GRID (NO PAGE SCROLL) -->
   <style>
     html, body {
       margin: 0 !important;
@@ -39,118 +39,167 @@
       bottom: 0 !important;
     }
     header.app-header {
-      height: 48px !important;
-      min-height: 48px !important;
-      max-height: 48px !important;
-      flex: 0 0 48px !important;
-      padding: 4px 10px !important;
+      height: 44px !important;
+      min-height: 44px !important;
+      max-height: 44px !important;
+      flex: 0 0 44px !important;
+      padding: 2px 8px !important;
       z-index: 100 !important;
       box-sizing: border-box !important;
     }
-    .studio-main-container {
-      display: flex !important;
-      flex-direction: column !important;
-      width: 100vw !important;
-      max-width: 100% !important;
-      height: calc(100dvh - 48px) !important;
-      max-height: calc(100dvh - 48px) !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: hidden !important;
-      position: relative !important;
-      gap: 0 !important;
+    .brand-title {
+      font-size: 0.85rem !important;
+    }
+    .brand-dragon-badge {
+      width: 28px !important;
+      height: 28px !important;
     }
 
-    /* ════ TIER 1: TOP 35% VIDEO PREVIEW STAGE ════ */
-    .studio-stage-col {
-      flex: 0 0 35vh !important;
-      height: 35vh !important;
-      max-height: 35vh !important;
-      min-height: 35vh !important;
+    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID ════ */
+    .studio-main-container {
+      display: grid !important;
+      grid-template-columns: 46% 54% !important;
       width: 100vw !important;
       max-width: 100% !important;
+      height: calc(100dvh - 44px) !important;
+      max-height: calc(100dvh - 44px) !important;
+      margin: 0 !important;
+      padding: 4px 4px 6px 4px !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      gap: 4px !important;
+    }
+
+    /* ── LEFT COLUMN: VIDEO PREVIEW + CONTROLS + EXPORT ── */
+    .studio-stage-col {
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      padding: 4px 8px 6px 8px !important;
-      border-bottom: 2px solid rgba(168, 85, 247, 0.35) !important;
-      background: #040308 !important;
-      z-index: 50 !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+      padding: 0 3px 0 0 !important;
+      border: none !important;
+      border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
+      background: transparent !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
       box-sizing: border-box !important;
-      overflow: hidden !important;
+      gap: 4px !important;
+      scrollbar-width: none !important;
     }
+    .studio-stage-col::-webkit-scrollbar {
+      display: none !important;
+    }
+
     .video-stage-card {
-      height: calc(35vh - 40px) !important;
-      max-height: calc(35vh - 40px) !important;
+      width: 100% !important;
       aspect-ratio: 9 / 16 !important;
+      max-height: calc(100dvh - 110px) !important;
       margin: 0 auto !important;
       display: flex !important;
       flex-direction: column !important;
       border-radius: 8px !important;
       overflow: hidden !important;
       background: #000000 !important;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.9) !important;
+      border: 1px solid var(--border-cyber) !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85) !important;
+      flex-shrink: 0 !important;
     }
     .video-stage-viewport {
       width: 100% !important;
       height: 100% !important;
       aspect-ratio: 9 / 16 !important;
-      margin: 0 auto !important;
       position: relative !important;
       overflow: hidden !important;
     }
     .video-toolbar {
-      height: 26px !important;
-      padding: 2px 6px !important;
+      height: 24px !important;
+      min-height: 24px !important;
+      padding: 2px 4px !important;
       flex-shrink: 0 !important;
-      box-sizing: border-box !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      background: #080612 !important;
     }
+    .video-toolbar .playback-controls {
+      gap: 3px !important;
+    }
+    .video-toolbar .btn-ctrl {
+      font-size: 0.62rem !important;
+      padding: 2px 4px !important;
+    }
+    .video-toolbar .time-display {
+      font-size: 0.56rem !important;
+    }
+
     .auto-process-banner {
       width: 100% !important;
-      max-width: 320px !important;
-      padding: 3px 6px !important;
-      margin: 2px 0 0 0 !important;
+      padding: 2px !important;
+      margin: 0 !important;
       border-radius: 6px !important;
       flex-shrink: 0 !important;
     }
     .btn-auto-process {
-      padding: 4px 8px !important;
-      font-size: 0.72rem !important;
+      padding: 6px 3px !important;
+      font-size: 0.62rem !important;
+      font-weight: 800 !important;
+      width: 100% !important;
+      justify-content: center !important;
+      letter-spacing: 0.1px !important;
     }
 
-    /* ════ TIER 2: MIDDLE MENU TABS BAR (SINGLE HORIZONTAL ROW) ════ */
+    /* ── RIGHT COLUMN: CONTROLS & SLIDERS BESIDE VIDEO ── */
+    .studio-controls-col {
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 0 2px 40px 2px !important;
+      background: transparent !important;
+      box-sizing: border-box !important;
+      gap: 5px !important;
+      scrollbar-width: thin !important;
+    }
+
+    /* Tabs Bar at top of Right Column */
     .studio-tabs-nav {
-      flex: 0 0 auto !important;
       display: flex !important;
       flex-direction: row !important;
-      width: 100vw !important;
-      max-width: 100% !important;
-      background: rgba(12, 9, 24, 0.98) !important;
-      border-bottom: 2px solid rgba(168, 85, 247, 0.35) !important;
-      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-      padding: 6px 8px !important;
-      gap: 5px !important;
+      flex-wrap: nowrap !important;
+      width: 100% !important;
+      background: rgba(14, 10, 26, 0.95) !important;
+      border: 1px solid rgba(168, 85, 247, 0.3) !important;
+      border-radius: 8px !important;
+      padding: 3px !important;
+      gap: 2px !important;
       overflow-x: auto !important;
       -webkit-overflow-scrolling: touch !important;
       white-space: nowrap !important;
-      z-index: 60 !important;
+      flex-shrink: 0 !important;
+      z-index: 10 !important;
       box-sizing: border-box !important;
+      scrollbar-width: none !important;
     }
     .studio-tabs-nav::-webkit-scrollbar {
       display: none !important;
     }
     .tab-nav-btn {
-      flex: 1 0 auto !important;
-      min-width: 66px !important;
-      padding: 6px 8px !important;
-      font-size: 0.72rem !important;
+      flex: 0 0 auto !important;
+      padding: 4px 6px !important;
+      font-size: 0.65rem !important;
       font-weight: 700 !important;
-      border-radius: 8px !important;
+      border-radius: 6px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 4px !important;
+      gap: 2px !important;
       white-space: nowrap !important;
       cursor: pointer !important;
     }
@@ -160,54 +209,67 @@
       color: #fbbf24 !important;
       font-weight: 800 !important;
     }
-    .tab-nav-btn[data-tab="marquee"].active {
-      background: linear-gradient(135deg, #d97706, #b45309) !important;
-      color: #ffffff !important;
-    }
 
-    /* ════ TIER 3: BOTTOM CONTROL PANEL (FULL WIDTH, 55% VIEWPORT) ════ */
-    .studio-controls-col {
-      flex: 1 1 auto !important;
-      width: 100vw !important;
-      max-width: 100% !important;
-      height: auto !important;
-      display: flex !important;
-      flex-direction: column !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 10px 12px 65px 12px !important;
-      background: transparent !important;
-      box-sizing: border-box !important;
-    }
+    /* Active Tab Panel */
     .tab-panel-card {
       width: 100% !important;
-      max-width: 100% !important;
+      padding: 6px 5px !important;
+      background: rgba(15, 11, 26, 0.94) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 8px !important;
       box-sizing: border-box !important;
+      gap: 5px !important;
     }
     .tab-panel-card.active {
       display: flex !important;
       flex-direction: column !important;
-      width: 100% !important;
-      max-width: 100% !important;
+    }
+    .panel-section-title {
+      font-size: 0.7rem !important;
+    }
+    .form-label {
+      font-size: 0.62rem !important;
+    }
+    .form-label-val {
+      font-size: 0.6rem !important;
+    }
+    .cyber-input {
+      font-size: 0.68rem !important;
+      padding: 3px 5px !important;
+      height: 30px !important;
+    }
+    .slider-group-box {
+      padding: 5px 6px !important;
+      gap: 3px !important;
+    }
+    .slider-group-title {
+      font-size: 0.62rem !important;
     }
 
-    /* Large touch-friendly sliders */
+    /* Sliders */
     .cyber-slider {
       width: 100% !important;
-      height: 10px !important;
-      margin: 8px 0 !important;
+      height: 6px !important;
+      margin: 3px 0 !important;
       touch-action: pan-x !important;
     }
     .cyber-slider::-webkit-slider-thumb {
-      width: 26px !important;
-      height: 26px !important;
+      width: 18px !important;
+      height: 18px !important;
       border-radius: 50% !important;
     }
+
+    /* Pure Blur Box without text */
     #blur-overlay-box {
-      width: 140px !important;
-      height: 45px !important;
+      border: 1.5px dashed var(--neon-cyan-bright) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      background: rgba(0, 0, 0, 0.4) !important;
     }
+    .blur-watermark-label {
+      display: none !important;
+    }
+
     .rendered-text-content.transparent-mode {
       background: transparent !important;
       text-shadow: none !important;
@@ -290,9 +352,8 @@
           <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
           <div class="video-overlay-layer" id="video-overlay-layer">
 
-            <!-- 1. Blur Mask Box -->
+            <!-- 1. Blur Mask Box (Pure Blur, zero text) -->
             <div class="interactive-overlay" id="blur-overlay-box">
-              <span class="blur-watermark-label">ព្រិលបាំង Logo</span>
               <div class="resizer-handle nw"></div>
               <div class="resizer-handle ne"></div>
               <div class="resizer-handle sw"></div>
@@ -369,41 +430,35 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════
-         ⚡ TIER 2: 5-TAB MENU BAR (SINGLE HORIZONTAL ROW)
-         [អក្សរ Text] | [រូប Logo] | [ព្រាល Blur] | [Sponsor] | [🎬 Marquee]
-    ══════════════════════════════════════════════════════════ -->
-    <nav class="studio-tabs-nav">
-      <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
-        📝 អក្សរ Text
-      </button>
-      <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
-        🖼️ រូប Logo
-      </button>
-      <button type="button" class="tab-nav-btn" data-tab="blur" onclick="switchStudioTab('blur')">
-        🌫️ ព្រាល Blur
-      </button>
-      <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
-        🤝 Sponsor
-      </button>
-      <button type="button" class="tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
-        🎬 Marquee
-      </button>
-      <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
-        🎙️ សំឡេង
-      </button>
-      <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
-        📂 Media
-      </button>
-      <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
-        ✂️ Export
-      </button>
-    </nav>
-
-    <!-- ══════════════════════════════════════════════════════════
-         ⚡ TIER 3: BOTTOM CONTROL PANEL (FULL WIDTH, 55% VIEWPORT)
-    ══════════════════════════════════════════════════════════ -->
+    <!-- ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── -->
     <div class="studio-controls-col">
+      <!-- Tabs Bar at Top of Controls Column (Logo, Blur, Text, Sponsor, Marquee) -->
+      <nav class="studio-tabs-nav">
+        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
+          🖼️ Logo
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="blur" onclick="switchStudioTab('blur')">
+          🌫️ Blur
+        </button>
+        <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
+          📝 Text
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
+          🤝 Sponsor
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
+          🎬 Marquee
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
+          🎙️ សំឡេង
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
+          📂 Media
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
+          ✂️ Export
+        </button>
+      </nav>
 
       <!-- ── TAB 1: TEXT OVERLAY (DUAL-TONE) ─────────────────── -->
       <div class="tab-panel-card active" id="tab-panel-text">
@@ -1121,6 +1176,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=4.0.0"></script>
+  <script src="/static/js/studio_engine.js?v=5.0.0"></script>
 </body>
 </html>

@@ -298,60 +298,60 @@ header.app-header {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ⚡ MOBILE STUDIO LAYOUT: FIXED TOP PREVIEW + FULL-WIDTH BOTTOM CONTROLS
+   ⚡ MOBILE STUDIO LAYOUT: 2-COLUMN SIDE-BY-SIDE MOBILE GRID
 ══════════════════════════════════════════════════════════════ */
 .studio-main-container {
+  display: grid !important;
+  grid-template-columns: 46% 54% !important;
   width: 100vw !important;
   max-width: 100% !important;
-  height: calc(100dvh - 48px) !important;
-  max-height: calc(100dvh - 48px) !important;
+  height: calc(100dvh - 44px) !important;
+  max-height: calc(100dvh - 44px) !important;
   margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 0 !important;
+  padding: 4px 4px 6px 4px !important;
   overflow: hidden !important;
-  position: relative !important;
-}
-
-/* TOP PREVIEW STAGE (Tier 1: Top 35% Viewport) */
-.studio-stage-col {
-  flex: 0 0 35vh !important;
-  height: 35vh !important;
-  max-height: 35vh !important;
-  min-height: 35vh !important;
-  width: 100vw !important;
-  max-width: 100% !important;
-  background: #040308 !important;
-  border-bottom: 2px solid rgba(168, 85, 247, 0.35) !important;
-  padding: 4px 8px 6px 8px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 4px;
-  z-index: 50 !important;
-  position: relative;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85);
   box-sizing: border-box !important;
-  overflow: hidden !important;
+  gap: 4px !important;
 }
 
-/* BOTTOM CONTROLS DOCK (Tier 3: 55% Viewport Full-Width Below Video) */
-.studio-controls-col {
-  flex: 1 1 auto !important;
-  width: 100vw !important;
-  max-width: 100% !important;
-  height: auto;
+/* LEFT COLUMN: VIDEO PREVIEW + CONTROLS + EXPORT */
+.studio-stage-col {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  padding: 0 3px 0 0 !important;
+  border: none !important;
+  border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
+  background: transparent !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  padding: 10px 12px 65px 12px !important;
+  box-sizing: border-box !important;
+  gap: 4px !important;
+  scrollbar-width: none !important;
+}
+.studio-stage-col::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* RIGHT COLUMN: CONTROLS & SLIDERS BESIDE VIDEO */
+.studio-controls-col {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
+  padding: 0 2px 40px 2px !important;
   background: transparent !important;
   box-sizing: border-box !important;
+  gap: 5px !important;
+  scrollbar-width: thin !important;
 }
 
 /* Video Stage Section */
@@ -465,12 +465,7 @@ header.app-header {
 }
 
 .blur-watermark-label {
-  font-size: 0.6rem;
-  color: var(--neon-cyan-bright);
-  padding: 2px 4px;
-  background: rgba(0, 0, 0, 0.7);
-  display: inline-block;
-  pointer-events: none;
+  display: none !important;
 }
 
 /* 2. Logo Overlay */
@@ -670,19 +665,20 @@ header.app-header {
 .studio-tabs-nav {
   display: flex !important;
   flex-direction: row !important;
-  width: 100vw !important;
-  max-width: 100% !important;
-  background: rgba(12, 9, 24, 0.98) !important;
-  border-bottom: 2px solid rgba(168, 85, 247, 0.35) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  padding: 6px 8px !important;
-  gap: 5px !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+  background: rgba(14, 10, 26, 0.95) !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 3px !important;
+  gap: 2px !important;
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
-  z-index: 60 !important;
+  z-index: 10 !important;
   box-sizing: border-box !important;
+  scrollbar-width: none !important;
 }
 .studio-tabs-nav::-webkit-scrollbar {
   display: none !important;
@@ -692,18 +688,17 @@ header.app-header {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-sub);
-  flex: 1 0 auto;
-  min-width: 66px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  font-size: 0.72rem;
+  flex: 0 0 auto;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 0.65rem;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   transition: all 0.2s;
 }
 
