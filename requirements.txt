@@ -3,3 +3,4 @@ gunicorn>=21.2.0
 requests>=2.31.0
 edge-tts>=6.1.9
 urllib3>=2.0.0
+python-telegram-bot>=21.0

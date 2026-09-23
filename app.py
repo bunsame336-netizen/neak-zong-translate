@@ -40,6 +40,7 @@ from core.audio_separator import separate_vocals_and_bgm
 from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg, get_video_duration
 from core.asr_engine import ChineseSpeechRecognizer
 from core.license_manager import license_mgr, DEFAULT_ADMIN_PASSWORD
+from core.telegram_bot_service import bot_service, BOT_USERNAME, ADMIN_ID
 
 # Global ASR Engine instance
 asr_engine = ChineseSpeechRecognizer(model_size="tiny")
@@ -52,6 +53,12 @@ app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1 GB upload limit for l
 PORT = int(os.environ.get('PORT', 5060))
 START_TIME = time.time()
 PROCESSING_JOBS = {}
+
+# Start 24/7 Telegram Bot Service (Async Webhook / Polling)
+try:
+    bot_service.start()
+except Exception as _e_bot:
+    print(f"Warning: Failed to start Telegram Bot service: {_e_bot}", flush=True)
 
 @app.after_request
 def add_cors_headers(response):
@@ -76,6 +83,7 @@ def require_active_license():
 # 🟢 1. HEALTH & KEEP-ALIVE (For Render.com 24/7)
 # ══════════════════════════════════════════════════════════════
 
+@app.route('/healthz')
 @app.route('/health')
 @app.route('/ping')
 def health():
@@ -90,8 +98,68 @@ def health():
         'ffmpeg_available': bool(find_ffmpeg()),
         'mode': 'Cloud-24-7',
         'license_active': valid,
-        'license_remaining': lic_info.get('remaining_text', lic_msg)
+        'license_remaining': lic_info.get('remaining_text', lic_msg),
+        'telegram_bot': {
+            'online': bot_service.is_running,
+            'mode': bot_service.mode,
+            'username': f'@{BOT_USERNAME}',
+            'admin_id': ADMIN_ID,
+            'webhook_url': bot_service.webhook_url,
+            'updates_processed': bot_service.updates_processed
+        }
     })
+
+# ══════════════════════════════════════════════════════════════
+# 🤖 TELEGRAM BOT WEBHOOK & STATUS APIS (24/7 CLOUD HOSTING)
+# ══════════════════════════════════════════════════════════════
+
+@app.route('/api/telegram-webhook', methods=['POST'])
+def api_telegram_webhook():
+    """Receives incoming updates from Telegram Webhook immediately."""
+    try:
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'status': 'ignored', 'reason': 'empty_payload'}), 200
+
+        ok = bot_service.process_webhook_update(data)
+        return jsonify({'status': 'ok' if ok else 'queued'}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/telegram/status', methods=['GET'])
+def api_telegram_status():
+    """Returns Telegram Bot health & stats."""
+    uptime = int(time.time() - bot_service.start_time) if bot_service.start_time else 0
+    return jsonify({
+        'status': 'ok',
+        'bot_online': bot_service.is_running,
+        'mode': bot_service.mode,
+        'username': f'@{BOT_USERNAME}',
+        'bot_id': 8988340001,
+        'admin_id': ADMIN_ID,
+        'webhook_url': bot_service.webhook_url,
+        'uptime_seconds': uptime,
+        'updates_processed': bot_service.updates_processed
+    })
+
+@app.route('/api/telegram/setup-webhook', methods=['GET', 'POST'])
+def api_telegram_setup_webhook():
+    """Dynamically sets the Telegram webhook URL."""
+    target_url = request.args.get('url') or (request.get_json(silent=True) or {}).get('url')
+    if not target_url:
+        target_url = os.environ.get('RENDER_EXTERNAL_URL')
+    if not target_url:
+        target_url = request.host_url
+
+    import asyncio
+    if bot_service._loop and bot_service.app:
+        fut = asyncio.run_coroutine_threadsafe(bot_service.set_webhook_url(target_url), bot_service._loop)
+        try:
+            ok, msg = fut.result(timeout=10)
+            return jsonify({'status': 'ok' if ok else 'error', 'message': msg, 'webhook_url': bot_service.webhook_url})
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+    return jsonify({'status': 'error', 'message': 'Bot service loop not active'}), 503
 
 # ══════════════════════════════════════════════════════════════
 # 🔑 2. LICENSE KEY MANAGEMENT & ACTIVATION APIS
