@@ -511,24 +511,29 @@ def _build_filter_graph(
 
         s_pos = sponsor_opts.get('position', 'bottom')
         s_y_percent = sponsor_opts.get('y_percent')
+        s_width_pct = max(30, min(100, int(sponsor_opts.get('width_percent', 85))))
+        s_scale = max(0.5, min(2.0, float(sponsor_opts.get('scale', 1.0))))
         s_color = sponsor_opts.get('color', '0xF59E0B')
         s_bg = sponsor_opts.get('bg_color', 'black@0.85')
-        s_font_size = max(12, int(sponsor_opts.get('font_size', 18)))
+        s_font_size = max(11, int(int(sponsor_opts.get('font_size', 16)) * s_scale))
 
-        # Ensure authentic Khmer font with full Unicode glyph support
-        s_font_name = sponsor_opts.get('font', 'kantumruy')
-        s_font = _resolve_font_path(s_font_name)
-        if not s_font or 'arial' in str(s_font).lower() or 'outfit' in str(s_font).lower():
-            s_font = _resolve_font_path('kantumruy')
-        font_arg = f"fontfile='{s_font}':" if s_font else ""
+        s_top_color = sponsor_opts.get('top_color') or s_color
+        s_bottom_color = sponsor_opts.get('bottom_color') or '0x22D3EE'
+        s_top_font_name = sponsor_opts.get('top_font') or sponsor_opts.get('font', 'kantumruy')
+        s_bottom_font_name = sponsor_opts.get('bottom_font') or sponsor_opts.get('font', 'kantumruy')
+
+        s_top_font = _resolve_font_path(s_top_font_name) or _resolve_font_path('kantumruy')
+        s_bottom_font = _resolve_font_path(s_bottom_font_name) or _resolve_font_path('kantumruy')
 
         lines = [
-            {'text': s_top, 'color': s_color, 'size': s_font_size},
-            {'text': s_bottom, 'color': '0x22D3EE', 'size': max(11, int(s_font_size * 0.88))}
+            {'text': s_top, 'color': s_top_color, 'size': s_font_size, 'font': s_top_font},
+            {'text': s_bottom, 'color': s_bottom_color, 'size': max(10, int(s_font_size * 0.88)), 'font': s_bottom_font}
         ]
 
-        line_gap = 4
-        total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap + 14
+        line_gap = max(2, int(4 * s_scale))
+        total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap + int(12 * s_scale)
+        box_w = f"trunc(iw*{s_width_pct/100.0:.3f})"
+        box_x = f"trunc((iw-{box_w})/2)"
 
         if s_y_percent is not None:
             box_y = f"trunc((h*{float(s_y_percent)/100.0:.3f}))"
@@ -538,14 +543,15 @@ def _build_filter_graph(
             box_y = f"h-{total_h + 10}"
 
         out = next_pad()
-        sponsor_chain = f"{current_pad}drawbox=x=0:y={box_y}:w=iw:h={total_h}:color={s_bg}:t=fill"
+        sponsor_chain = f"{current_pad}drawbox=x={box_x}:y={box_y}:w={box_w}:h={total_h}:color={s_bg}:t=fill"
 
-        curr_y_offset = 6
+        curr_y_offset = int(6 * s_scale)
         for l in lines:
             s_y_expr = f"{box_y}+{curr_y_offset}"
             tf_line_path = _write_temp_text_file(l['text'])
+            l_font_arg = f"fontfile='{l['font']}':" if l.get('font') else ""
             sponsor_chain += (
-                f",drawtext={font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
+                f",drawtext={l_font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
                 f"borderw=1:bordercolor=black@0.85:x=(w-text_w)/2:y={s_y_expr}"
             )
             curr_y_offset += l['size'] + line_gap

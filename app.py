@@ -470,7 +470,7 @@ def api_auto_process():
     out_filename = f"NeakZong_Auto_{job_id}.mp4"
     out_path = EXPORTS_DIR / out_filename
     
-    PROCESSING_JOBS[job_id] = {'status': 'processing', 'progress': 5, 'step': 'Extracting Audio...'}
+    PROCESSING_JOBS[job_id] = {'status': 'processing', 'progress': 10, 'step': 'ទាញយកសំឡេងពីវីដេអូ (Extracting Audio)...'}
     
     def _pipeline_worker():
         try:
@@ -478,19 +478,23 @@ def api_auto_process():
             bg_audio = EXPORTS_DIR / f"bg_{job_id}.mp3"
             extract_audio_from_video(str(video_path), str(bg_audio))
             PROCESSING_JOBS[job_id]['progress'] = 25
-            PROCESSING_JOBS[job_id]['step'] = 'Translating Subtitles to Khmer...'
+            PROCESSING_JOBS[job_id]['step'] = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR)...'
             
             # 2. Chinese Speech Recognition & Khmer Translation
             khmer_text = ""
             active_cues = []
             if srt_content:
+                PROCESSING_JOBS[job_id]['progress'] = 35
+                PROCESSING_JOBS[job_id]['step'] = 'កំពុងបកប្រែ Subtitles ជាភាសាខ្មែរ...'
                 t_srt, active_cues = translate_srt(srt_content)
                 khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
             else:
                 # 100% Auto: AI listens to Chinese speech & translates to Khmer
                 PROCESSING_JOBS[job_id]['progress'] = 30
-                PROCESSING_JOBS[job_id]['step'] = 'AI Speech-to-Text (Faster-Whisper Listening)...'
-                cues = asr_engine.transcribe_to_cues(str(video_path), language="zh")
+                PROCESSING_JOBS[job_id]['step'] = 'AI Faster-Whisper (Int8) កំពុងសម្គាល់ការសន្ទនា...'
+                cues = asr_engine.transcribe_to_cues(str(video_path), language="zh", timeout_sec=18.0)
+                PROCESSING_JOBS[job_id]['progress'] = 45
+                PROCESSING_JOBS[job_id]['step'] = 'កំពុងបកប្រែការសន្ទនាចិនជាភាសាខ្មែរ...'
                 if cues:
                     chinese_srt = ChineseSpeechRecognizer.cues_to_srt(cues)
                     t_srt, active_cues = translate_srt(chinese_srt)
@@ -498,8 +502,8 @@ def api_auto_process():
                 else:
                     khmer_text = "សូមស្វាគមន៍មកកាន់ការទស្សនារឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
                 
-            PROCESSING_JOBS[job_id]['progress'] = 50
-            PROCESSING_JOBS[job_id]['step'] = 'Generating Synced Khmer Voiceover (Lip-Sync)...'
+            PROCESSING_JOBS[job_id]['progress'] = 60
+            PROCESSING_JOBS[job_id]['step'] = 'កំពុងបង្កើតសំឡេងខ្មែរ AI Neural (ស្រីមុំ/ពិសិដ្ឋ)...'
             
             # 3. Synchronized Khmer TTS (True Lip-Sync to exact character speech timestamps)
             tts_audio = EXPORTS_DIR / f"tts_{job_id}.mp3"

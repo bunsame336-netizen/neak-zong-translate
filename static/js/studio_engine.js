@@ -678,8 +678,10 @@ function updateDualTonePreview() {
   state.textPart2.effect = document.getElementById('text-part2-effect')?.value || 'none';
   state.textPart2.outlineColor = document.getElementById('text-part2-outline-color')?.value || '#000000';
 
-  // Read font
-  state.textOverlay.font = document.getElementById('text-font-select')?.value || "'Moul', serif";
+  // Read fonts
+  state.textPart1.font = document.getElementById('text-part1-font')?.value || "'Moul', serif";
+  state.textPart2.font = document.getElementById('text-part2-font')?.value || "'Kantumruy Pro', sans-serif";
+  state.textOverlay.font = state.textPart1.font;
 
   // Show/hide outline rows
   const p1eff = state.textPart1.effect;
@@ -696,14 +698,14 @@ function updateDualTonePreview() {
   if (p1Span) {
     p1Span.innerText = state.textPart1.text;
     p1Span.style.color = state.textPart1.color;
-    p1Span.style.fontFamily = state.textOverlay.font;
+    p1Span.style.fontFamily = state.textPart1.font;
     p1Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
     _applyEffectToSpan(p1Span, state.textPart1.effect, state.textPart1.color, state.textPart1.outlineColor);
   }
   if (p2Span) {
     p2Span.innerText = ' ' + state.textPart2.text;
     p2Span.style.color = state.textPart2.color;
-    p2Span.style.fontFamily = state.textOverlay.font;
+    p2Span.style.fontFamily = state.textPart2.font;
     p2Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
     _applyEffectToSpan(p2Span, state.textPart2.effect, state.textPart2.color, state.textPart2.outlineColor);
   }
@@ -733,7 +735,7 @@ function _applyEffectToSpan(span, effect, color, outlineColor) {
 }
 
 
-// ── BLUR BOX SLIDERS (HORIZONTAL RECTANGLE: W: 50-280px, H: 20-80px) ──────
+// ── BLUR BOX SLIDERS (CLAMPS STRICTLY WITHIN VIDEO VIEWPORT) ──────
 function updateBlurBoxLimits() {
   const vpW = (videoViewport && videoViewport.clientWidth) || 280;
   const vpH = (videoViewport && videoViewport.clientHeight) || 320;
@@ -742,18 +744,27 @@ function updateBlurBoxLimits() {
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
   if (wSlider) {
-    wSlider.min = 50;
-    wSlider.max = 280;
+    wSlider.min = 20;
+    wSlider.max = Math.max(40, vpW);
   }
   if (hSlider) {
-    hSlider.min = 20;
-    hSlider.max = 80;
+    hSlider.min = 10;
+    hSlider.max = Math.max(30, vpH);
   }
-  if (xSlider) xSlider.max = Math.max(0, vpW - (state.blurMask.w || 140));
-  if (ySlider) ySlider.max = Math.max(0, vpH - (state.blurMask.h || 45));
+  if (xSlider) {
+    xSlider.min = 0;
+    xSlider.max = Math.max(0, vpW - (state.blurMask.w || 140));
+  }
+  if (ySlider) {
+    ySlider.min = 0;
+    ySlider.max = Math.max(0, vpH - (state.blurMask.h || 45));
+  }
 }
 
 function updateBlurBoxFromSliders() {
+  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
+
   if (!state.blurMask.enabled) {
     state.blurMask.enabled = true;
     const toggle = document.getElementById('toggle-blur');
@@ -764,10 +775,16 @@ function updateBlurBoxFromSliders() {
     }
   }
 
-  const w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
-  const h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
-  const x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
-  const y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+  let w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
+  let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
+  let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
+  let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+
+  // Boundary clamping: Ensure blur box NEVER exceeds video frame
+  w = Math.min(w, vpW);
+  h = Math.min(h, vpH);
+  x = Math.max(0, Math.min(x, vpW - w));
+  y = Math.max(0, Math.min(y, vpH - h));
 
   state.blurMask.x = x;
   state.blurMask.y = y;
@@ -831,6 +848,33 @@ function setBlurPreset(level) {
   updateBlurIntensity(val);
 }
 
+// 🎨 Real Blur Tint Modes: Pure Blur, Dark Black, or Transparent White Tint
+function setBlurTintPreset(mode) {
+  state.blurMask.tintMode = mode;
+  ['btn-tint-pure', 'btn-tint-dark', 'btn-tint-white'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active');
+  });
+  const btn = document.getElementById(`btn-tint-${mode}`);
+  if (btn) btn.classList.add('active');
+
+  const tintSlider = document.getElementById('blur-tint-slider');
+  let opacityPct = parseInt(tintSlider?.value || 40);
+
+  if (mode === 'pure') {
+    state.blurMask.tintColor = 'rgba(0, 0, 0, 0)';
+    if (tintSlider) tintSlider.value = 0;
+    opacityPct = 0;
+  } else if (mode === 'dark') {
+    if (opacityPct === 0) opacityPct = 40;
+    if (tintSlider) tintSlider.value = opacityPct;
+  } else if (mode === 'white') {
+    if (opacityPct === 0) opacityPct = 30;
+    if (tintSlider) tintSlider.value = opacityPct;
+  }
+  updateBlurTint(opacityPct);
+  showToast(mode === 'pure' ? '🌫️ ផ្ទៃព្រាលសុទ្ធ' : (mode === 'white' ? '⬜ សថ្លា' : '⬛ ខ្មៅងងឹត'));
+}
+
 function updateBlurTint(val) {
   if (!state.blurMask.enabled) {
     state.blurMask.enabled = true;
@@ -845,8 +889,16 @@ function updateBlurTint(val) {
   state.blurMask.tintOpacity = pct / 100.0;
   const tintValEl = document.getElementById('blur-tint-val');
   if (tintValEl) tintValEl.innerText = `${pct}%`;
+
+  const mode = state.blurMask.tintMode || 'dark';
   if (blurBox) {
-    blurBox.style.backgroundColor = `rgba(0, 0, 0, ${state.blurMask.tintOpacity})`;
+    if (mode === 'pure' || pct === 0) {
+      blurBox.style.backgroundColor = 'transparent';
+    } else if (mode === 'white') {
+      blurBox.style.backgroundColor = `rgba(255, 255, 255, ${state.blurMask.tintOpacity})`;
+    } else {
+      blurBox.style.backgroundColor = `rgba(0, 0, 0, ${state.blurMask.tintOpacity})`;
+    }
   }
 }
 
@@ -868,7 +920,7 @@ function setBlurCorner(corner) {
   updateBlurBoxFromSliders();
 }
 
-// ── SPONSOR CONTROLS (2-LINE CONCISE SPONSOR) ────
+// ── SPONSOR CONTROLS (WIDTH, SCALE & DUAL-STYLE SUPPORT) ────
 function toggleSponsorOverlay(enabled) {
   state.sponsor.enabled = enabled;
   const toggle = document.getElementById('toggle-sponsor');
@@ -882,40 +934,72 @@ function toggleSponsorOverlay(enabled) {
 }
 
 function updateSponsorContent() {
-  const topText = (document.getElementById('sponsor-top-input')?.value || document.getElementById('sponsor-brand-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
-  const bottomText = (document.getElementById('sponsor-bottom-input')?.value || document.getElementById('sponsor-contact-input')?.value || '📱 012 345 678 | Telegram').trim();
-  const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
-  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 17);
+  const topText = (document.getElementById('sponsor-top-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
+  const bottomText = (document.getElementById('sponsor-bottom-input')?.value || '📱 012 345 678 | Telegram').trim();
+
+  // Colors & Fonts
+  const topColor = document.getElementById('sponsor-top-color')?.value || '#f59e0b';
+  const bottomColor = document.getElementById('sponsor-bottom-color')?.value || '#22d3ee';
+  const topFont = document.getElementById('sponsor-top-font')?.value || "'Kantumruy Pro', sans-serif";
+  const bottomFont = document.getElementById('sponsor-bottom-font')?.value || "'Kantumruy Pro', sans-serif";
+  const topEffect = document.getElementById('sponsor-top-effect')?.value || 'glow';
+  const bottomEffect = document.getElementById('sponsor-bottom-effect')?.value || 'none';
+
+  // Size, Width, Scale & Position
+  const widthPct = parseInt(document.getElementById('sponsor-width-slider')?.value || 88);
+  const scalePct = parseInt(document.getElementById('sponsor-scale-slider')?.value || 100);
+  const scale = scalePct / 100.0;
   const yPercent = parseInt(document.getElementById('sponsor-y-slider')?.value || 88);
   const bg = document.getElementById('sponsor-bg-select')?.value || 'rgba(8, 6, 18, 0.90)';
 
   state.sponsor.topLine = topText;
   state.sponsor.bottomLine = bottomText;
-  state.sponsor.color = color;
-  state.sponsor.fontSize = size;
+  state.sponsor.topColor = topColor;
+  state.sponsor.bottomColor = bottomColor;
+  state.sponsor.topFont = topFont;
+  state.sponsor.bottomFont = bottomFont;
+  state.sponsor.topEffect = topEffect;
+  state.sponsor.bottomEffect = bottomEffect;
+  state.sponsor.widthPercent = widthPct;
+  state.sponsor.scale = scale;
   state.sponsor.yPercent = yPercent;
   state.sponsor.bgColor = bg;
+
+  const widthVal = document.getElementById('sponsor-width-val');
+  if (widthVal) widthVal.innerText = `${widthPct}%`;
+  const scaleVal = document.getElementById('sponsor-scale-val');
+  if (scaleVal) scaleVal.innerText = `${scale.toFixed(1)}x`;
 
   const topEl = document.getElementById('sponsor-top-tag') || document.getElementById('sponsor-brand-tag');
   const bottomEl = document.getElementById('sponsor-bottom-tag') || document.getElementById('sponsor-contact-tag');
 
+  const baseSize = Math.max(10, Math.round(14 * scale));
+
   if (topEl) {
     topEl.innerText = topText;
-    topEl.style.color = color;
-    topEl.style.fontSize = size + 'px';
+    topEl.style.color = topColor;
+    topEl.style.fontFamily = topFont;
+    topEl.style.fontSize = baseSize + 'px';
+    _applyEffectToSpan(topEl, topEffect, topColor, '#000');
   }
   if (bottomEl) {
     bottomEl.innerText = bottomText;
-    bottomEl.style.color = '#22d3ee';
-    bottomEl.style.fontSize = Math.max(11, size - 3) + 'px';
+    bottomEl.style.color = bottomColor;
+    bottomEl.style.fontFamily = bottomFont;
+    bottomEl.style.fontSize = Math.max(9, Math.round(baseSize * 0.85)) + 'px';
+    _applyEffectToSpan(bottomEl, bottomEffect, bottomColor, '#000');
   }
+
   const bannerBar = document.getElementById('sponsor-banner-bar');
   if (bannerBar) {
     bannerBar.style.backgroundColor = bg;
+    bannerBar.style.padding = `${Math.round(4 * scale)}px ${Math.round(8 * scale)}px`;
   }
   if (sponsorElement) {
     sponsorElement.style.bottom = 'auto';
     sponsorElement.style.top = `${yPercent}%`;
+    sponsorElement.style.width = `${widthPct}%`;
+    sponsorElement.style.left = `${(100 - widthPct) / 2}%`;
   }
 }
 
@@ -952,70 +1036,93 @@ function updateLogoPosition() {
   logoElement.style.top = `${y}px`;
 }
 
-// ── MARQUEE ────────────────────────────────────────────────
-function toggleMarqueeOverlay(enabled) {
+// ── MARQUEE ANIMATION (INTEGRATED INTO TEXT TAB) ────────────
+function toggleMarqueeAnimation(enabled) {
   state.marquee.enabled = enabled;
+  const toggle = document.getElementById('toggle-marquee');
+  if (toggle && toggle.checked !== enabled) toggle.checked = enabled;
   if (marqueeElement) {
     marqueeElement.classList.toggle('active-visible', enabled);
     marqueeElement.style.display = enabled ? 'block' : 'none';
   }
   updateMarqueeAnimation();
-  showToast(enabled ? '✓ បានបើកអក្សររត់ (Marquee)' : 'បានបិទអក្សររត់');
+  showToast(enabled ? '🎬 បានបើកចលនាអក្សររត់ (Auto Marquee)' : 'បានបិទអក្សររត់');
 }
 
-function updateMarqueeText(val) {
+function applyMarqueePreset(text) {
+  state.marquee.text = text;
+  const input = document.getElementById('marquee-text-input');
+  if (input) input.value = text;
+  if (marqueeTrack) marqueeTrack.innerText = text;
+  if (!state.marquee.enabled) {
+    toggleMarqueeAnimation(true);
+  } else {
+    updateMarqueeAnimation();
+  }
+  showToast(`⚡ បានជ្រើសរើស៖ ${text}`);
+}
+
+function updateMarqueeCustomText(val) {
   state.marquee.text = val;
   if (marqueeTrack) marqueeTrack.innerText = val;
 }
 
-function setMarqueeDirection(dir) {
-  state.marquee.direction = dir;
-  // Update active button states
-  ['up', 'down', 'left', 'right'].forEach(d => {
-    const btn = document.getElementById(`marquee-dir-${d}`);
-    if (btn) btn.classList.toggle('active', d === dir);
-  });
+// Natural Speed Slider: 1 = 20s (Very Slow), 5 = 8s (Normal), 10 = 3s (Very Fast)
+function setMarqueeSpeedNatural(val) {
+  const level = parseInt(val) || 5;
+  // Map level 1..10 to duration in seconds: 10 -> 3s, 1 -> 20s
+  const speedSec = Math.max(2, Math.round(20 - (level - 1) * 1.88));
+  state.marquee.speedSec = speedSec;
+  state.marquee.speedLevel = level;
+
+  let label = `${level}x (មធ្យម)`;
+  if (level <= 3) label = `${level}x (យឺត 🐢)`;
+  else if (level >= 8) label = `${level}x (លឿន 🚀)`;
+  const valEl = document.getElementById('marquee-speed-natural-val');
+  if (valEl) valEl.innerText = label;
+
   updateMarqueeAnimation();
 }
 
+function setMarqueeDir(dir) {
+  state.marquee.direction = dir;
+  ['up', 'down', 'left', 'right'].forEach(d => {
+    const btn = document.getElementById(`btn-marquee-dir-${d}`);
+    if (btn) btn.classList.toggle('active', d === dir);
+  });
+  updateMarqueeAnimation();
+  showToast(`✓ ទិសដៅរត់៖ ${dir.toUpperCase()}`);
+}
+
+// Legacy Marquee Helpers for compatibility
+function toggleMarqueeOverlay(enabled) {
+  toggleMarqueeAnimation(enabled);
+}
+
+function updateMarqueeText(val) {
+  updateMarqueeCustomText(val);
+}
+
+function setMarqueeDirection(dir) {
+  setMarqueeDir(dir);
+}
+
 function setMarqueeSpeed(preset) {
-  let sec = 8;
-  if (preset === 'slow') sec = 15;
-  if (preset === 'normal') sec = 8;
-  if (preset === 'fast') sec = 4;
-  setMarqueeSpeedSeconds(sec);
+  let level = 5;
+  if (preset === 'slow') level = 2;
+  if (preset === 'normal') level = 5;
+  if (preset === 'fast') level = 9;
+  setMarqueeSpeedNatural(level);
 }
 
 function setMarqueeSpeedSeconds(sec) {
-  const val = parseInt(sec) || 8;
-  state.marquee.speedSec = val;
-  const valEl = document.getElementById('marquee-speed-val');
-  if (valEl) valEl.innerText = `${val}s`;
-  const slider = document.getElementById('marquee-speed-slider');
-  if (slider && parseInt(slider.value) !== val) slider.value = val;
-
-  ['slow', 'normal', 'fast'].forEach(p => {
-    const btn = document.getElementById(`btn-speed-${p}`);
-    if (btn) btn.classList.remove('active');
-  });
-  if (val >= 14) document.getElementById('btn-speed-slow')?.classList.add('active');
-  else if (val <= 5) document.getElementById('btn-speed-fast')?.classList.add('active');
-  else document.getElementById('btn-speed-normal')?.classList.add('active');
-
+  const s = parseInt(sec) || 8;
+  state.marquee.speedSec = s;
   updateMarqueeAnimation();
 }
 
 function setMarqueeEffect(effect) {
   state.marquee.effect = effect;
-  ['none', 'shadow', 'glow', 'outline'].forEach(e => {
-    const btn = document.getElementById(`effect-btn-${e}`);
-    if (btn) btn.classList.toggle('active', e === effect);
-  });
-
-  // Show glow color picker only for glow
-  const glowRow = document.getElementById('glow-color-row');
-  if (glowRow) glowRow.style.display = effect === 'glow' ? 'flex' : 'none';
-
   applyMarqueeStyles();
 }
 
@@ -1031,7 +1138,6 @@ function applyMarqueeStyles() {
   state.marquee.glowColor = glowColor;
   state.marquee.fontSize = fontSize;
 
-  // Apply CSS to preview marquee
   marqueeTrack.style.fontFamily = font;
   marqueeTrack.style.color = color;
   marqueeTrack.style.fontSize = fontSize + 'px';
@@ -1066,6 +1172,11 @@ function updateMarqueeAnimation() {
 
   marqueeElement.classList.add('active-visible');
   marqueeElement.style.display = 'block';
+
+  // Set text if needed
+  if (state.marquee.text) {
+    marqueeTrack.innerText = state.marquee.text;
+  }
 
   // Toggle directional classes
   if (dir === 'left' || dir === 'right') {
@@ -1306,7 +1417,8 @@ function _buildRenderOptions() {
       outline_w: state.textPart1.outlineW,
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
-      size: state.textOverlay.size
+      size: state.textOverlay.size,
+      font: state.textPart1.font || 'moul'
     },
     text_part2: {
       enabled: state.textOverlay.enabled && state.textPart2.text.length > 0,
@@ -1317,18 +1429,25 @@ function _buildRenderOptions() {
       outline_w: state.textPart2.outlineW,
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
-      size: state.textOverlay.size
+      size: state.textOverlay.size,
+      font: state.textPart2.font || 'kantumruy'
     },
-    // Custom sponsor branding (2 concise lines + position)
+    // Custom sponsor branding (2 concise lines + dual style + width & scale)
     sponsor: {
       enabled: state.sponsor.enabled,
       top_line: state.sponsor.topLine,
       bottom_line: state.sponsor.bottomLine,
       position: state.sponsor.position,
       y_percent: state.sponsor.yPercent,
-      color: _hexToFFmpegColor(state.sponsor.color),
-      font_size: state.sponsor.fontSize,
-      bg_color: state.sponsor.bgColor,
+      width_percent: state.sponsor.widthPercent || 88,
+      scale: state.sponsor.scale || 1.0,
+      color: _hexToFFmpegColor(state.sponsor.color || state.sponsor.topColor),
+      top_color: _hexToFFmpegColor(state.sponsor.topColor || '#f59e0b'),
+      bottom_color: _hexToFFmpegColor(state.sponsor.bottomColor || '#22d3ee'),
+      top_font: state.sponsor.topFont || 'kantumruy',
+      bottom_font: state.sponsor.bottomFont || 'kantumruy',
+      font_size: state.sponsor.fontSize || 16,
+      bg_color: state.sponsor.bgColor || 'rgba(8, 6, 18, 0.90)',
       font: 'kantumruy'
     }
   };

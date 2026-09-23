@@ -754,10 +754,10 @@
             <span class="btn-lbl">Logo</span>
           </button>
 
-          <!-- 6. Marquee (អក្សររត់ ⬆️/⬇️) -->
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
-            <span class="btn-ico">🎬</span>
-            <span class="btn-lbl">Marquee</span>
+          <!-- 6. Media (ឯកសារ & SRT) -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="media" id="tab-nav-media" onclick="switchStudioTab('media')">
+            <span class="btn-ico">📂</span>
+            <span class="btn-lbl">Media</span>
           </button>
         </div>
 
@@ -782,13 +782,10 @@
           </div>
         </div>
 
-        <!-- Secondary Quick Pills: Media & Flip/Crop Export -->
+        <!-- Secondary Quick Pill: Tools (Flip/Crop/Filters) -->
         <div class="top-extra-pills-row">
-          <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="media" onclick="switchStudioTab('media')">
-            📂 Media
-          </button>
-          <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="tools" onclick="switchStudioTab('tools')">
-            ✂️ Tools
+          <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="tools" onclick="switchStudioTab('tools')" style="width: 100%;">
+            ✂️ Tools (Flip / Filters)
           </button>
         </div>
       </div>
@@ -875,6 +872,13 @@
                 <option value="outline">ស៊ុម</option>
               </select>
             </div>
+            <select id="text-part1-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem; margin-top: 2px;" onchange="updateDualTonePreview()">
+              <option value="'Moul', serif" selected>Moul (មូល)</option>
+              <option value="'Kantumruy Pro', sans-serif">Kantumruy Pro</option>
+              <option value="'Battambang', sans-serif">Battambang</option>
+              <option value="'Koulen', serif">Koulen (កូលែន)</option>
+              <option value="'Bokor', serif">Bokor</option>
+            </select>
           </div>
 
           <!-- Part 2 -->
@@ -894,29 +898,23 @@
                 <option value="outline">ស៊ុម</option>
               </select>
             </div>
+            <select id="text-part2-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem; margin-top: 2px;" onchange="updateDualTonePreview()">
+              <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
+              <option value="'Moul', serif">Moul (មូល)</option>
+              <option value="'Battambang', sans-serif">Battambang</option>
+              <option value="'Koulen', serif">Koulen (កូលែន)</option>
+              <option value="'Siemreap', sans-serif">Siemreap</option>
+            </select>
           </div>
         </div>
 
-        <!-- Shared Font & Size (2 Columns) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
-          <div>
-            <label class="form-label">ពុម្ពអក្សរ (Font)</label>
-            <select id="text-font-select" class="cyber-input" style="padding: 0 4px; height: 26px;" onchange="updateDualTonePreview()">
-              <option value="'Moul', serif">Moul (មូល)</option>
-              <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
-              <option value="'Battambang', sans-serif">Battambang</option>
-              <option value="'Siemreap', sans-serif">Siemreap</option>
-              <option value="'Bokor', serif">Bokor</option>
-              <option value="'Koulen', serif">Koulen</option>
-            </select>
+        <!-- Shared Size Slider -->
+        <div class="form-row" style="margin-top: 3px;">
+          <div class="form-label">
+            <span>ទំហំអក្សររួម (Font Size)</span>
+            <span class="form-label-val" id="text-size-val">26px</span>
           </div>
-          <div>
-            <div class="form-label">
-              <span>ទំហំ</span>
-              <span class="form-label-val" id="text-size-val">26px</span>
-            </div>
-            <input type="range" min="14" max="60" step="2" value="26" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
-          </div>
+          <input type="range" min="14" max="60" step="2" value="26" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
         </div>
 
         <!-- Text Position Sliders (2 Columns: X and Y) -->
@@ -938,6 +936,59 @@
               </div>
               <input type="range" min="0" max="600" step="5" value="30" class="cyber-slider" id="text-y-slider"
                 oninput="document.getElementById('text-y-val').innerText = this.value + 'px'; updateTextPosition();">
+            </div>
+          </div>
+        </div>
+
+        <!-- 🎬 INTEGRATED AUTO MARQUEE ANIMATION SECTION -->
+        <div class="slider-group-box" style="margin-top: 5px; border-color: rgba(245, 158, 11, 0.45); background: rgba(18, 14, 30, 0.95);">
+          <div class="slider-group-title" style="color: var(--neon-gold); display: flex; justify-content: space-between; align-items: center;">
+            <span>🎬 ចលនាអក្សររត់ (Auto Marquee Animation)</span>
+            <label class="cyber-switch" style="transform: scale(0.85); margin: 0;">
+              <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeAnimation(this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- Quick Presets -->
+          <div style="margin-top: 3px;">
+            <div style="font-size: 0.60rem; color: var(--text-muted); font-weight: 700; margin-bottom: 2px;">⚡ Preset រហ័ស (ចុចជ្រើសរើស):</div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 3px;">
+              <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ')">
+                👑 រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ
+              </button>
+              <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴')">
+                🎬 𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴
+              </button>
+              <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('នាគហ្សង បកប្រែ')">
+                🐉 នាគហ្សង បកប្រែ
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Marquee Text Edit Input -->
+          <div class="form-row" style="margin-top: 4px;">
+            <label class="form-label">អត្ថបទរត់ (Custom Text Edit)</label>
+            <input type="text" id="marquee-text-input" class="cyber-input" value="👑 រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ" placeholder="វាយអក្សររត់នៅទីនេះ..." oninput="updateMarqueeCustomText(this.value)">
+          </div>
+
+          <!-- Natural Speed Slider: Right = Fast, Left = Slow -->
+          <div class="form-row" style="margin-top: 3px;">
+            <div class="form-label">
+              <span>⚡ ល្បឿនរត់ (ឆ្វេង=យឺត 🐢 | ស្ដាំ=លឿន 🚀)</span>
+              <span class="form-label-val" id="marquee-speed-natural-val">5x (មធ្យម)</span>
+            </div>
+            <input type="range" min="1" max="10" step="1" value="5" class="cyber-slider" id="marquee-speed-natural-slider" oninput="setMarqueeSpeedNatural(this.value)">
+          </div>
+
+          <!-- Directions -->
+          <div class="form-row" style="margin-top: 3px;">
+            <label class="form-label">ទិសដៅរត់</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3px;">
+              <button type="button" class="btn-ctrl active" id="btn-marquee-dir-up" onclick="setMarqueeDir('up')">⬆️ ឡើង</button>
+              <button type="button" class="btn-ctrl" id="btn-marquee-dir-down" onclick="setMarqueeDir('down')">⬇️ ចុះ</button>
+              <button type="button" class="btn-ctrl" id="btn-marquee-dir-left" onclick="setMarqueeDir('left')">⬅️ ឆ្វេង</button>
+              <button type="button" class="btn-ctrl" id="btn-marquee-dir-right" onclick="setMarqueeDir('right')">➡️ ស្ដាំ</button>
             </div>
           </div>
         </div>
@@ -1024,30 +1075,30 @@
           <button type="button" class="btn-ctrl" id="btn-blur-strong" style="justify-content: center; height: 24px; font-size: 0.62rem;" onclick="setBlurPreset('strong')">ខ្លាំង (45)</button>
         </div>
 
-        <!-- Blur Size (2 Columns: Width & Height) -->
+        <!-- Blur Size (Bounded Strictly to Video Frame) -->
         <div class="slider-group-box" style="margin-top: 2px;">
-          <div class="slider-group-title">📏 ទំហំ Blur Box (Width x Height)</div>
+          <div class="slider-group-title">📏 ទំហំ Blur Box (កម្រិតព្រំដែនស៊ុមវីដេអូ)</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
             <div class="form-row">
               <div class="form-label">
                 <span>ទទឹង (W)</span>
                 <span class="form-label-val" id="blur-w-val">140px</span>
               </div>
-              <input type="range" min="20" max="380" step="2" value="140" class="cyber-slider" id="blur-w-slider"
-                oninput="document.getElementById('blur-w-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+              <input type="range" min="20" max="258" step="2" value="140" class="cyber-slider" id="blur-w-slider"
+                oninput="updateBlurBoxFromSliders();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>កម្ពស់ (H)</span>
                 <span class="form-label-val" id="blur-h-val">45px</span>
               </div>
-              <input type="range" min="10" max="180" step="2" value="45" class="cyber-slider" id="blur-h-slider"
-                oninput="document.getElementById('blur-h-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+              <input type="range" min="10" max="140" step="2" value="45" class="cyber-slider" id="blur-h-slider"
+                oninput="updateBlurBoxFromSliders();">
             </div>
           </div>
         </div>
 
-        <!-- Blur Position (2 Columns: X & Y) -->
+        <!-- Blur Position (X & Y Clamped) -->
         <div class="slider-group-box" style="margin-top: 2px;">
           <div class="slider-group-title">📐 ទីតាំង Blur Box (X, Y)</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
@@ -1056,16 +1107,16 @@
                 <span>ឆ្វេង-ស្ដាំ (X)</span>
                 <span class="form-label-val" id="blur-x-val">15px</span>
               </div>
-              <input type="range" min="0" max="450" step="2" value="15" class="cyber-slider" id="blur-x-slider"
-                oninput="document.getElementById('blur-x-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+              <input type="range" min="0" max="238" step="2" value="15" class="cyber-slider" id="blur-x-slider"
+                oninput="updateBlurBoxFromSliders();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>លើ-ក្រោម (Y)</span>
                 <span class="form-label-val" id="blur-y-val">15px</span>
               </div>
-              <input type="range" min="0" max="750" step="2" value="15" class="cyber-slider" id="blur-y-slider"
-                oninput="document.getElementById('blur-y-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+              <input type="range" min="0" max="320" step="2" value="15" class="cyber-slider" id="blur-y-slider"
+                oninput="updateBlurBoxFromSliders();">
             </div>
           </div>
           <!-- Quick Corners -->
@@ -1077,9 +1128,22 @@
           </div>
         </div>
 
-        <!-- Blur Intensity & Black Tint (2 Columns) -->
+        <!-- Blur Tint Style & Intensity -->
         <div class="slider-group-box" style="margin-top: 2px;">
-          <div class="slider-group-title">🌫️ កម្រិតព្រាល &amp; ផ្ទៃខ្មៅងងឹត</div>
+          <div class="slider-group-title">🎨 ពណ៌ផ្ទៃ &amp; កម្រិតព្រាល (Tint &amp; Blur)</div>
+          <!-- Tint Modes -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; margin-bottom: 4px;">
+            <button type="button" class="btn-ctrl" id="btn-tint-pure" style="justify-content: center; font-size: 0.58rem; height: 24px;" onclick="setBlurTintPreset('pure')">
+              🌫️ ព្រាលសុទ្ធ
+            </button>
+            <button type="button" class="btn-ctrl active" id="btn-tint-dark" style="justify-content: center; font-size: 0.58rem; height: 24px;" onclick="setBlurTintPreset('dark')">
+              ⬛ ខ្មៅងងឹត
+            </button>
+            <button type="button" class="btn-ctrl" id="btn-tint-white" style="justify-content: center; font-size: 0.58rem; height: 24px;" onclick="setBlurTintPreset('white')">
+              ⬜ សថ្លា
+            </button>
+          </div>
+
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
             <div class="form-row">
               <div class="form-label">
@@ -1091,7 +1155,7 @@
             </div>
             <div class="form-row">
               <div class="form-label">
-                <span>ផ្ទៃខ្មៅងងឹត</span>
+                <span>កម្រិតពណ៌ផ្ទៃ</span>
                 <span class="form-label-val" id="blur-tint-val">40%</span>
               </div>
               <input type="range" min="0" max="100" step="2" value="40" class="cyber-slider" id="blur-tint-slider"
@@ -1101,16 +1165,16 @@
         </div>
       </div>
 
-      <!-- ── TAB: CUSTOM SPONSOR (2 LINES ONLY) ──────────────── -->
+      <!-- ── TAB: CUSTOM SPONSOR (DUAL-STYLE & RESIZABLE) ──────────────── -->
       <div class="tab-panel-card" id="tab-panel-sponsor">
         <div class="panel-section-title">
-          <span>🤝 ផ្ទាំងផ្សាយ Sponsor (២ បន្ទាត់)</span>
+          <span>🤝 ផ្ទាំងផ្សាយ Sponsor (២ បន្ទាត់ &amp; Dual Style)</span>
         </div>
 
-        <div class="toggle-switch-wrap">
+        <div class="toggle-switch-wrap" style="padding: 3px 5px;">
           <div>
             <div class="toggle-switch-label">បើកបង្ហាញ Sponsor Banner</div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">បង្ហាញព័ត៌មាន Sponsor ២ បន្ទាត់ខ្លី gọn លើវីដេអូ</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">សារ៉េទំហំទទឹង និងអក្សរ ២ ពណ៌ដាច់ដោយឡែក</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-sponsor" onchange="toggleSponsorOverlay(this.checked)">
@@ -1118,142 +1182,110 @@
           </label>
         </div>
 
-        <div class="form-row">
-          <label class="form-label">ជួរលើ (Top Line) — អត្ថបទ Sponsor</label>
-          <input type="text" id="sponsor-top-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" oninput="updateSponsorContent()">
-        </div>
+        <!-- Dual Style: Top Line & Bottom Line -->
+        <div class="slider-group-box" style="margin-top: 3px;">
+          <div class="slider-group-title">✏️ អត្ថបទ និង Style ដាច់ដោយឡែក (Dual-Style)</div>
 
-        <div class="form-row">
-          <label class="form-label">ជួរក្រោម (Bottom Line) — លេខទាក់ទង ឬ Telegram</label>
-          <input type="text" id="sponsor-bottom-input" class="cyber-input" value="📱 012 345 678 | Telegram" placeholder="លេខទូរសព្ទ / Telegram..." oninput="updateSponsorContent()">
-        </div>
-
-        <!-- Sponsor Slider Box -->
-        <div class="slider-group-box">
-          <div class="slider-group-title">📐 សារ៉េទំហំ និងទីតាំង Sponsor Banner</div>
-          
-          <div class="form-row">
-            <div class="form-label">
-              <span>ទំហំអក្សរ Sponsor (Font Size)</span>
-              <span class="form-label-val" id="sponsor-size-val">17px</span>
+          <!-- Top Line -->
+          <div style="background: rgba(255,255,255,0.03); padding: 4px; border-radius: 6px; margin-bottom: 4px; border: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <span style="font-size: 0.60rem; font-weight: 800; color: #f59e0b;">ជួរលើ (Top Line):</span>
             </div>
-            <input type="range" min="12" max="28" step="1" value="17" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
-          </div>
-
-          <div class="form-row">
-            <div class="form-label">
-              <span>ទីតាំង Y លើ-ក្រោម (Position Y)</span>
-              <span class="form-label-val" id="sponsor-y-val">88%</span>
-            </div>
-            <input type="range" min="5" max="92" step="1" value="88" class="cyber-slider" id="sponsor-y-slider" oninput="document.getElementById('sponsor-y-val').innerText = this.value + '%'; updateSponsorContent();">
-          </div>
-
-          <div class="form-row" style="margin-top: 4px;">
-            <label class="form-label">ទីតាំងលឿន (Preset Positions)</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-              <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.75rem; height: 36px;" onclick="setSponsorPosition('bottom')">
-                ⬇️ ខាងក្រោម (Bottom)
-              </button>
-              <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.75rem; height: 36px;" onclick="setSponsorPosition('top')">
-                ⬆️ ខាងលើ (Top)
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
-          <div>
-            <label class="form-label">ពណ៌អក្សរ Top Line</label>
-            <input type="color" id="sponsor-color-picker" value="#f59e0b" class="cyber-input" style="height: 38px; padding: 2px;" oninput="updateSponsorContent()">
-          </div>
-          <div>
-            <label class="form-label">ពណ៌ផ្ទៃ Background</label>
-            <select id="sponsor-bg-select" class="cyber-input" style="padding: 0 6px; height: 38px;" onchange="updateSponsorContent()">
-              <option value="rgba(8, 6, 18, 0.90)" selected>ខ្មៅងងឹត (Dark Glass)</option>
-              <option value="rgba(0, 0, 0, 0.95)">ខ្មៅសុទ្ធ (Pure Black)</option>
-              <option value="rgba(168, 85, 247, 0.35)">ស្វាយ Neon (Purple Tint)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── TAB 4: ANIMATED VERTICAL MARQUEE ─────────────────── -->
-      <div class="tab-panel-card" id="tab-panel-marquee">
-        <div class="panel-section-title">
-          <span>🎬 អក្សររត់លើវីដេអូ (Marquee Text Overlay)</span>
-        </div>
-
-        <div class="toggle-switch-wrap" style="padding: 3px 5px;">
-          <div>
-            <div class="toggle-switch-label" style="font-size: 0.68rem; font-weight: 800; color: #fbbf24;">បើកដំណើរការអក្សររត់ (Marquee)</div>
-          </div>
-          <label class="cyber-switch">
-            <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeOverlay(this.checked)">
-            <span class="switch-slider"></span>
-          </label>
-        </div>
-
-        <!-- Marquee Text Input -->
-        <div class="form-row" style="margin-top: 4px;">
-          <label class="form-label" style="font-size: 0.68rem;">✍️ អត្ថបទរត់លើវីដេអូ (Text Overlay)</label>
-          <input type="text" id="marquee-text-input" class="cyber-input" value="🎬 សូមចុច Subscribe &amp; Follow ឆានែលដើម្បីទស្សនាភាគបន្ត!" placeholder="វាយអត្ថបទរត់លើវីដេអូ..." oninput="updateMarqueeText(this.value)">
-        </div>
-
-        <!-- Direction Buttons (Up & Down) -->
-        <div class="form-row" style="margin-top: 4px;">
-          <label class="form-label" style="font-size: 0.68rem;">↕️ ទិសដៅរត់ (Direction)</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('up')">
-              ⬆️ រត់ពីក្រោមឡើងលើ
-            </button>
-            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('down')">
-              ⬇️ រត់ពីលើចុះក្រោម
-            </button>
-          </div>
-        </div>
-
-        <!-- Speed & Size (2 Columns) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
-          <div class="slider-group-box" style="margin: 0;">
-            <div class="form-label">
-              <span>ល្បឿនរត់</span>
-              <span class="form-label-val" id="marquee-speed-val">8s</span>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 3px;">
-              <button type="button" class="btn-ctrl" id="btn-speed-slow" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('slow')">🐢 15s</button>
-              <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('normal')">🚶 8s</button>
-              <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('fast')">⚡ 4s</button>
-            </div>
-            <input type="range" min="3" max="25" step="1" value="8" class="cyber-slider" id="marquee-speed-slider" oninput="setMarqueeSpeedSeconds(this.value)">
-          </div>
-
-          <div class="slider-group-box" style="margin: 0;">
-            <div class="form-label">
-              <span>ទំហំអក្សរ</span>
-              <span class="form-label-val" id="marquee-size-val">22px</span>
-            </div>
-            <input type="range" min="14" max="44" step="2" value="22" class="cyber-slider" id="marquee-size-slider"
-              oninput="document.getElementById('marquee-size-val').innerText = this.value + 'px'; state.marquee.fontSize = parseInt(this.value); applyMarqueeStyles();">
-            <div style="display: grid; grid-template-columns: 32px 1fr; gap: 4px; margin-top: 2px;">
-              <input type="color" id="marquee-color-picker" value="#f59e0b" class="cyber-input" style="height: 24px; padding: 1px;" oninput="state.marquee.color = this.value; applyMarqueeStyles();">
-              <select id="marquee-font-select" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="applyMarqueeStyles()">
-                <option value="'Kantumruy Pro', sans-serif">Kantumruy</option>
+            <input type="text" id="sponsor-top-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="ជួរលើ..." oninput="updateSponsorContent()">
+            <div style="display: grid; grid-template-columns: 32px 1fr 1fr; gap: 3px; margin-top: 3px;">
+              <input type="color" id="sponsor-top-color" value="#f59e0b" class="cyber-input" style="height: 24px; padding: 1px;" oninput="updateSponsorContent()">
+              <select id="sponsor-top-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
+                <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
                 <option value="'Moul', serif">Moul (មូល)</option>
+                <option value="'Koulen', serif">Koulen</option>
                 <option value="'Battambang', sans-serif">Battambang</option>
-                <option value="'Siemreap', sans-serif">Siemreap</option>
+              </select>
+              <select id="sponsor-top-effect" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
+                <option value="glow" selected>Glow</option>
+                <option value="shadow">ស្រមោល</option>
+                <option value="none">គ្មាន</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Bottom Line -->
+          <div style="background: rgba(255,255,255,0.03); padding: 4px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <span style="font-size: 0.60rem; font-weight: 800; color: #22d3ee;">ជួរក្រោម (Bottom Line):</span>
+            </div>
+            <input type="text" id="sponsor-bottom-input" class="cyber-input" value="📱 012 345 678 | Telegram" placeholder="ជួរក្រោម..." oninput="updateSponsorContent()">
+            <div style="display: grid; grid-template-columns: 32px 1fr 1fr; gap: 3px; margin-top: 3px;">
+              <input type="color" id="sponsor-bottom-color" value="#22d3ee" class="cyber-input" style="height: 24px; padding: 1px;" oninput="updateSponsorContent()">
+              <select id="sponsor-bottom-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
+                <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
+                <option value="'Moul', serif">Moul</option>
+                <option value="'Battambang', sans-serif">Battambang</option>
+                <option value="'Inter', sans-serif">Inter</option>
+              </select>
+              <select id="sponsor-bottom-effect" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
+                <option value="none" selected>គ្មាន</option>
+                <option value="shadow">ស្រមោល</option>
+                <option value="glow">Glow</option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- Marquee Text Effects (4 buttons in 1 row) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3px; margin-top: 3px;">
-          <button type="button" id="effect-btn-none" class="btn-ctrl active" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('none')">🚫 គ្មាន</button>
-          <button type="button" id="effect-btn-shadow" class="btn-ctrl" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('shadow')">🌑 Shadow</button>
-          <button type="button" id="effect-btn-glow" class="btn-ctrl" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('glow')">💜 Glow</button>
-          <button type="button" id="effect-btn-outline" class="btn-ctrl" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('outline')">🔲 ស៊ុម</button>
+        <!-- Sponsor Size, Width & Scale Sliders -->
+        <div class="slider-group-box" style="margin-top: 3px;">
+          <div class="slider-group-title">📐 សារ៉េទំហំទទឹង (Width) &amp; ទំហំរួម (Scale)</div>
+          
+          <!-- Width & Scale (2 Columns) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <div class="form-row">
+              <div class="form-label">
+                <span>ទទឹង Banner (Width)</span>
+                <span class="form-label-val" id="sponsor-width-val">88%</span>
+              </div>
+              <input type="range" min="40" max="100" step="2" value="88" class="cyber-slider" id="sponsor-width-slider" oninput="updateSponsorContent();">
+            </div>
+            <div class="form-row">
+              <div class="form-label">
+                <span>ទំហំរួម (Scale)</span>
+                <span class="form-label-val" id="sponsor-scale-val">1.0x</span>
+              </div>
+              <input type="range" min="60" max="130" step="5" value="100" class="cyber-slider" id="sponsor-scale-slider" oninput="updateSponsorContent();">
+            </div>
+          </div>
+
+          <!-- Position Y and Background (2 Columns) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
+            <div class="form-row">
+              <div class="form-label">
+                <span>ទីតាំង Y លើ-ក្រោម</span>
+                <span class="form-label-val" id="sponsor-y-val">88%</span>
+              </div>
+              <input type="range" min="5" max="92" step="1" value="88" class="cyber-slider" id="sponsor-y-slider" oninput="updateSponsorContent();">
+            </div>
+            <div class="form-row">
+              <label class="form-label">ពណ៌ផ្ទៃ Background</label>
+              <select id="sponsor-bg-select" class="cyber-input" style="padding: 0 4px; height: 26px;" onchange="updateSponsorContent()">
+                <option value="rgba(8, 6, 18, 0.90)" selected>ខ្មៅងងឹត (Dark Glass)</option>
+                <option value="rgba(0, 0, 0, 0.95)">ខ្មៅសុទ្ធ (Pure Black)</option>
+                <option value="rgba(168, 85, 247, 0.35)">ស្វាយ Neon (Purple)</option>
+                <option value="transparent">ថ្លា (Transparent)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Quick Positions -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
+            <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.65rem; height: 26px;" onclick="setSponsorPosition('bottom')">
+              ⬇️ ខាងក្រោម (Bottom)
+            </button>
+            <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.65rem; height: 26px;" onclick="setSponsorPosition('top')">
+              ⬆️ ខាងលើ (Top)
+            </button>
+          </div>
         </div>
       </div>
+
+
 
       <!-- ── TAB 5: KHMER NEURAL VOICE (TTS) ─────────────────── -->
       <div class="tab-panel-card" id="tab-panel-voice">

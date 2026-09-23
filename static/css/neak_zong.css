@@ -583,6 +583,57 @@ header.app-header {
   will-change: top, transform, left !important;
 }
 
+.marquee-scrolling-track.dir-horizontal {
+  width: max-content !important;
+  white-space: nowrap !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+@keyframes scrollUp {
+  0% {
+    top: 100%;
+    transform: translateY(0%);
+  }
+  100% {
+    top: 0%;
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes scrollDown {
+  0% {
+    top: 0%;
+    transform: translateY(-100%);
+  }
+  100% {
+    top: 100%;
+    transform: translateY(0%);
+  }
+}
+
+@keyframes scrollLeft {
+  0% {
+    left: 100%;
+    transform: translateY(-50%);
+  }
+  100% {
+    left: -100%;
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes scrollRight {
+  0% {
+    left: -100%;
+    transform: translateY(-50%);
+  }
+  100% {
+    left: 100%;
+    transform: translateY(-50%);
+  }
+}
+
 /* Resizing Handles for Blur Box */
 .resizer-handle {
   position: absolute;
