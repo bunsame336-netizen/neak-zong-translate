@@ -46,6 +46,7 @@ asr_engine = ChineseSpeechRecognizer(model_size="tiny")
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['JSON_AS_ASCII'] = False
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1 GB upload limit for long drama videos
 
 PORT = int(os.environ.get('PORT', 5060))

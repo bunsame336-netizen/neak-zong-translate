@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.0.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.1.0">
 
   <!-- ⚡ CRITICAL MOBILE STUDIO 3-TIER RESTRUCTURE (NO WHOLE-PAGE SCROLL / 100dvh LOCK) -->
   <style>
@@ -71,20 +71,25 @@
       gap: 3px !important;
     }
 
-    /* ════ 1. TOP SPLIT ROW: LEFT VIDEO (46%) / RIGHT ACTION MENU (54%) ════ */
+    /* ════ 1. TOP SPLIT ROW: 68% LEFT (VIDEO) / 32% RIGHT (BUTTONS) ════ */
     .studio-top-split-row {
       display: grid !important;
-      grid-template-columns: 46% 54% !important;
-      gap: 5px !important;
+      grid-template-columns: 68% calc(32% - 4px) !important;
+      gap: 4px !important;
       width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
       flex: 0 0 auto !important;
-      max-height: 42dvh !important;
       box-sizing: border-box !important;
+      align-items: stretch !important;
+      overflow: hidden !important;
     }
 
-    /* 1.1 TOP-LEFT: VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
+    /* 1.1 TOP-LEFT (68% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
     .top-video-col {
       width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       gap: 3px !important;
@@ -101,19 +106,21 @@
       display: flex !important;
       flex-direction: column !important;
       width: 100% !important;
+      box-sizing: border-box !important;
     }
 
     .video-stage-viewport {
       position: relative !important;
       aspect-ratio: 9 / 16 !important;
       width: 100% !important;
-      max-height: calc(42dvh - 60px) !important;
+      max-height: calc(44dvh - 58px) !important;
       background: #050408 !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       overflow: hidden !important;
       margin: 0 auto !important;
+      box-sizing: border-box !important;
     }
 
     .video-toolbar {
@@ -125,6 +132,7 @@
       align-items: center !important;
       justify-content: space-between !important;
       background: #080612 !important;
+      box-sizing: border-box !important;
     }
     .video-toolbar .playback-controls {
       display: flex !important;
@@ -148,10 +156,10 @@
     }
     .btn-auto-process {
       padding: 5px 3px !important;
-      font-size: 0.63rem !important;
+      font-size: 0.64rem !important;
       font-weight: 800 !important;
       width: 100% !important;
-      min-height: 30px !important;
+      min-height: 32px !important;
       height: auto !important;
       display: flex !important;
       align-items: center !important;
@@ -171,48 +179,65 @@
       transform: scale(0.97) !important;
     }
 
-    /* 1.2 TOP-RIGHT: ACTION MENU AREA (NO SLIDERS HERE!) */
+    /* 1.2 TOP-RIGHT (32% LOCKED): COMPACT BUTTONS ALIGNED FULL HEIGHT */
     .top-action-menu-col {
       width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      gap: 3px !important;
+      justify-content: space-between !important;
+      height: 100% !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
+      gap: 2px !important;
     }
 
     .action-menu-grid {
       display: grid !important;
       grid-template-columns: 1fr 1fr !important;
-      gap: 3px !important;
+      gap: 5px !important;
       width: 100% !important;
     }
     .action-menu-btn {
       display: flex !important;
+      flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 3px !important;
-      height: 27px !important;
-      padding: 1px 3px !important;
-      font-size: 0.60rem !important;
+      gap: 2px !important;
+      height: 44px !important;
+      padding: 3px 2px !important;
+      font-size: 0.54rem !important;
       font-weight: 700 !important;
       color: var(--text-main) !important;
       background: rgba(18, 14, 32, 0.9) !important;
       border: 1px solid rgba(168, 85, 247, 0.25) !important;
-      border-radius: 5px !important;
+      border-radius: 7px !important;
       cursor: pointer !important;
-      transition: all 0.15s ease !important;
+      transition: background 0.15s ease, border-color 0.15s ease !important;
       white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      box-sizing: border-box !important;
     }
     .action-menu-btn .btn-ico {
-      font-size: 0.72rem !important;
+      font-size: 0.84rem !important;
+      flex-shrink: 0 !important;
+      line-height: 1 !important;
+    }
+    .action-menu-btn .btn-lbl {
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      font-size: 0.54rem !important;
+      line-height: 1 !important;
+      letter-spacing: -0.2px !important;
     }
     .action-menu-btn:hover {
       background: rgba(30, 22, 54, 0.95) !important;
       border-color: rgba(168, 85, 247, 0.5) !important;
     }
     .action-menu-btn.active {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(6, 182, 212, 0.25)) !important;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(6, 182, 212, 0.3)) !important;
       border-color: var(--neon-cyan-bright) !important;
       color: #ffffff !important;
       font-weight: 800 !important;
@@ -225,18 +250,21 @@
       align-items: center !important;
       justify-content: center !important;
       gap: 4px !important;
-      height: 27px !important;
+      height: 36px !important;
       width: 100% !important;
-      padding: 1px 4px !important;
-      font-size: 0.62rem !important;
+      padding: 2px 4px !important;
+      font-size: 0.64rem !important;
       font-weight: 800 !important;
       color: #10b981 !important;
-      background: rgba(16, 185, 129, 0.12) !important;
-      border: 1.2px solid rgba(16, 185, 129, 0.5) !important;
-      border-radius: 5px !important;
+      background: rgba(16, 185, 129, 0.14) !important;
+      border: 1.2px solid rgba(16, 185, 129, 0.55) !important;
+      border-radius: 7px !important;
       cursor: pointer !important;
-      box-shadow: 0 0 8px rgba(16, 185, 129, 0.2) !important;
-      transition: all 0.15s ease !important;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.25) !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      box-sizing: border-box !important;
     }
     .btn-action-download:active {
       transform: scale(0.97) !important;
@@ -247,17 +275,19 @@
     .top-voice-selector-box {
       display: flex !important;
       flex-direction: column !important;
-      gap: 2px !important;
+      gap: 3px !important;
       background: rgba(12, 9, 24, 0.92) !important;
       border: 1px solid rgba(245, 158, 11, 0.3) !important;
-      border-radius: 5px !important;
-      padding: 2px 4px !important;
+      border-radius: 7px !important;
+      padding: 4px 5px !important;
+      box-sizing: border-box !important;
     }
     .top-voice-header {
       font-size: 0.55rem !important;
       color: var(--neon-gold) !important;
       font-weight: 700 !important;
       letter-spacing: 0.2px !important;
+      white-space: nowrap !important;
     }
     .top-voice-pill-group {
       display: grid !important;
@@ -265,11 +295,11 @@
       gap: 3px !important;
     }
     .voice-pill-btn {
-      height: 20px !important;
+      height: 26px !important;
       padding: 0 2px !important;
-      font-size: 0.56rem !important;
+      font-size: 0.58rem !important;
       font-weight: 700 !important;
-      border-radius: 4px !important;
+      border-radius: 5px !important;
       background: rgba(255, 255, 255, 0.05) !important;
       border: 1px solid rgba(255, 255, 255, 0.15) !important;
       color: var(--text-sub) !important;
@@ -290,18 +320,19 @@
     /* Extra secondary pills */
     .top-extra-pills-row {
       display: flex !important;
-      gap: 3px !important;
+      gap: 4px !important;
       width: 100% !important;
+      box-sizing: border-box !important;
     }
     .extra-pill-btn {
       flex: 1 !important;
-      height: 18px !important;
-      font-size: 0.54rem !important;
+      height: 26px !important;
+      font-size: 0.58rem !important;
       font-weight: 600 !important;
       color: var(--text-muted) !important;
       background: rgba(255, 255, 255, 0.04) !important;
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      border-radius: 4px !important;
+      border-radius: 5px !important;
       cursor: pointer !important;
       display: flex !important;
       align-items: center !important;
@@ -607,7 +638,7 @@
   <main class="studio-main-container">
 
     <!-- ══════════════════════════════════════════════════════════
-         ⚡ 1. TOP SPLIT ROW: LEFT VIDEO (46%) / RIGHT ACTION MENU (54%)
+         ⚡ 1. TOP SPLIT ROW: LEFT VIDEO (68%) / RIGHT ACTION MENU (32%)
     ══════════════════════════════════════════════════════════ -->
     <section class="studio-top-split-row">
 
@@ -696,19 +727,19 @@
           <!-- 1. Clone សំឡេង -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
             <span class="btn-ico">🎙️</span>
-            <span class="btn-lbl">Clone សំឡេង</span>
+            <span class="btn-lbl">Clone</span>
           </button>
 
           <!-- 2. Text (អក្សរ) -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
             <span class="btn-ico">📝</span>
-            <span class="btn-lbl">Text (អក្សរ)</span>
+            <span class="btn-lbl">Text</span>
           </button>
 
           <!-- 3. Blur (ព្រាល) -->
           <button type="button" class="action-menu-btn tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
             <span class="btn-ico">🌫️</span>
-            <span class="btn-lbl">Blur (ព្រាល)</span>
+            <span class="btn-lbl">Blur</span>
           </button>
 
           <!-- 4. Sponsor (ពាណិជ្ជកម្ម) -->
@@ -726,27 +757,27 @@
           <!-- 6. Marquee (អក្សររត់ ⬆️/⬇️) -->
           <button type="button" class="action-menu-btn tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
             <span class="btn-ico">🎬</span>
-            <span class="btn-lbl">Marquee ⬆️⬇️</span>
+            <span class="btn-lbl">Marquee</span>
           </button>
         </div>
 
         <!-- 7. ទាញយកវីដេអូបកប្រែរួច Action Button -->
         <button type="button" class="btn-action-download" id="top-download-btn" onclick="handleTopDownloadAction()">
           <span class="btn-ico">📥</span>
-          <span class="btn-lbl">ទាញយកវីដេអូបកប្រែរួច</span>
+          <span class="btn-lbl">ទាញយក MP4</span>
         </button>
 
         <!-- 8. កន្លែងរើសម៉ូដែលសំឡេងពិសិដ្ឋ/ស្រីមុំ -->
         <div class="top-voice-selector-box">
           <div class="top-voice-header">
-            <span>🗣️ ម៉ូដែលសំឡេង AI:</span>
+            <span>🗣️ សំឡេង AI:</span>
           </div>
           <div class="top-voice-pill-group">
             <button type="button" class="voice-pill-btn active" id="btn-voice-female" onclick="selectQuickVoice('female')">
-              <span>👩 កញ្ញា ស្រីមុំ</span>
+              <span>👩 ស្រីមុំ</span>
             </button>
             <button type="button" class="voice-pill-btn" id="btn-voice-male" onclick="selectQuickVoice('male')">
-              <span>👨 លោក ពិសិដ្ឋ</span>
+              <span>👨 ពិសិដ្ឋ</span>
             </button>
           </div>
         </div>
@@ -754,10 +785,10 @@
         <!-- Secondary Quick Pills: Media & Flip/Crop Export -->
         <div class="top-extra-pills-row">
           <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="media" onclick="switchStudioTab('media')">
-            📂 Media/SRT
+            📂 Media
           </button>
           <button type="button" class="tab-nav-btn extra-pill-btn" data-tab="tools" onclick="switchStudioTab('tools')">
-            ✂️ Flip/Crop
+            ✂️ Tools
           </button>
         </div>
       </div>
@@ -1479,6 +1510,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=8.0.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.1.0"></script>
 </body>
 </html>

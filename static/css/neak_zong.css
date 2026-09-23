@@ -322,20 +322,25 @@ header.app-header {
   gap: 3px !important;
 }
 
-/* 1. TOP SPLIT ROW: LEFT VIDEO (46%) / RIGHT ACTION MENU (54%) */
+/* 1. TOP SPLIT ROW: LEFT VIDEO (68%) / RIGHT ACTION MENU (32%) */
 .studio-top-split-row {
   display: grid !important;
-  grid-template-columns: 46% 54% !important;
-  gap: 5px !important;
+  grid-template-columns: 68% calc(32% - 4px) !important;
+  gap: 4px !important;
   width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
   flex: 0 0 auto !important;
-  max-height: 42dvh !important;
   box-sizing: border-box !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
 }
 
-/* 1.1 TOP-LEFT: VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
+/* 1.1 TOP-LEFT (68% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
 .top-video-col {
   width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 3px !important;
@@ -343,12 +348,16 @@ header.app-header {
   box-sizing: border-box !important;
 }
 
-/* 1.2 TOP-RIGHT: ACTION MENU AREA (NO SLIDERS HERE!) */
+/* 1.2 TOP-RIGHT (32% LOCKED): ACTION MENU AREA (NO SLIDERS HERE!) */
 .top-action-menu-col {
   width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 3px !important;
+  justify-content: space-between !important;
+  height: 100% !important;
+  gap: 2px !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
 }
@@ -395,12 +404,12 @@ header.app-header {
   max-width: 100%;
 }
 
-/* 9:16 Portrait Viewport strictly scaled to mobile screen (max-height: 36vh) */
+/* 9:16 Portrait Viewport strictly scaled to mobile screen */
 .video-stage-viewport {
   position: relative;
   aspect-ratio: 9 / 16;
-  height: 36vh;
-  max-height: 36vh;
+  width: 100%;
+  max-height: calc(44dvh - 58px);
   background: #050408;
   display: flex;
   align-items: center;

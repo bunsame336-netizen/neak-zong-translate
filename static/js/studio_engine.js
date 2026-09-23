@@ -117,17 +117,12 @@ const sponsorElement = document.getElementById('sponsor-overlay-element');
 const sponsorTopTag = document.getElementById('sponsor-top-tag') || document.getElementById('sponsor-brand-tag');
 const sponsorBottomTag = document.getElementById('sponsor-bottom-tag') || document.getElementById('sponsor-contact-tag');
 
-// Tab Navigation Switching
+// Tab Navigation Switching (Zero Layout Shift)
 function switchStudioTab(tabId) {
   state.activeTab = tabId;
   document.querySelectorAll('.tab-nav-btn').forEach(btn => {
     const isTarget = btn.getAttribute('data-tab') === tabId;
     btn.classList.toggle('active', isTarget);
-    if (isTarget) {
-      try {
-        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      } catch (e) {}
-    }
   });
   document.querySelectorAll('.tab-panel-card').forEach(panel => {
     panel.classList.remove('active');
@@ -138,6 +133,10 @@ function switchStudioTab(tabId) {
   }
   if (tabId === 'blur') {
     updateBlurBoxLimits();
+  }
+  const bottomPanel = document.getElementById('studio-dynamic-controls-area');
+  if (bottomPanel) {
+    bottomPanel.scrollTop = 0;
   }
 }
 
