@@ -234,6 +234,28 @@ def _sanitize_ffmpeg_text(text: str) -> str:
     text = text.replace("'", "\\'")
     return text
 
+def _write_temp_text_file(text: str) -> str:
+    """
+    Writes UTF-8 text to a temporary file and returns a relative or escaped path
+    that FFmpeg drawtext can read reliably on Windows and Linux without colon parsing bugs.
+    """
+    try:
+        tmp_dir = os.path.join(os.path.dirname(__file__), '..', 'temp_text')
+        os.makedirs(tmp_dir, exist_ok=True)
+        tf = tempfile.NamedTemporaryFile(suffix='.txt', dir=tmp_dir, delete=False, mode='w', encoding='utf-8')
+        tf.write(str(text or ''))
+        tf.close()
+        return os.path.relpath(tf.name).replace('\\', '/')
+    except Exception:
+        tf = tempfile.NamedTemporaryFile(suffix='.txt', delete=False, mode='w', encoding='utf-8')
+        tf.write(str(text or ''))
+        tf.close()
+        p = tf.name.replace('\\', '/')
+        if len(p) > 1 and p[1] == ':':
+            p = p.replace(':', r'\:')
+        return p
+
+
 def _build_blur_mask_filter(bx: int, by: int, bw: int, bh: int) -> str:
     """
     Builds avgblur-based blur mask to cover a rectangular region.
@@ -342,16 +364,27 @@ def _build_filter_graph(
     # 5. Animated Vertical Scrolling Marquee Text (Up, Down, or Left)
     marquee_opts = opts.get('marquee')
     if marquee_opts and marquee_opts.get('enabled') and marquee_opts.get('text'):
-        m_text = _sanitize_ffmpeg_text(marquee_opts['text'])
+        m_raw_text = str(marquee_opts['text'])
+        m_tf_path = _write_temp_text_file(m_raw_text)
         direction = marquee_opts.get('direction', 'up').lower()
-        # Clamp speed: min 20px/sec so animation is always visible, max 400
-        speed_px = max(20, min(400, int(marquee_opts.get('speed', 60))))
+
+        # Compute traversal speed in seconds (Slow: 15s, Normal: 8s, Fast: 4s)
+        speed_sec = float(marquee_opts.get('speed_sec') or 0)
+        if speed_sec <= 0:
+            raw_s = float(marquee_opts.get('speed', 60))
+            if raw_s > 0:
+                speed_sec = max(3.0, min(30.0, 300.0 / raw_s))
+            else:
+                speed_sec = 8.0
+
         font_size = int(marquee_opts.get('font_size', 28))
         font_color = marquee_opts.get('color', 'yellow')
         m_x = marquee_opts.get('x', '(w-text_w)/2')
-        # Resolve font safely
-        m_font_name = marquee_opts.get('font', 'noto')
+        # Resolve font safely, preferring Khmer font
+        m_font_name = marquee_opts.get('font', 'kantumruy')
         m_font_path = _resolve_font_path(m_font_name)
+        if not m_font_path:
+            m_font_path = _resolve_font_path('kantumruy')
         m_font_arg = f"fontfile='{m_font_path}':" if m_font_path else ""
 
         # Incorporate time_offset so animation continues seamlessly across chunks
@@ -359,20 +392,21 @@ def _build_filter_graph(
 
         if direction == 'up':
             x_expr = str(m_x)
-            # Linear scroll: text starts below frame and moves upward continuously
-            y_expr = f"h-mod({t_expr}*{speed_px}\\,h+text_h)"
+            # Full traversal from bottom to top in speed_sec seconds
+            y_expr = f"h-mod({t_expr}*((h+text_h)/{speed_sec:.2f})\\,h+text_h)"
         elif direction == 'down':
             x_expr = str(m_x)
-            y_expr = f"-text_h+mod({t_expr}*{speed_px}\\,h+text_h)"
+            # Full traversal from top to bottom in speed_sec seconds
+            y_expr = f"-text_h+mod({t_expr}*((h+text_h)/{speed_sec:.2f})\\,h+text_h)"
         else:  # 'left' (right-to-left scrolling)
-            x_expr = f"w-mod({t_expr}*{speed_px}\\,w+text_w)"
+            x_expr = f"w-mod({t_expr}*((w+text_w)/{speed_sec:.2f})\\,w+text_w)"
             y_expr = "(h-text_h)/2"
 
         out = next_pad()
         draw_marquee = (
             f"{current_pad}drawtext="
             f"{m_font_arg}"
-            f"text='{m_text}':fontcolor={font_color}:fontsize={font_size}:"
+            f"textfile='{m_tf_path}':fontcolor={font_color}:fontsize={font_size}:"
             f"box=1:boxcolor=black@0.65:boxborderw=6:"
             f"x={x_expr}:y={y_expr}{out}"
         )
@@ -458,15 +492,20 @@ def _build_filter_graph(
     # 7. Sponsor Banner Overlay (3 Lines: Brand, Contact, Ad/Sponsor text)
     sponsor_opts = opts.get('sponsor')
     if sponsor_opts and sponsor_opts.get('enabled'):
-        s_brand = _sanitize_ffmpeg_text(sponsor_opts.get('brand', sponsor_opts.get('top_text', '')))
-        s_contact = _sanitize_ffmpeg_text(sponsor_opts.get('contact', sponsor_opts.get('mid_text', '')))
-        s_ad = _sanitize_ffmpeg_text(sponsor_opts.get('ad_text', sponsor_opts.get('bot_text', '')))
+        s_brand = (sponsor_opts.get('brand') or sponsor_opts.get('top_text') or '').strip()
+        s_contact = (sponsor_opts.get('contact') or sponsor_opts.get('mid_text') or '').strip()
+        s_ad = (sponsor_opts.get('ad_text') or sponsor_opts.get('bot_text') or '').strip()
         s_pos = sponsor_opts.get('position', 'bottom')
         s_y_percent = sponsor_opts.get('y_percent')
         s_color = sponsor_opts.get('color', '0xF59E0B')
         s_bg = sponsor_opts.get('bg_color', 'black@0.80')
         s_font_size = max(12, int(sponsor_opts.get('font_size', 20)))
-        s_font = _resolve_font_path(sponsor_opts.get('font', 'noto'))
+
+        # Ensure authentic Khmer font with full Unicode glyph support
+        s_font_name = sponsor_opts.get('font', 'kantumruy')
+        s_font = _resolve_font_path(s_font_name)
+        if not s_font or 'arial' in str(s_font).lower() or 'outfit' in str(s_font).lower():
+            s_font = _resolve_font_path('kantumruy')
         font_arg = f"fontfile='{s_font}':" if s_font else ""
 
         lines = []
@@ -494,9 +533,10 @@ def _build_filter_graph(
             curr_y_offset = 8
             for l in lines:
                 s_y_expr = f"{box_y}+{curr_y_offset}"
+                tf_line_path = _write_temp_text_file(l['text'])
                 sponsor_chain += (
-                    f",drawtext={font_arg}text='{l['text']}':fontcolor={l['color']}:fontsize={l['size']}:"
-                    f"x=(w-text_w)/2:y={s_y_expr}"
+                    f",drawtext={font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
+                    f"borderw=1:bordercolor=black@0.85:x=(w-text_w)/2:y={s_y_expr}"
                 )
                 curr_y_offset += l['size'] + line_gap
 

@@ -209,8 +209,29 @@ def generate_synced_cues_voiceover(
             else:
                 start_t = float(start_t)
 
+            end_t = cue.get('end')
+            if end_t is None:
+                end_t = _parse_cue_timestamp(cue.get('end_str'))
+            else:
+                end_t = float(end_t)
+
+            if end_t <= start_t:
+                end_t = start_t + 2.5
+
             if start_t >= total_dur:
                 continue
+
+            # Strict Dialogue Window: Target duration allocated for this line
+            target_dur = max(0.4, end_t - start_t)
+            if i + 1 < len(cues):
+                next_c = cues[i + 1]
+                next_start = next_c.get('start')
+                if next_start is None:
+                    next_start = _parse_cue_timestamp(next_c.get('start_str'))
+                else:
+                    next_start = float(next_start)
+                if next_start > start_t:
+                    target_dur = min(target_dur, max(0.35, next_start - start_t))
 
             seg_mp3 = str(tmp_dir_p / f"cue_{i:04d}.mp3")
             seg_raw = str(tmp_dir_p / f"cue_{i:04d}.raw")
@@ -236,6 +257,43 @@ def generate_synced_cues_voiceover(
             raw_bytes = Path(seg_raw).read_bytes()
             if not raw_bytes:
                 continue
+
+            actual_dur = (len(raw_bytes) // 2) / float(sample_rate)
+
+            # Strict Lip-Sync: if synthesized speech exceeds dialogue window by > 0.12s,
+            # time-stretch audio using FFmpeg atempo filter to match the actor's mouth movement
+            if actual_dur > (target_dur + 0.12):
+                tempo = min(2.0, max(0.5, actual_dur / target_dur))
+                seg_stretched = str(tmp_dir_p / f"cue_{i:04d}_stretched.raw")
+                cmd_stretch = [
+                    ff, '-y',
+                    '-i', seg_mp3,
+                    '-filter:a', f"atempo={tempo:.3f}",
+                    '-f', 's16le',
+                    '-ar', str(sample_rate),
+                    '-ac', '1',
+                    seg_stretched
+                ]
+                res_stretch = subprocess.run(cmd_stretch, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+                if res_stretch.returncode == 0 and os.path.exists(seg_stretched):
+                    stretched_bytes = Path(seg_stretched).read_bytes()
+                    if stretched_bytes:
+                        raw_bytes = stretched_bytes
+
+            # Clamp max samples strictly to target duration window (+40ms buffer)
+            max_allowed_samples = int((target_dur + 0.04) * sample_rate)
+            total_cue_samples = len(raw_bytes) // 2
+            if total_cue_samples > max_allowed_samples:
+                fade_len = min(480, max_allowed_samples)
+                cue_pcm = bytearray(raw_bytes[:max_allowed_samples * 2])
+                for f_idx in range(fade_len):
+                    s_pos = max_allowed_samples - fade_len + f_idx
+                    b_pos = s_pos * 2
+                    fade_factor = 1.0 - (f_idx / float(fade_len))
+                    val = int.from_bytes(cue_pcm[b_pos:b_pos+2], byteorder='little', signed=True)
+                    faded_val = int(val * fade_factor)
+                    cue_pcm[b_pos:b_pos+2] = max(-32768, min(32767, faded_val)).to_bytes(2, byteorder='little', signed=True)
+                raw_bytes = bytes(cue_pcm)
 
             has_any_segment = True
             start_sample = max(0, int(start_t * sample_rate))

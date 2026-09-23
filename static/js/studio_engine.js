@@ -1132,9 +1132,11 @@ function _buildRenderOptions() {
       enabled: state.marquee.enabled,
       text: state.marquee.text,
       direction: state.marquee.direction,
-      speed: Math.round(300 / state.marquee.speedSec),
+      speed_sec: state.marquee.speedSec || 8,
+      speed: Math.round(300 / (state.marquee.speedSec || 8)),
       color: state.marquee.color,
-      font_size: state.marquee.fontSize
+      font_size: state.marquee.fontSize,
+      font: 'kantumruy'
     },
     // Dual-tone text
     text_overlay: {
@@ -1176,7 +1178,8 @@ function _buildRenderOptions() {
       y_percent: state.sponsor.yPercent,
       color: _hexToFFmpegColor(state.sponsor.color),
       font_size: state.sponsor.fontSize,
-      bg_color: state.sponsor.bgColor
+      bg_color: state.sponsor.bgColor,
+      font: 'kantumruy'
     }
   };
 }
