@@ -19,6 +19,7 @@ import sys
 import math
 import subprocess
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Dict, Any, Optional, Callable, List
 
@@ -489,17 +490,30 @@ def _build_filter_graph(
         )
         current_pad = out
 
-    # 7. Sponsor Banner Overlay (3 Lines: Brand, Contact, Ad/Sponsor text)
+    # 7. Sponsor Banner Overlay (2 Lines: Top Ad Line + Bottom Contact Line)
     sponsor_opts = opts.get('sponsor')
     if sponsor_opts and sponsor_opts.get('enabled'):
-        s_brand = (sponsor_opts.get('brand') or sponsor_opts.get('top_text') or '').strip()
-        s_contact = (sponsor_opts.get('contact') or sponsor_opts.get('mid_text') or '').strip()
-        s_ad = (sponsor_opts.get('ad_text') or sponsor_opts.get('bot_text') or '').strip()
+        # Clean 2-line structure without "នាគហ្សង បកប្រែ" or "@neakzong"
+        s_top = (sponsor_opts.get('top_line') or sponsor_opts.get('brand') or sponsor_opts.get('top_text') or '').strip()
+        s_bottom = (sponsor_opts.get('bottom_line') or sponsor_opts.get('contact') or sponsor_opts.get('mid_text') or sponsor_opts.get('ad_text') or '').strip()
+
+        # Sanitize any legacy strings
+        s_top = s_top.replace('នាគហ្សង បកប្រែ', '').replace('«នាគហ្សង» ឧបត្ថម្ភធំ', '').replace('@neakzong', '').strip()
+        s_bottom = s_bottom.replace('នាគហ្សង បកប្រែ', '').replace('@neakzong', '').strip()
+
+        if not s_top and not s_bottom:
+            s_top = '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor'
+            s_bottom = '📱 012 345 678 | Telegram'
+        elif not s_top:
+            s_top = '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor'
+        elif not s_bottom:
+            s_bottom = '📱 012 345 678 | Telegram'
+
         s_pos = sponsor_opts.get('position', 'bottom')
         s_y_percent = sponsor_opts.get('y_percent')
         s_color = sponsor_opts.get('color', '0xF59E0B')
-        s_bg = sponsor_opts.get('bg_color', 'black@0.80')
-        s_font_size = max(12, int(sponsor_opts.get('font_size', 20)))
+        s_bg = sponsor_opts.get('bg_color', 'black@0.85')
+        s_font_size = max(12, int(sponsor_opts.get('font_size', 18)))
 
         # Ensure authentic Khmer font with full Unicode glyph support
         s_font_name = sponsor_opts.get('font', 'kantumruy')
@@ -508,41 +522,37 @@ def _build_filter_graph(
             s_font = _resolve_font_path('kantumruy')
         font_arg = f"fontfile='{s_font}':" if s_font else ""
 
-        lines = []
-        if s_brand:
-            lines.append({'text': s_brand, 'color': s_color, 'size': s_font_size})
-        if s_contact:
-            lines.append({'text': s_contact, 'color': '0x22D3EE', 'size': max(11, int(s_font_size * 0.9))})
-        if s_ad:
-            lines.append({'text': s_ad, 'color': '0xE2E8F0', 'size': max(10, int(s_font_size * 0.8))})
+        lines = [
+            {'text': s_top, 'color': s_color, 'size': s_font_size},
+            {'text': s_bottom, 'color': '0x22D3EE', 'size': max(11, int(s_font_size * 0.88))}
+        ]
 
-        if lines:
-            line_gap = 4
-            total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap + 16
+        line_gap = 4
+        total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap + 14
 
-            if s_y_percent is not None:
-                box_y = f"trunc((h*{float(s_y_percent)/100.0:.3f}))"
-            elif s_pos == 'top':
-                box_y = "10"
-            else:
-                box_y = f"h-{total_h + 10}"
+        if s_y_percent is not None:
+            box_y = f"trunc((h*{float(s_y_percent)/100.0:.3f}))"
+        elif s_pos == 'top':
+            box_y = "10"
+        else:
+            box_y = f"h-{total_h + 10}"
 
-            out = next_pad()
-            sponsor_chain = f"{current_pad}drawbox=x=0:y={box_y}:w=iw:h={total_h}:color={s_bg}:t=fill"
+        out = next_pad()
+        sponsor_chain = f"{current_pad}drawbox=x=0:y={box_y}:w=iw:h={total_h}:color={s_bg}:t=fill"
 
-            curr_y_offset = 8
-            for l in lines:
-                s_y_expr = f"{box_y}+{curr_y_offset}"
-                tf_line_path = _write_temp_text_file(l['text'])
-                sponsor_chain += (
-                    f",drawtext={font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
-                    f"borderw=1:bordercolor=black@0.85:x=(w-text_w)/2:y={s_y_expr}"
-                )
-                curr_y_offset += l['size'] + line_gap
+        curr_y_offset = 6
+        for l in lines:
+            s_y_expr = f"{box_y}+{curr_y_offset}"
+            tf_line_path = _write_temp_text_file(l['text'])
+            sponsor_chain += (
+                f",drawtext={font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
+                f"borderw=1:bordercolor=black@0.85:x=(w-text_w)/2:y={s_y_expr}"
+            )
+            curr_y_offset += l['size'] + line_gap
 
-            sponsor_chain += f"{out}"
-            steps.append(sponsor_chain)
-            current_pad = out
+        sponsor_chain += f"{out}"
+        steps.append(sponsor_chain)
+        current_pad = out
 
     # 8. Logo Overlay (composited last)
     if has_logo and logo_input_idx is not None:

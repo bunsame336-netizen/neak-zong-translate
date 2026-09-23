@@ -374,15 +374,11 @@
   <header class="app-header">
     <div class="brand-wrap">
       <div class="brand-dragon-badge">
-        <svg viewBox="0 0 100 100" fill="none">
-          <path d="M50 10 C32 20 20 38 25 60 C30 80 50 90 50 90 C50 90 70 80 75 60 C80 38 68 20 50 10 Z" stroke="#c084fc" stroke-width="5"/>
-          <path d="M38 32 L50 45 L62 32" stroke="#22d3ee" stroke-width="4"/>
-          <polygon points="50,22 45,30 55,30" fill="#f59e0b"/>
-        </svg>
+        <img src="/static/brand_dragon_logo.png" alt="Dragon Logo" class="brand-dragon-img">
       </div>
       <div class="brand-text-col">
         <div class="brand-title-row">
-          <span class="brand-title">នាគហ្សង បកប្រែ</span>
+          <span class="brand-title">🐉 នាគហ្សង បកប្រែ</span>
           <span class="brand-badge">Studio Mobile</span>
         </div>
         <span class="brand-sub">AI Video Translator &amp; Khmer Voice</span>
@@ -460,12 +456,11 @@
               </div>
             </div>
 
-            <!-- 5. Custom Sponsor Banner Overlay (3 Lines) -->
+            <!-- 5. Custom Sponsor Banner Overlay (2 Lines) -->
             <div class="interactive-overlay" id="sponsor-overlay-element">
               <div class="sponsor-banner-bar" id="sponsor-banner-bar">
-                <div class="sponsor-brand-tag" id="sponsor-brand-tag">🐉 «នាគហ្សង» ឧបត្ថម្ភធំ</div>
-                <div class="sponsor-contact-tag" id="sponsor-contact-tag">☎️ 012 345 678 | Telegram: @neakzong</div>
-                <div class="sponsor-ad-tag" id="sponsor-ad-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
+                <div class="sponsor-top-tag" id="sponsor-top-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
+                <div class="sponsor-bottom-tag" id="sponsor-bottom-tag">📱 012 345 678 | Telegram</div>
               </div>
             </div>
 
@@ -752,7 +747,7 @@
                 <span>ទទឹង (W)</span>
                 <span class="form-label-val" id="blur-w-val">140px</span>
               </div>
-              <input type="range" min="50" max="280" step="5" value="140" class="cyber-slider" id="blur-w-slider"
+              <input type="range" min="20" max="380" step="2" value="140" class="cyber-slider" id="blur-w-slider"
                 oninput="document.getElementById('blur-w-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
             <div class="form-row">
@@ -760,7 +755,7 @@
                 <span>កម្ពស់ (H)</span>
                 <span class="form-label-val" id="blur-h-val">45px</span>
               </div>
-              <input type="range" min="20" max="80" step="2" value="45" class="cyber-slider" id="blur-h-slider"
+              <input type="range" min="10" max="180" step="2" value="45" class="cyber-slider" id="blur-h-slider"
                 oninput="document.getElementById('blur-h-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
           </div>
@@ -775,7 +770,7 @@
                 <span>ឆ្វេង-ស្ដាំ (X)</span>
                 <span class="form-label-val" id="blur-x-val">15px</span>
               </div>
-              <input type="range" min="0" max="500" step="5" value="15" class="cyber-slider" id="blur-x-slider"
+              <input type="range" min="0" max="450" step="2" value="15" class="cyber-slider" id="blur-x-slider"
                 oninput="document.getElementById('blur-x-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
             <div class="form-row">
@@ -783,7 +778,7 @@
                 <span>លើ-ក្រោម (Y)</span>
                 <span class="form-label-val" id="blur-y-val">15px</span>
               </div>
-              <input type="range" min="0" max="700" step="5" value="15" class="cyber-slider" id="blur-y-slider"
+              <input type="range" min="0" max="750" step="2" value="15" class="cyber-slider" id="blur-y-slider"
                 oninput="document.getElementById('blur-y-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
           </div>
@@ -805,7 +800,7 @@
                 <span>កម្រិតព្រាល</span>
                 <span class="form-label-val" id="blur-intensity-val">25</span>
               </div>
-              <input type="range" min="5" max="60" step="5" value="25" class="cyber-slider" id="blur-intensity-slider"
+              <input type="range" min="5" max="60" step="1" value="25" class="cyber-slider" id="blur-intensity-slider"
                 oninput="updateBlurIntensity(this.value)">
             </div>
             <div class="form-row">
@@ -813,23 +808,23 @@
                 <span>ផ្ទៃខ្មៅងងឹត</span>
                 <span class="form-label-val" id="blur-tint-val">40%</span>
               </div>
-              <input type="range" min="0" max="100" step="5" value="40" class="cyber-slider" id="blur-tint-slider"
+              <input type="range" min="0" max="100" step="2" value="40" class="cyber-slider" id="blur-tint-slider"
                 oninput="updateBlurTint(this.value)">
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── TAB: CUSTOM SPONSOR BRANDING & PHONE ──────────────── -->
+      <!-- ── TAB: CUSTOM SPONSOR (2 LINES ONLY) ──────────────── -->
       <div class="tab-panel-card" id="tab-panel-sponsor">
         <div class="panel-section-title">
-          <span>🤝 ឈ្មោះយីហោ &amp; Sponsor (Custom Branding)</span>
+          <span>🤝 ផ្ទាំងផ្សាយ Sponsor (២ បន្ទាត់)</span>
         </div>
 
         <div class="toggle-switch-wrap">
           <div>
             <div class="toggle-switch-label">បើកបង្ហាញ Sponsor Banner</div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">បង្ហាញឈ្មោះយីហោ និងលេខទូរស័ព្ទលើវីដេអូ</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">បង្ហាញព័ត៌មាន Sponsor ២ បន្ទាត់ខ្លី gọn លើវីដេអូ</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-sponsor" onchange="toggleSponsorOverlay(this.checked)">
@@ -838,18 +833,13 @@
         </div>
 
         <div class="form-row">
-          <label class="form-label">ជួរលើ (Top Line) — ឈ្មោះយីហោ / Brand Name</label>
-          <input type="text" id="sponsor-brand-input" class="cyber-input" value="🐉 «នាគហ្សង បកប្រែ»" placeholder="ឧ. នាគហ្សង បកប្រែ ឬ ស្ដេចហ្សង បកប្រែ" oninput="updateSponsorContent()">
+          <label class="form-label">ជួរលើ (Top Line) — អត្ថបទ Sponsor</label>
+          <input type="text" id="sponsor-top-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" oninput="updateSponsorContent()">
         </div>
 
         <div class="form-row">
-          <label class="form-label">ជួរកណ្ដាល (Middle Line) — លេខទូរសព្ទ ឬ Telegram</label>
-          <input type="text" id="sponsor-contact-input" class="cyber-input" value="☎️ 012 345 678 | Telegram: @neakzong" placeholder="លេខទូរសព្ទ / Telegram Contact..." oninput="updateSponsorContent()">
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">ជួរក្រោម (Bottom Line) — អក្សរ Sponsor</label>
-          <input type="text" id="sponsor-ad-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor..." oninput="updateSponsorContent()">
+          <label class="form-label">ជួរក្រោម (Bottom Line) — លេខទាក់ទង ឬ Telegram</label>
+          <input type="text" id="sponsor-bottom-input" class="cyber-input" value="📱 012 345 678 | Telegram" placeholder="លេខទូរសព្ទ / Telegram..." oninput="updateSponsorContent()">
         </div>
 
         <!-- Sponsor Slider Box -->
@@ -859,9 +849,9 @@
           <div class="form-row">
             <div class="form-label">
               <span>ទំហំអក្សរ Sponsor (Font Size)</span>
-              <span class="form-label-val" id="sponsor-size-val">18px</span>
+              <span class="form-label-val" id="sponsor-size-val">17px</span>
             </div>
-            <input type="range" min="12" max="32" step="1" value="18" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
+            <input type="range" min="12" max="28" step="1" value="17" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
           </div>
 
           <div class="form-row">
@@ -875,10 +865,10 @@
           <div class="form-row" style="margin-top: 4px;">
             <label class="form-label">ទីតាំងលឿន (Preset Positions)</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-              <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('bottom')">
+              <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.75rem; height: 36px;" onclick="setSponsorPosition('bottom')">
                 ⬇️ ខាងក្រោម (Bottom)
               </button>
-              <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.75rem; height: 38px;" onclick="setSponsorPosition('top')">
+              <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.75rem; height: 36px;" onclick="setSponsorPosition('top')">
                 ⬆️ ខាងលើ (Top)
               </button>
             </div>
@@ -887,15 +877,15 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
           <div>
-            <label class="form-label">ពណ៌អក្សរ Brand</label>
-            <input type="color" id="sponsor-color-picker" value="#f59e0b" class="cyber-input" style="height: 40px; padding: 2px;" oninput="updateSponsorContent()">
+            <label class="form-label">ពណ៌អក្សរ Top Line</label>
+            <input type="color" id="sponsor-color-picker" value="#f59e0b" class="cyber-input" style="height: 38px; padding: 2px;" oninput="updateSponsorContent()">
           </div>
           <div>
             <label class="form-label">ពណ៌ផ្ទៃ Background</label>
-            <select id="sponsor-bg-select" class="cyber-input" style="padding: 0 6px; height: 40px;" onchange="updateSponsorContent()">
+            <select id="sponsor-bg-select" class="cyber-input" style="padding: 0 6px; height: 38px;" onchange="updateSponsorContent()">
               <option value="rgba(8, 6, 18, 0.90)" selected>ខ្មៅងងឹត (Dark Glass)</option>
               <option value="rgba(0, 0, 0, 0.95)">ខ្មៅសុទ្ធ (Pure Black)</option>
-              <option value="rgba(168, 85, 247, 0.3)">ស្វាយ Neon (Purple Tint)</option>
+              <option value="rgba(168, 85, 247, 0.35)">ស្វាយ Neon (Purple Tint)</option>
             </select>
           </div>
         </div>
@@ -904,12 +894,12 @@
       <!-- ── TAB 4: ANIMATED VERTICAL MARQUEE ─────────────────── -->
       <div class="tab-panel-card" id="tab-panel-marquee">
         <div class="panel-section-title">
-          <span>📜 អក្សររត់ (Marquee) &amp; ស្ទីល</span>
+          <span>🎬 អក្សររត់លើវីដេអូ (Marquee Text Overlay)</span>
         </div>
 
         <div class="toggle-switch-wrap" style="padding: 3px 5px;">
           <div>
-            <div class="toggle-switch-label" style="font-size: 0.66rem;">បើកដំណើរការអក្សររត់ (Marquee)</div>
+            <div class="toggle-switch-label" style="font-size: 0.68rem; font-weight: 800; color: #fbbf24;">បើកដំណើរការអក្សររត់ (Marquee)</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeOverlay(this.checked)">
@@ -918,31 +908,35 @@
         </div>
 
         <!-- Marquee Text Input -->
-        <div class="form-row" style="margin-top: 2px;">
-          <input type="text" id="marquee-text-input" class="cyber-input" value="សូមចុច Subscribe &amp; Follow «នាគហ្សង បកប្រែ AI»" oninput="updateMarqueeText(this.value)">
+        <div class="form-row" style="margin-top: 4px;">
+          <label class="form-label" style="font-size: 0.68rem;">✍️ អត្ថបទរត់លើវីដេអូ (Text Overlay)</label>
+          <input type="text" id="marquee-text-input" class="cyber-input" value="🎬 សូមចុច Subscribe &amp; Follow ឆានែលដើម្បីទស្សនាភាគបន្ត!" placeholder="វាយអត្ថបទរត់លើវីដេអូ..." oninput="updateMarqueeText(this.value)">
         </div>
 
         <!-- Direction Buttons (Up & Down) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 2px;">
-          <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.70rem; height: 28px;" onclick="setMarqueeDirection('up')">
-            ⬆️ ក្រោម→លើ (Up)
-          </button>
-          <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.70rem; height: 28px;" onclick="setMarqueeDirection('down')">
-            ⬇️ លើ→ក្រោម (Down)
-          </button>
+        <div class="form-row" style="margin-top: 4px;">
+          <label class="form-label" style="font-size: 0.68rem;">↕️ ទិសដៅរត់ (Direction)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('up')">
+              ⬆️ រត់ពីក្រោមឡើងលើ
+            </button>
+            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('down')">
+              ⬇️ រត់ពីលើចុះក្រោម
+            </button>
+          </div>
         </div>
 
         <!-- Speed & Size (2 Columns) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
           <div class="slider-group-box" style="margin: 0;">
             <div class="form-label">
-              <span>ល្បឿន</span>
+              <span>ល្បឿនរត់</span>
               <span class="form-label-val" id="marquee-speed-val">8s</span>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 2px;">
-              <button type="button" class="btn-ctrl" id="btn-speed-slow" style="justify-content: center; font-size: 0.58rem; height: 22px; padding: 0;" onclick="setMarqueeSpeed('slow')">យឺត</button>
-              <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center; font-size: 0.58rem; height: 22px; padding: 0;" onclick="setMarqueeSpeed('normal')">ល្មម</button>
-              <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center; font-size: 0.58rem; height: 22px; padding: 0;" onclick="setMarqueeSpeed('fast')">លឿន</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 3px;">
+              <button type="button" class="btn-ctrl" id="btn-speed-slow" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('slow')">🐢 15s</button>
+              <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('normal')">🚶 8s</button>
+              <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('fast')">⚡ 4s</button>
             </div>
             <input type="range" min="3" max="25" step="1" value="8" class="cyber-slider" id="marquee-speed-slider" oninput="setMarqueeSpeedSeconds(this.value)">
           </div>
@@ -952,7 +946,7 @@
               <span>ទំហំអក្សរ</span>
               <span class="form-label-val" id="marquee-size-val">22px</span>
             </div>
-            <input type="range" min="12" max="48" step="2" value="22" class="cyber-slider" id="marquee-size-slider"
+            <input type="range" min="14" max="44" step="2" value="22" class="cyber-slider" id="marquee-size-slider"
               oninput="document.getElementById('marquee-size-val').innerText = this.value + 'px'; state.marquee.fontSize = parseInt(this.value); applyMarqueeStyles();">
             <div style="display: grid; grid-template-columns: 32px 1fr; gap: 4px; margin-top: 2px;">
               <input type="color" id="marquee-color-picker" value="#f59e0b" class="cyber-input" style="height: 24px; padding: 1px;" oninput="state.marquee.color = this.value; applyMarqueeStyles();">

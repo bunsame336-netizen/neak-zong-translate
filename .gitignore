@@ -8,3 +8,5 @@ exports/*
 node_modules/
 .env
 .venv
+temp_text/
+*.log

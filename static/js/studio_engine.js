@@ -82,16 +82,15 @@ const state = {
     glowColor: '#c084fc'
   },
 
-  // Sponsor Overlay (Custom Branding & Phone/Telegram ID)
+  // Sponsor Overlay (2 Short Lines: Top Ad + Bottom Contact)
   sponsor: {
     enabled: false,
-    brand: '🐉 «នាគហ្សង» ឧបត្ថម្ភធំ',
-    contact: '☎️ 012 345 678 | Telegram: @neakzong',
-    adText: '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor',
+    topLine: '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor',
+    bottomLine: '📱 012 345 678 | Telegram',
     position: 'bottom',
     yPercent: 88,
     color: '#f59e0b',
-    fontSize: 18,
+    fontSize: 17,
     bgColor: 'rgba(8, 6, 18, 0.90)'
   },
 
@@ -115,9 +114,8 @@ const marqueeElement = document.getElementById('marquee-overlay-element');
 const marqueeTrack = document.getElementById('marquee-track');
 
 const sponsorElement = document.getElementById('sponsor-overlay-element');
-const sponsorBrandTag = document.getElementById('sponsor-brand-tag');
-const sponsorContactTag = document.getElementById('sponsor-contact-tag');
-const sponsorAdTag = document.getElementById('sponsor-ad-tag');
+const sponsorTopTag = document.getElementById('sponsor-top-tag') || document.getElementById('sponsor-brand-tag');
+const sponsorBottomTag = document.getElementById('sponsor-bottom-tag') || document.getElementById('sponsor-contact-tag');
 
 // Tab Navigation Switching
 function switchStudioTab(tabId) {
@@ -395,20 +393,7 @@ async function revokeAdminKey(key) {
 }
 
 // ══════════════════════════════════════════════════════════
-// ⚡ 2. TAB NAVIGATION (COMPACT 7 TABS)
-// ══════════════════════════════════════════════════════════
-function switchStudioTab(tabId) {
-  state.activeTab = tabId;
-  document.querySelectorAll('.tab-nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabId);
-  });
-  document.querySelectorAll('.tab-panel-card').forEach(panel => {
-    panel.classList.toggle('active', panel.id === `tab-panel-${tabId}`);
-  });
-}
-
-// ══════════════════════════════════════════════════════════
-// ⚡ 3. MEDIA UPLOAD & HANDLING
+// ⚡ 2. MEDIA UPLOAD & HANDLING
 // ══════════════════════════════════════════════════════════
 async function handleVideoUpload(input) {
   if (!input.files || input.files.length === 0) return;
@@ -738,29 +723,32 @@ function updateBlurBoxLimits() {
 }
 
 function updateBlurBoxFromSliders() {
-  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
+  if (!state.blurMask.enabled) {
+    state.blurMask.enabled = true;
+    const toggle = document.getElementById('toggle-blur');
+    if (toggle) toggle.checked = true;
+    if (blurBox) {
+      blurBox.classList.add('active-visible');
+      blurBox.style.display = 'block';
+    }
+  }
 
-  let w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
-  let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
-  let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
-  let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
-
-  // Strictly clamp to Horizontal Rectangle constraints
-  w = Math.max(50, Math.min(280, w));
-  h = Math.max(20, Math.min(80, h));
-  x = Math.max(0, Math.min(x, Math.max(0, vpW - w)));
-  y = Math.max(0, Math.min(y, Math.max(0, vpH - h)));
+  const w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
+  const h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
+  const x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
+  const y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
 
   state.blurMask.x = x;
   state.blurMask.y = y;
   state.blurMask.w = w;
   state.blurMask.h = h;
 
-  blurBox.style.left = `${x}px`;
-  blurBox.style.top = `${y}px`;
-  blurBox.style.width = `${w}px`;
-  blurBox.style.height = `${h}px`;
+  if (blurBox) {
+    blurBox.style.left = `${x}px`;
+    blurBox.style.top = `${y}px`;
+    blurBox.style.width = `${w}px`;
+    blurBox.style.height = `${h}px`;
+  }
 
   const wVal = document.getElementById('blur-w-val');
   const hVal = document.getElementById('blur-h-val');
@@ -770,11 +758,18 @@ function updateBlurBoxFromSliders() {
   if (hVal) hVal.innerText = `${h}px`;
   if (xVal) xVal.innerText = `${x}px`;
   if (yVal) yVal.innerText = `${y}px`;
-
-  updateBlurBoxLimits();
 }
 
 function updateBlurIntensity(val) {
+  if (!state.blurMask.enabled) {
+    state.blurMask.enabled = true;
+    const toggle = document.getElementById('toggle-blur');
+    if (toggle) toggle.checked = true;
+    if (blurBox) {
+      blurBox.classList.add('active-visible');
+      blurBox.style.display = 'block';
+    }
+  }
   const intVal = parseInt(val) || 25;
   state.blurMask.intensity = intVal;
   let label = `${intVal}`;
@@ -784,7 +779,7 @@ function updateBlurIntensity(val) {
   const labelEl = document.getElementById('blur-intensity-val');
   if (labelEl) labelEl.innerText = label;
   if (blurBox) {
-    const px = Math.max(4, Math.round(intVal / 1.8));
+    const px = Math.max(3, Math.round(intVal / 1.5));
     blurBox.style.backdropFilter = `blur(${px}px)`;
     blurBox.style.webkitBackdropFilter = `blur(${px}px)`;
   }
@@ -806,6 +801,15 @@ function setBlurPreset(level) {
 }
 
 function updateBlurTint(val) {
+  if (!state.blurMask.enabled) {
+    state.blurMask.enabled = true;
+    const toggle = document.getElementById('toggle-blur');
+    if (toggle) toggle.checked = true;
+    if (blurBox) {
+      blurBox.classList.add('active-visible');
+      blurBox.style.display = 'block';
+    }
+  }
   const pct = parseInt(val) || 0;
   state.blurMask.tintOpacity = pct / 100.0;
   const tintValEl = document.getElementById('blur-tint-val');
@@ -833,43 +837,46 @@ function setBlurCorner(corner) {
   updateBlurBoxFromSliders();
 }
 
-// ── SPONSOR CONTROLS (3-LINE CUSTOM BRANDING & CONTACT) ────
+// ── SPONSOR CONTROLS (2-LINE CONCISE SPONSOR) ────
 function toggleSponsorOverlay(enabled) {
   state.sponsor.enabled = enabled;
-  if (sponsorElement) sponsorElement.classList.toggle('active-visible', enabled);
+  const toggle = document.getElementById('toggle-sponsor');
+  if (toggle && toggle.checked !== enabled) toggle.checked = enabled;
+  if (sponsorElement) {
+    sponsorElement.classList.toggle('active-visible', enabled);
+    sponsorElement.style.display = enabled ? 'block' : 'none';
+  }
   updateSponsorContent();
   showToast(enabled ? '✓ បានបើកបង្ហាញ Sponsor Banner' : 'បានបិទ Sponsor');
 }
 
 function updateSponsorContent() {
-  const brand = document.getElementById('sponsor-brand-input')?.value || '';
-  const contact = document.getElementById('sponsor-contact-input')?.value || '';
-  const adText = document.getElementById('sponsor-ad-input')?.value || '';
+  const topText = (document.getElementById('sponsor-top-input')?.value || document.getElementById('sponsor-brand-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
+  const bottomText = (document.getElementById('sponsor-bottom-input')?.value || document.getElementById('sponsor-contact-input')?.value || '📱 012 345 678 | Telegram').trim();
   const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
-  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 18);
+  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 17);
   const yPercent = parseInt(document.getElementById('sponsor-y-slider')?.value || 88);
   const bg = document.getElementById('sponsor-bg-select')?.value || 'rgba(8, 6, 18, 0.90)';
 
-  state.sponsor.brand = brand;
-  state.sponsor.contact = contact;
-  state.sponsor.adText = adText;
+  state.sponsor.topLine = topText;
+  state.sponsor.bottomLine = bottomText;
   state.sponsor.color = color;
   state.sponsor.fontSize = size;
   state.sponsor.yPercent = yPercent;
   state.sponsor.bgColor = bg;
 
-  if (sponsorBrandTag) {
-    sponsorBrandTag.innerText = brand;
-    sponsorBrandTag.style.color = color;
-    sponsorBrandTag.style.fontSize = size + 'px';
+  const topEl = document.getElementById('sponsor-top-tag') || document.getElementById('sponsor-brand-tag');
+  const bottomEl = document.getElementById('sponsor-bottom-tag') || document.getElementById('sponsor-contact-tag');
+
+  if (topEl) {
+    topEl.innerText = topText;
+    topEl.style.color = color;
+    topEl.style.fontSize = size + 'px';
   }
-  if (sponsorContactTag) {
-    sponsorContactTag.innerText = contact;
-    sponsorContactTag.style.fontSize = Math.max(11, size - 4) + 'px';
-  }
-  if (sponsorAdTag) {
-    sponsorAdTag.innerText = adText;
-    sponsorAdTag.style.fontSize = Math.max(10, size - 6) + 'px';
+  if (bottomEl) {
+    bottomEl.innerText = bottomText;
+    bottomEl.style.color = '#22d3ee';
+    bottomEl.style.fontSize = Math.max(11, size - 3) + 'px';
   }
   const bannerBar = document.getElementById('sponsor-banner-bar');
   if (bannerBar) {
@@ -1281,12 +1288,11 @@ function _buildRenderOptions() {
       y: textElement.offsetTop,
       size: state.textOverlay.size
     },
-    // Custom sponsor branding (3 lines + position)
+    // Custom sponsor branding (2 concise lines + position)
     sponsor: {
       enabled: state.sponsor.enabled,
-      brand: state.sponsor.brand,
-      contact: state.sponsor.contact,
-      ad_text: state.sponsor.adText,
+      top_line: state.sponsor.topLine,
+      bottom_line: state.sponsor.bottomLine,
       position: state.sponsor.position,
       y_percent: state.sponsor.yPercent,
       color: _hexToFFmpegColor(state.sponsor.color),

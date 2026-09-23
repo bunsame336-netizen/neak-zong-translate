@@ -173,6 +173,14 @@ header.app-header {
   filter: drop-shadow(0 0 6px var(--neon-purple-bright));
 }
 
+.brand-dragon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  filter: drop-shadow(0 0 6px var(--neon-purple-bright));
+}
+
 .brand-text-col {
   display: flex;
   flex-direction: column;
@@ -1167,7 +1175,7 @@ header.app-header {
   border-bottom: 1.5px solid var(--neon-gold);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  padding: 6px 10px;
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1176,17 +1184,19 @@ header.app-header {
   text-align: center;
   box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
 }
+.sponsor-top-tag,
 .sponsor-brand-tag {
   color: var(--neon-gold);
   font-weight: 800;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   letter-spacing: 0.3px;
   line-height: 1.25;
 }
+.sponsor-bottom-tag,
 .sponsor-contact-tag {
   color: var(--neon-cyan-bright);
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   line-height: 1.2;
 }
 .sponsor-ad-tag {
