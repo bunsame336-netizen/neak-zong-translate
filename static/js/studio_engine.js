@@ -49,7 +49,8 @@ const state = {
     font: "'Moul', serif",
     size: 26,
     x: 15,
-    y: 30
+    y: 30,
+    transparentMode: false
   },
   textPart1: {
     enabled: true,
@@ -590,6 +591,26 @@ function toggleTextOverlay(enabled) {
   showToast(enabled ? '✓ បានបើកអក្សរ Dual-Tone' : 'បានបិទអក្សរ');
 }
 
+function toggleTextTransparentMode(enabled) {
+  state.textOverlay.transparentMode = enabled;
+  const rendered = document.getElementById('rendered-text-val');
+  if (rendered) {
+    rendered.classList.toggle('transparent-mode', enabled);
+  }
+  showToast(enabled ? '✓ បានដោះផ្ទៃខាងក្រោយ (Transparent Mode)' : 'បានបិទ Transparent Mode');
+}
+
+function updateTextPosition() {
+  const x = parseInt(document.getElementById('text-x-slider')?.value || 15);
+  const y = parseInt(document.getElementById('text-y-slider')?.value || 30);
+  state.textOverlay.x = x;
+  state.textOverlay.y = y;
+  if (textElement) {
+    textElement.style.left = `${x}px`;
+    textElement.style.top = `${y}px`;
+  }
+}
+
 // ── DUAL-TONE TEXT PREVIEW ─────────────────────────────────
 function updateDualTonePreview() {
   // Read Part 1
@@ -751,6 +772,24 @@ function updateBlurTint(val) {
   if (blurBox) {
     blurBox.style.backgroundColor = `rgba(0, 0, 0, ${state.blurMask.tintOpacity})`;
   }
+}
+
+function setBlurCorner(corner) {
+  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
+  const w = state.blurMask.w || 140;
+  const h = state.blurMask.h || 45;
+  let x = 15, y = 15;
+  if (corner === 'top-left') { x = 10; y = 10; }
+  else if (corner === 'top-right') { x = Math.max(0, vpW - w - 10); y = 10; }
+  else if (corner === 'bottom-left') { x = 10; y = Math.max(0, vpH - h - 10); }
+  else if (corner === 'bottom-right') { x = Math.max(0, vpW - w - 10); y = Math.max(0, vpH - h - 10); }
+
+  const xSlider = document.getElementById('blur-x-slider');
+  const ySlider = document.getElementById('blur-y-slider');
+  if (xSlider) xSlider.value = x;
+  if (ySlider) ySlider.value = y;
+  updateBlurBoxFromSliders();
 }
 
 // ── SPONSOR CONTROLS (3-LINE CUSTOM BRANDING & CONTACT) ────

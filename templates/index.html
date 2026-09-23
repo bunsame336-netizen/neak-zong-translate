@@ -19,71 +19,203 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=3.0.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=4.0.0">
 
-  <!-- ⚡ CRITICAL MOBILE OVERRIDE: GUARANTEE ONE-COLUMN FIXED TOP VIDEO + FULL-WIDTH BOTTOM CONTROLS -->
+  <!-- ⚡ CRITICAL MOBILE OVERRIDE: GUARANTEE VERTICAL 3-TIER MOBILE ARCHITECTURE (NO PAGE SCROLL) -->
   <style>
     html, body {
-      overflow-x: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
       width: 100vw !important;
       max-width: 100% !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      min-height: 100dvh !important;
+      overflow: hidden !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+    }
+    header.app-header {
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      flex: 0 0 48px !important;
+      padding: 4px 10px !important;
+      z-index: 100 !important;
+      box-sizing: border-box !important;
     }
     .studio-main-container {
       display: flex !important;
       flex-direction: column !important;
       width: 100vw !important;
       max-width: 100% !important;
-      height: calc(100dvh - 52px) !important;
+      height: calc(100dvh - 48px) !important;
+      max-height: calc(100dvh - 48px) !important;
       margin: 0 !important;
       padding: 0 !important;
       overflow: hidden !important;
+      position: relative !important;
+      gap: 0 !important;
     }
+
+    /* ════ TIER 1: TOP 35% VIDEO PREVIEW STAGE ════ */
     .studio-stage-col {
-      flex: 0 0 auto !important;
-      width: 100% !important;
+      flex: 0 0 35vh !important;
+      height: 35vh !important;
+      max-height: 35vh !important;
+      min-height: 35vh !important;
+      width: 100vw !important;
       max-width: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
-      padding: 6px 10px 8px 10px !important;
-      border-bottom: 2px solid rgba(168, 85, 247, 0.3) !important;
+      padding: 4px 8px 6px 8px !important;
+      border-bottom: 2px solid rgba(168, 85, 247, 0.35) !important;
       background: #040308 !important;
       z-index: 50 !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
     }
+    .video-stage-card {
+      height: calc(35vh - 40px) !important;
+      max-height: calc(35vh - 40px) !important;
+      aspect-ratio: 9 / 16 !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+      background: #000000 !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.9) !important;
+    }
+    .video-stage-viewport {
+      width: 100% !important;
+      height: 100% !important;
+      aspect-ratio: 9 / 16 !important;
+      margin: 0 auto !important;
+      position: relative !important;
+      overflow: hidden !important;
+    }
+    .video-toolbar {
+      height: 26px !important;
+      padding: 2px 6px !important;
+      flex-shrink: 0 !important;
+      box-sizing: border-box !important;
+    }
+    .auto-process-banner {
+      width: 100% !important;
+      max-width: 320px !important;
+      padding: 3px 6px !important;
+      margin: 2px 0 0 0 !important;
+      border-radius: 6px !important;
+      flex-shrink: 0 !important;
+    }
+    .btn-auto-process {
+      padding: 4px 8px !important;
+      font-size: 0.72rem !important;
+    }
+
+    /* ════ TIER 2: MIDDLE MENU TABS BAR (SINGLE HORIZONTAL ROW) ════ */
+    .studio-tabs-nav {
+      flex: 0 0 auto !important;
+      display: flex !important;
+      flex-direction: row !important;
+      width: 100vw !important;
+      max-width: 100% !important;
+      background: rgba(12, 9, 24, 0.98) !important;
+      border-bottom: 2px solid rgba(168, 85, 247, 0.35) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+      padding: 6px 8px !important;
+      gap: 5px !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      white-space: nowrap !important;
+      z-index: 60 !important;
+      box-sizing: border-box !important;
+    }
+    .studio-tabs-nav::-webkit-scrollbar {
+      display: none !important;
+    }
+    .tab-nav-btn {
+      flex: 1 0 auto !important;
+      min-width: 66px !important;
+      padding: 6px 8px !important;
+      font-size: 0.72rem !important;
+      font-weight: 700 !important;
+      border-radius: 8px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      white-space: nowrap !important;
+      cursor: pointer !important;
+    }
+    .tab-nav-btn[data-tab="marquee"] {
+      border-color: rgba(245, 158, 11, 0.5) !important;
+      background: rgba(245, 158, 11, 0.15) !important;
+      color: #fbbf24 !important;
+      font-weight: 800 !important;
+    }
+    .tab-nav-btn[data-tab="marquee"].active {
+      background: linear-gradient(135deg, #d97706, #b45309) !important;
+      color: #ffffff !important;
+    }
+
+    /* ════ TIER 3: BOTTOM CONTROL PANEL (FULL WIDTH, 55% VIEWPORT) ════ */
     .studio-controls-col {
       flex: 1 1 auto !important;
-      width: 100% !important;
+      width: 100vw !important;
       max-width: 100% !important;
+      height: auto !important;
       display: flex !important;
       flex-direction: column !important;
       overflow-y: auto !important;
       overflow-x: hidden !important;
-      padding: 10px 14px 45px 14px !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 10px 12px 65px 12px !important;
       background: transparent !important;
+      box-sizing: border-box !important;
     }
-    .video-stage-viewport {
-      height: 36vh !important;
-      max-height: 36vh !important;
-      aspect-ratio: 9 / 16 !important;
-      margin: 0 auto !important;
+    .tab-panel-card {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .tab-panel-card.active {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    /* Large touch-friendly sliders */
+    .cyber-slider {
+      width: 100% !important;
+      height: 10px !important;
+      margin: 8px 0 !important;
+      touch-action: pan-x !important;
+    }
+    .cyber-slider::-webkit-slider-thumb {
+      width: 26px !important;
+      height: 26px !important;
+      border-radius: 50% !important;
     }
     #blur-overlay-box {
       width: 140px !important;
       height: 45px !important;
     }
-    .tab-panel-card {
-      width: 100% !important;
-      max-width: 100% !important;
+    .rendered-text-content.transparent-mode {
+      background: transparent !important;
+      text-shadow: none !important;
+      box-shadow: none !important;
+      border: none !important;
     }
-    .cyber-slider {
-      width: 100% !important;
-      height: 10px !important;
-      margin: 8px 0 !important;
-    }
-    .cyber-slider::-webkit-slider-thumb {
-      width: 28px !important;
-      height: 28px !important;
+    .rendered-text-content.transparent-mode span {
+      text-shadow: none !important;
     }
   </style>
 </head>
@@ -237,35 +369,41 @@
       </div>
     </div>
 
-    <!-- ── RIGHT COLUMN (50%): COMPACT CONTROL PANEL TABS ──── -->
+    <!-- ══════════════════════════════════════════════════════════
+         ⚡ TIER 2: 5-TAB MENU BAR (SINGLE HORIZONTAL ROW)
+         [អក្សរ Text] | [រូប Logo] | [ព្រាល Blur] | [Sponsor] | [🎬 Marquee]
+    ══════════════════════════════════════════════════════════ -->
+    <nav class="studio-tabs-nav">
+      <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
+        📝 អក្សរ Text
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
+        🖼️ រូប Logo
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="blur" onclick="switchStudioTab('blur')">
+        🌫️ ព្រាល Blur
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
+        🤝 Sponsor
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
+        🎬 Marquee
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
+        🎙️ សំឡេង
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
+        📂 Media
+      </button>
+      <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
+        ✂️ Export
+      </button>
+    </nav>
+
+    <!-- ══════════════════════════════════════════════════════════
+         ⚡ TIER 3: BOTTOM CONTROL PANEL (FULL WIDTH, 55% VIEWPORT)
+    ══════════════════════════════════════════════════════════ -->
     <div class="studio-controls-col">
-      <!-- 7 Compact Navigation Tabs -->
-      <nav class="studio-tabs-nav">
-        <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
-          📝 អក្សរ Text
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
-          🖼️ Logo
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="blur" onclick="switchStudioTab('blur')">
-          🌫️ ព្រិល Blur
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
-          🤝 Sponsor
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
-          🎬 Marquee
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
-          🎙️ សំឡេងខ្មែរ
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
-          📂 Media
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
-          ✂️ Export
-        </button>
-      </nav>
 
       <!-- ── TAB 1: TEXT OVERLAY (DUAL-TONE) ─────────────────── -->
       <div class="tab-panel-card active" id="tab-panel-text">
@@ -280,6 +418,18 @@
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-text" onchange="toggleTextOverlay(this.checked)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Transparent Mode Switch -->
+        <div class="toggle-switch-wrap" style="margin-top: 6px;">
+          <div>
+            <div class="toggle-switch-label">✨ ដោះផ្ទៃខាងក្រោយខ្មៅ (Transparent Mode)</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">អក្សរថ្លាសុទ្ធ គ្មានប្រអប់ខ្មៅ ឬស្រមោលបាំងវីដេអូ</div>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggle-text-transparent" onchange="toggleTextTransparentMode(this.checked)">
             <span class="switch-slider"></span>
           </label>
         </div>
@@ -363,6 +513,27 @@
               <input type="range" min="14" max="60" step="2" value="26" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
               <span class="form-label-val" id="text-size-val">26px</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Text Position Sliders -->
+        <div class="slider-group-box" style="margin-top: 8px;">
+          <div class="slider-group-title">📐 ទីតាំងអក្សរ (Text Position Sliders)</div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង X (ឆ្វេង-ស្ដាំ)</span>
+              <span class="form-label-val" id="text-x-val">15px</span>
+            </div>
+            <input type="range" min="0" max="350" step="5" value="15" class="cyber-slider" id="text-x-slider"
+              oninput="document.getElementById('text-x-val').innerText = this.value + 'px'; updateTextPosition();">
+          </div>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង Y (លើ-ក្រោម)</span>
+              <span class="form-label-val" id="text-y-val">30px</span>
+            </div>
+            <input type="range" min="0" max="600" step="5" value="30" class="cyber-slider" id="text-y-slider"
+              oninput="document.getElementById('text-y-val').innerText = this.value + 'px'; updateTextPosition();">
           </div>
         </div>
       </div>
@@ -481,6 +652,15 @@
             </div>
             <input type="range" min="0" max="700" step="5" value="15" class="cyber-slider" id="blur-y-slider"
               oninput="document.getElementById('blur-y-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+          </div>
+          <div class="form-row" style="margin-top: 6px;">
+            <label class="form-label">លោតទៅជ្រុងស្វ័យប្រវត្តិ (Quick Corners)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px;">
+              <button type="button" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setBlurCorner('top-left')">↖ លើឆ្វេង</button>
+              <button type="button" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setBlurCorner('top-right')">↗ លើស្ដាំ</button>
+              <button type="button" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setBlurCorner('bottom-left')">↙ ក្រោមឆ្វេង</button>
+              <button type="button" class="btn-ctrl" style="justify-content: center; font-size: 0.68rem;" onclick="setBlurCorner('bottom-right')">↘ ក្រោមស្ដាំ</button>
+            </div>
           </div>
         </div>
 
@@ -941,6 +1121,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=2.1.0"></script>
+  <script src="/static/js/studio_engine.js?v=4.0.0"></script>
 </body>
 </html>
