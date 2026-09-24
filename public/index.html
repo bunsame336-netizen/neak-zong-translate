@@ -2,43 +2,335 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#07080d">
     <title>នាគហ្សង បកប្រែ - Neak Zong Translate AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
         body {
             background-color: #07080d;
-            color: #fff;
-            font-family: system-ui, -apple-system, sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 20%, rgba(168, 85, 247, 0.18), transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.12), transparent 50%);
+            color: #f1f5f9;
+            font-family: 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
             text-align: center;
+            overflow: hidden;
+            user-select: none;
         }
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid rgba(168, 85, 247, 0.2);
-            border-top-color: #a855f7;
+        .container {
+            max-width: 380px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dragon-icon-wrap {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dragon-glow {
+            position: absolute;
+            inset: -12px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            filter: blur(20px);
+            opacity: 0.55;
+            animation: pulseGlow 3s ease-in-out infinite alternate;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        h2 { color: #c084fc; font-size: 20px; margin-bottom: 8px; }
-        p { color: #94a3b8; font-size: 14px; }
+        @keyframes pulseGlow {
+            0% { transform: scale(0.9); opacity: 0.4; }
+            100% { transform: scale(1.15); opacity: 0.75; }
+        }
+        .dragon-circle {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            border-radius: 26px;
+            background: linear-gradient(145deg, #161127, #0a0814);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(168, 85, 247, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dragon-circle svg {
+            width: 52px;
+            height: 52px;
+            filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.8));
+        }
+        .app-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #d8b4fe;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 30%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        .spinner-wrapper {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin-bottom: 24px;
+        }
+        .spinner-ring {
+            width: 100%;
+            height: 100%;
+            border: 3.5px solid rgba(168, 85, 247, 0.12);
+            border-top: 3.5px solid #a855f7;
+            border-right: 3.5px solid #ec4899;
+            border-radius: 50%;
+            animation: spin 1.1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+            box-shadow: 0 0 18px rgba(168, 85, 247, 0.35);
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status-box {
+            background: rgba(18, 14, 34, 0.7);
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 16px;
+            padding: 16px 20px;
+            width: 100%;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 18px;
+        }
+        .status-main {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .status-sub {
+            font-size: 12px;
+            color: #a855f7;
+            font-weight: 600;
+        }
+        .status-attempt {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 6px;
+            font-family: 'Outfit', sans-serif;
+        }
+        .info-tip {
+            font-size: 11.5px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-top: 4px;
+        }
+        .btn-retry {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 22px;
+            background: linear-gradient(135deg, #9333ea, #db2777);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Kantumruy Pro', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(168, 85, 247, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-retry:active {
+            transform: scale(0.96);
+        }
     </style>
 </head>
 <body>
-    <div class="spinner"></div>
-    <h2>នាគហ្សង បកប្រែ AI</h2>
-    <p>កំពុងភ្ជាប់ទៅកាន់ Cloud Studio 24/7...</p>
+    <div class="container">
+        <!-- Dragon Naga Icon -->
+        <div class="dragon-icon-wrap">
+            <div class="dragon-glow"></div>
+            <div class="dragon-circle">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="dragonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffd700" />
+                            <stop offset="50%" stop-color="#ec4899" />
+                            <stop offset="100%" stop-color="#a855f7" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M50 12 C30 12, 18 28, 22 46 C25 60, 36 72, 48 88 C50 90, 52 90, 54 88 C66 72, 77 60, 80 46 C84 28, 72 12, 50 12 Z" stroke="url(#dragonGrad)" stroke-width="4" stroke-linejoin="round" fill="none"/>
+                    <circle cx="42" cy="38" r="4.5" fill="#ffd700" />
+                    <circle cx="58" cy="38" r="4.5" fill="#ffd700" />
+                    <path d="M38 56 Q50 66 62 56" stroke="url(#dragonGrad)" stroke-width="4" stroke-linecap="round" fill="none"/>
+                    <path d="M50 20 L50 32 M38 24 L46 32 M62 24 L54 32" stroke="#ec4899" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+
+        <div class="app-badge">Cloud Studio 24/7</div>
+        <h1>«នាគហ្សង បកប្រែ»</h1>
+        <p class="subtitle">ប្រព័ន្ធបកប្រែរឿងភាគចិន & បញ្ចូលសំឡេង AI ស្វ័យប្រវត្តិ</p>
+
+        <!-- Loading Spinner -->
+        <div class="spinner-wrapper">
+            <div class="spinner-ring" id="spinner"></div>
+        </div>
+
+        <!-- Real-time Status Card -->
+        <div class="status-box">
+            <div class="status-main" id="status-title">
+                កំពុងតភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេ...
+            </div>
+            <div class="status-sub" id="status-desc">
+                ម៉ាស៊ីនមេ Cloud កំពុងភ្ញាក់ឡើង (Waking Up)
+            </div>
+            <div class="status-attempt" id="status-attempt">
+                ព្យាយាមលើកទី ១...
+            </div>
+            <button class="btn-retry" id="btn-retry" onclick="retryConnection()">🔄 ព្យាយាមតភ្ជាប់ឡើងវិញ</button>
+        </div>
+
+        <p class="info-tip" id="info-tip">
+            💡 លើកដំបូង ម៉ាស៊ីនមេអាចចំណាយពេលប្រហែល ២០-៤០ វិនាទី ដើម្បីភ្ញាក់ឡើង។ សូមរង់ចាំបន្តិច កម្មវិធីនឹងបើកស្វ័យប្រវត្តិ!
+        </p>
+    </div>
+
     <script>
-        setTimeout(function() {
-            window.location.href = "https://neak-zong-translate.onrender.com";
-        }, 800);
+        const SERVER_URL = "https://neak-zong-translate.onrender.com";
+        const HEALTH_URL = SERVER_URL + "/healthz";
+        
+        let attempts = 0;
+        let isRedirecting = false;
+        let pollTimer = null;
+
+        const titleEl = document.getElementById("status-title");
+        const descEl = document.getElementById("status-desc");
+        const attemptEl = document.getElementById("status-attempt");
+        const spinnerEl = document.getElementById("spinner");
+        const btnRetry = document.getElementById("btn-retry");
+        const infoTip = document.getElementById("info-tip");
+
+        async function checkServer() {
+            if (isRedirecting) return;
+            attempts++;
+
+            attemptEl.innerText = `ព្យាយាមលើកទី ${attempts}... (${attempts * 2.5}s)`;
+
+            if (attempts > 3) {
+                descEl.innerText = "កំពុងរង់ចាំ Render បើកដំណើរការ Compute Container...";
+            }
+            if (attempts > 12) {
+                descEl.innerText = "ម៉ាស៊ីនមេជិតរួចរាល់ហើយ សូមកុំចាកចេញ...";
+            }
+            if (attempts > 25) {
+                btnRetry.style.display = "inline-block";
+                infoTip.innerText = "⚠️ ការតភ្ជាប់យូរជាងធម្មតា។ សូមប្រាកដថាទូរសព្ទមានអ៊ីនធឺណិតល្អ។";
+            }
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+                const res = await fetch(HEALTH_URL, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: { 'Accept': 'text/plain, application/json' },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (res.status === 200 || res.ok) {
+                    const text = (await res.text()).trim();
+                    // Render "Waking up" page returns HTML; genuine healthz returns "OK" or JSON
+                    if (text === "OK" || text.includes('"status"') || text.includes('ok')) {
+                        onServerReady();
+                        return;
+                    }
+                }
+            } catch (err) {
+                // Network error or timeout while Render is spinning up
+                console.log(`[Attempt #${attempts}] Server waking up...`, err.name);
+            }
+
+            // Retry every 2.5 seconds
+            pollTimer = setTimeout(checkServer, 2500);
+        }
+
+        function onServerReady() {
+            isRedirecting = true;
+            if (pollTimer) clearTimeout(pollTimer);
+
+            titleEl.innerHTML = "✅ តភ្ជាប់ជោគជ័យ ១០០%!";
+            descEl.innerText = "កំពុងបើកផ្ទាំងកម្មវិធី «នាគហ្សង បកប្រែ»...";
+            descEl.style.color = "#34d399";
+            attemptEl.style.display = "none";
+            btnRetry.style.display = "none";
+
+            // Success Emerald Glow
+            spinnerEl.style.borderColor = "rgba(52, 211, 153, 0.2)";
+            spinnerEl.style.borderTopColor = "#10b981";
+            spinnerEl.style.borderRightColor = "#34d399";
+            spinnerEl.style.boxShadow = "0 0 25px rgba(16, 185, 129, 0.6)";
+
+            setTimeout(() => {
+                window.location.replace(SERVER_URL);
+            }, 600);
+        }
+
+        function retryConnection() {
+            btnRetry.style.display = "none";
+            attempts = 0;
+            checkServer();
+        }
+
+        // Start checking immediately on load
+        window.addEventListener('load', () => {
+            checkServer();
+        });
     </script>
 </body>
 </html>

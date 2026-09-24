@@ -42,8 +42,15 @@ from core.asr_engine import ChineseSpeechRecognizer
 from core.license_manager import license_mgr, DEFAULT_ADMIN_PASSWORD
 from core.telegram_bot_service import bot_service, BOT_USERNAME, ADMIN_ID
 
-# Global ASR Engine instance
-asr_engine = ChineseSpeechRecognizer(model_size="tiny")
+# ── Lazy ASR Engine Loader (Cold Start Optimization) ───────────
+_asr_engine = None
+
+def get_asr_engine():
+    global _asr_engine
+    if _asr_engine is None:
+        from core.asr_engine import ChineseSpeechRecognizer
+        _asr_engine = ChineseSpeechRecognizer(model_size="tiny")
+    return _asr_engine
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['JSON_AS_ASCII'] = False
@@ -54,11 +61,13 @@ PORT = int(os.environ.get('PORT', 5060))
 START_TIME = time.time()
 PROCESSING_JOBS = {}
 
-# Start 24/7 Telegram Bot Service (Async Webhook / Polling)
-try:
-    bot_service.start()
-except Exception as _e_bot:
-    print(f"Warning: Failed to start Telegram Bot service: {_e_bot}", flush=True)
+# Start 24/7 Telegram Bot Service only if explicitly enabled
+ENABLE_TELEGRAM_BOT = os.environ.get("ENABLE_TELEGRAM_BOT", "0") == "1"
+if ENABLE_TELEGRAM_BOT:
+    try:
+        threading.Thread(target=bot_service.start, daemon=True, name="NeakZongBotThread").start()
+    except Exception as _e_bot:
+        print(f"Warning: Failed to start Telegram Bot service: {_e_bot}", flush=True)
 
 @app.after_request
 def add_cors_headers(response):
@@ -84,6 +93,10 @@ def require_active_license():
 # ══════════════════════════════════════════════════════════════
 
 @app.route('/healthz')
+def healthz():
+    """Ultra-lightweight health-check endpoint for Keep-Alive pings (Instant 200 OK)"""
+    return "OK", 200
+
 @app.route('/health')
 @app.route('/ping')
 def health():
@@ -108,6 +121,35 @@ def health():
             'updates_processed': bot_service.updates_processed
         }
     })
+
+# ── 24/7 CLOUD KEEP-ALIVE SENTINEL (Prevents Render Free Inactivity Sleep) ─────
+import urllib.request
+
+def _start_keep_alive_sentinel():
+    def _pinger():
+        time.sleep(25)  # Initial wait for server to bind
+        target_host = os.environ.get("RENDER_EXTERNAL_URL") or "https://neak-zong-translate.onrender.com"
+        ping_url = target_host.rstrip("/") + "/healthz"
+        print(f"[Keep-Alive] 24/7 Sentinel active targeting: {ping_url}", flush=True)
+
+        while True:
+            try:
+                time.sleep(420)  # 7 minutes (Render free sleeps at 15m)
+                req = urllib.request.Request(
+                    ping_url,
+                    headers={"User-Agent": "NeakZong-KeepAlive-Sentinel/1.0"}
+                )
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    if resp.status == 200:
+                        print(f"[Keep-Alive] Periodic ping successful ({time.strftime('%H:%M:%S')}) — Render 24/7 active!", flush=True)
+            except Exception as e:
+                print(f"[Keep-Alive] Ping notice: {e}", flush=True)
+
+    t = threading.Thread(target=_pinger, daemon=True, name="NeakZongKeepAliveSentinel")
+    t.start()
+
+_start_keep_alive_sentinel()
+
 
 # ══════════════════════════════════════════════════════════════
 # 🤖 TELEGRAM BOT WEBHOOK & STATUS APIS (24/7 CLOUD HOSTING)
@@ -347,7 +389,7 @@ def api_translate():
         video_path = UPLOADS_DIR / video_filename
         if video_path.exists():
             print(f"[Auto-ASR] Transcribing speech from {video_filename}...", flush=True)
-            cues = asr_engine.transcribe_to_cues(str(video_path), language="zh")
+            cues = get_asr_engine().transcribe_to_cues(str(video_path), language="zh")
             if cues:
                 chinese_srt = ChineseSpeechRecognizer.cues_to_srt(cues)
                 translated_srt, t_cues = translate_srt(chinese_srt)
@@ -561,7 +603,7 @@ def api_auto_process():
                 # 100% Auto: AI listens to Chinese speech & translates to Khmer
                 PROCESSING_JOBS[job_id]['progress'] = 30
                 PROCESSING_JOBS[job_id]['step'] = 'AI Faster-Whisper កំពុងសម្គាល់ការសន្ទនាតួអង្គ...'
-                cues = asr_engine.transcribe_to_cues(str(video_path), language="zh", timeout_sec=18.0)
+                cues = get_asr_engine().transcribe_to_cues(str(video_path), language="zh", timeout_sec=18.0)
                 PROCESSING_JOBS[job_id]['progress'] = 45
                 PROCESSING_JOBS[job_id]['step'] = 'កំពុងបកប្រែការសន្ទនាចិនជាភាសាខ្មែរ...'
                 if cues:

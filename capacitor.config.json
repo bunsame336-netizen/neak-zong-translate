@@ -3,10 +3,6 @@
   "appName": "នាគហ្សង បកប្រែ",
   "webDir": "public",
   "bundledWebRuntime": false,
-  "server": {
-    "url": "https://neak-zong-translate.onrender.com",
-    "cleartext": true
-  },
   "android": {
     "allowMixedContent": true,
     "captureInput": true,

@@ -6,9 +6,11 @@ services:
     region: singapore
     dockerfilePath: ./Dockerfile
     autoDeploy: true
-    healthCheckPath: /health
+    healthCheckPath: /healthz
     envVars:
       - key: PORT
         value: 5060
       - key: PYTHONIOENCODING
         value: utf-8
+      - key: PYTHONUNBUFFERED
+        value: 1

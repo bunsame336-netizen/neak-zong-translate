@@ -18,6 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 5060
+EXPOSE 5060 10000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5060", "--workers", "2", "--threads", "4", "--timeout", "300", "app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5060} --workers 1 --threads 8 --timeout 300 app:app"]
