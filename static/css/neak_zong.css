@@ -557,69 +557,54 @@ header.app-header {
 }
 
 /* 4. Animated Vertical Scrolling Marquee */
-#marquee-overlay-element {
+/* ── 3. DUAL-TONE HEADER MARQUEE ANIMATION ───────────────── */
+#text-overlay-element.marquee-active {
   position: absolute !important;
-  inset: 0 !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
   pointer-events: none !important;
-  overflow: hidden !important;
-  z-index: 15 !important;
-  display: none;
-}
-
-#marquee-overlay-element.active-visible {
-  display: block !important;
-}
-
-.marquee-scrolling-track {
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  text-align: center !important;
-  font-weight: 800 !important;
-  font-size: 0.88rem !important;
-  color: var(--neon-gold) !important;
-  background: rgba(0, 0, 0, 0.65) !important;
-  padding: 4px 8px !important;
-  border-top: 1px solid rgba(245, 158, 11, 0.4) !important;
-  border-bottom: 1px solid rgba(245, 158, 11, 0.4) !important;
-  text-shadow: 0 2px 4px #000 !important;
-  will-change: top, transform, left !important;
-}
-
-.marquee-scrolling-track.dir-horizontal {
-  width: max-content !important;
+  will-change: top, left, transform !important;
   white-space: nowrap !important;
+  z-index: 25 !important;
+}
+
+#text-overlay-element.marquee-active.dir-up {
+  left: 50% !important;
+  animation-name: scrollUp !important;
+}
+
+#text-overlay-element.marquee-active.dir-down {
+  left: 50% !important;
+  animation-name: scrollDown !important;
+}
+
+#text-overlay-element.marquee-active.dir-left {
   top: 50% !important;
-  transform: translateY(-50%) !important;
+  animation-name: scrollLeft !important;
+}
+
+#text-overlay-element.marquee-active.dir-right {
+  top: 50% !important;
+  animation-name: scrollRight !important;
 }
 
 @keyframes scrollUp {
   0% {
     top: 100%;
-    transform: translateY(0%);
+    transform: translate(-50%, 0%);
   }
   100% {
     top: 0%;
-    transform: translateY(-100%);
+    transform: translate(-50%, -100%);
   }
 }
 
 @keyframes scrollDown {
   0% {
     top: 0%;
-    transform: translateY(-100%);
+    transform: translate(-50%, -100%);
   }
   100% {
     top: 100%;
-    transform: translateY(0%);
+    transform: translate(-50%, 0%);
   }
 }
 

@@ -244,16 +244,7 @@
       box-shadow: 0 0 8px rgba(34, 211, 238, 0.4) !important;
     }
 
-    /* Download Action Button in 2-Column Grid */
-    .btn-action-download {
-      color: #10b981 !important;
-      background: rgba(16, 185, 129, 0.14) !important;
-      border-color: rgba(16, 185, 129, 0.55) !important;
-      box-shadow: 0 0 6px rgba(16, 185, 129, 0.25) !important;
-    }
-    .btn-action-download:active {
-      transform: scale(0.97) !important;
-    }
+
     .voice-pill-btn.active {
       background: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(168, 85, 247, 0.35)) !important;
       border-color: #ec4899 !important;
@@ -616,10 +607,6 @@
       <button type="button" class="header-admin-btn" onclick="openAdminModal()" title="ផ្ទាំង Admin បង្កើត Key">
         <span>🔑 Admin</span>
       </button>
-
-      <a href="/static/NeakZong_Translate_v1.0.apk" download="NeakZong_Translate_v1.0.apk" class="btn-top-apk" title="ទាញយក APK សម្រាប់ទូរស័ព្ទ Android">
-        <span>📥 ទាញយក APK</span>
-      </a>
     </div>
   </header>
 
@@ -664,18 +651,11 @@
                 </svg>
               </div>
 
-              <!-- 3. Static Text Overlay (Dual-Tone) -->
-              <div class="interactive-overlay" id="text-overlay-element" title="អូសរំកិលអក្សរលើវីដេអូ">
+              <!-- 3. Dual-Tone Title Overlay (Direct Header Marquee Supported) -->
+              <div class="interactive-overlay" id="text-overlay-element" title="អូសរំកិលអក្សរលើវីដេអូ ឬបើកជាអក្សររត់ Marquee">
                 <div class="rendered-text-content" id="rendered-text-val">
                   <span id="text-part1-preview" class="text-preview-part1">នាគហ្សង</span>
                   <span id="text-part2-preview" class="text-preview-part2"> បកប្រែ</span>
-                </div>
-              </div>
-
-              <!-- 4. Animated Vertical Scrolling Marquee -->
-              <div class="interactive-overlay" id="marquee-overlay-element">
-                <div class="marquee-scrolling-track" id="marquee-track">
-                  រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ
                 </div>
               </div>
 
@@ -745,17 +725,7 @@
             <span class="btn-lbl">Media</span>
           </button>
 
-          <!-- Row 4: Tools & Download -->
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
-            <span class="btn-ico">✂️</span>
-            <span class="btn-lbl">Tools</span>
-          </button>
-          <button type="button" class="action-menu-btn btn-action-download" id="top-download-btn" onclick="handleTopDownloadAction()">
-            <span class="btn-ico">📥</span>
-            <span class="btn-lbl">ទាញយក</span>
-          </button>
-
-          <!-- Row 5: Voice Selector (ស្រីមុំ / ពិសិដ្ឋ) -->
+          <!-- Row 4: Voice Selector (ស្រីមុំ / ពិសិដ្ឋ) -->
           <button type="button" class="action-menu-btn voice-pill-btn active" id="btn-voice-female" onclick="selectQuickVoice('female')">
             <span class="btn-ico">👩</span>
             <span class="btn-lbl">ស្រីមុំ</span>
@@ -763,6 +733,12 @@
           <button type="button" class="action-menu-btn voice-pill-btn" id="btn-voice-male" onclick="selectQuickVoice('male')">
             <span class="btn-ico">👨</span>
             <span class="btn-lbl">ពិសិដ្ឋ</span>
+          </button>
+
+          <!-- Row 5: Tools & Settings (Span 2 Columns Full Width) -->
+          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')" style="grid-column: span 2; width: 100%;">
+            <span class="btn-ico">✂️</span>
+            <span class="btn-lbl">Tools &amp; កាត់ត</span>
           </button>
         </div>
       </div>
@@ -917,36 +893,18 @@
           </div>
         </div>
 
-        <!-- 🎬 INTEGRATED AUTO MARQUEE ANIMATION SECTION -->
+        <!-- 🎬 DIRECT DUAL-TONE HEADER MARQUEE ANIMATION SECTION -->
         <div class="slider-group-box" style="margin-top: 5px; border-color: rgba(245, 158, 11, 0.45); background: rgba(18, 14, 30, 0.95);">
           <div class="slider-group-title" style="color: var(--neon-gold); display: flex; justify-content: space-between; align-items: center;">
-            <span>🎬 ចលនាអក្សររត់ (Auto Marquee Animation)</span>
+            <span>🎬 ធ្វើឱ្យចំណងជើង Dual-Tone រត់ (Header Marquee)</span>
             <label class="cyber-switch" style="transform: scale(0.85); margin: 0;">
               <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeAnimation(this.checked)">
               <span class="switch-slider"></span>
             </label>
           </div>
 
-          <!-- Quick Presets -->
-          <div style="margin-top: 3px;">
-            <div style="font-size: 0.60rem; color: var(--text-muted); font-weight: 700; margin-bottom: 2px;">⚡ Preset រហ័ស (ចុចជ្រើសរើស):</div>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 3px;">
-              <button type="button" class="btn-ctrl active" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ')">
-                🐉 [Preset 1]: រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ
-              </button>
-              <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ')">
-                👑 [Preset 2]: រក្សាសិទ្ធិដោយ ស្ដេចហ្សង បកប្រែ
-              </button>
-              <button type="button" class="btn-ctrl" style="justify-content: flex-start; height: 26px; font-size: 0.60rem; padding: 2px 6px;" onclick="applyMarqueePreset('𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴')">
-                🎬 [Preset 3]: 𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴
-              </button>
-            </div>
-          </div>
-
-          <!-- Custom Marquee Text Edit Input -->
-          <div class="form-row" style="margin-top: 4px;">
-            <label class="form-label">អត្ថបទរត់ (Custom Text Edit)</label>
-            <input type="text" id="marquee-text-input" class="cyber-input" value="រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ" placeholder="វាយអក្សររត់នៅទីនេះ..." oninput="updateMarqueeCustomText(this.value)">
+          <div style="font-size: 0.60rem; color: #94a3b8; margin: 3px 0 6px 0; line-height: 1.3;">
+            ✨ អក្សរចំណងជើង Dual-Tone («ពាក្យ ១ + ពាក្យ ២») ខាងលើនេះ នឹងរត់កាត់អេក្រង់វីដេអូដោយផ្ទាល់តែម្ដង គ្មានអក្សរជាន់គ្នាឡើយ។
           </div>
 
           <!-- Natural Speed Slider: Right = Fast, Left = Slow -->

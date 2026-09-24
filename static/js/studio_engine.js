@@ -154,23 +154,7 @@ function selectQuickVoice(voiceId) {
   showToast(voiceId === 'female' ? '🎙️ ជ្រើសរើសសំឡេង៖ កញ្ញា ស្រីមុំ' : '🎙️ ជ្រើសរើសសំឡេង៖ លោក ពិសិដ្ឋ');
 }
 
-// Download Translated Video Action Handler in Top Menu
-function handleTopDownloadAction() {
-  const downloadBtn = document.getElementById('btn-download-result');
-  if (downloadBtn && downloadBtn.href && downloadBtn.href !== '#' && !downloadBtn.href.endsWith('#') && downloadBtn.style.display !== 'none') {
-    downloadBtn.click();
-    showToast('📥 កំពុងទាញយកវីដេអូបកប្រែរួច...');
-  } else {
-    if (!state.videoFile && !state.videoFilename) {
-      showToast('⚠️ សូមរើសវីដេអូចិន (MP4) និងចុច 1-Click បកប្រែជាមុនសិន!');
-      const fileInput = document.getElementById('video-file-input');
-      if (fileInput) fileInput.click();
-    } else {
-      showToast('⚡ ចាប់ផ្ដើមដំណើរការ Export វីដេអូ...');
-      triggerAutoProcessPipeline();
-    }
-  }
-}
+// Top download button removed per user request for a cleaner 2-column menu grid
 
 // Toast Notification
 function showToast(text, duration = 3000) {
@@ -447,6 +431,14 @@ async function handleVideoUpload(input) {
     try {
       previewVideo.currentTime = 0.05;
     } catch (err) {}
+    // Auto-adapt viewport to video aspect ratio (e.g. 16:9 landscape vs 9:16 vertical)
+    const isLandscape = (previewVideo.videoWidth || 9) > (previewVideo.videoHeight || 16);
+    const vp = document.getElementById('video-viewport');
+    if (vp) {
+      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
+    }
+    updateBlurBoxLimits();
+    updateBlurBoxFromSliders();
     updateVideoTime();
   };
 
@@ -454,7 +446,7 @@ async function handleVideoUpload(input) {
     previewVideo.play().catch(() => {});
   };
 
-  showToast('✓ វីដេអូបានបើកក្នុង Player Preview 9:16!');
+  showToast('✓ វីដេអូបានបើកក្នុង Player Preview ត្រូវទម្រង់ ១០០%!');
 
   // Upload to Cloud Server in background
   const formData = new FormData();
@@ -1036,35 +1028,14 @@ function updateLogoPosition() {
   logoElement.style.top = `${y}px`;
 }
 
-// ── MARQUEE ANIMATION (INTEGRATED INTO TEXT TAB) ────────────
+// ── DIRECT DUAL-TONE HEADER MARQUEE ANIMATION ───────────────
 function toggleMarqueeAnimation(enabled) {
   state.marquee.enabled = enabled;
   const toggle = document.getElementById('toggle-marquee');
   if (toggle && toggle.checked !== enabled) toggle.checked = enabled;
-  if (marqueeElement) {
-    marqueeElement.classList.toggle('active-visible', enabled);
-    marqueeElement.style.display = enabled ? 'block' : 'none';
-  }
+
   updateMarqueeAnimation();
-  showToast(enabled ? '🎬 បានបើកចលនាអក្សររត់ (Auto Marquee)' : 'បានបិទអក្សររត់');
-}
-
-function applyMarqueePreset(text) {
-  state.marquee.text = text;
-  const input = document.getElementById('marquee-text-input');
-  if (input) input.value = text;
-  if (marqueeTrack) marqueeTrack.innerText = text;
-  if (!state.marquee.enabled) {
-    toggleMarqueeAnimation(true);
-  } else {
-    updateMarqueeAnimation();
-  }
-  showToast(`⚡ បានជ្រើសរើស៖ ${text}`);
-}
-
-function updateMarqueeCustomText(val) {
-  state.marquee.text = val;
-  if (marqueeTrack) marqueeTrack.innerText = val;
+  showToast(enabled ? '🎬 បានបើកចលនាចំណងជើងរត់ (Header Marquee)' : 'បានបិទអក្សររត់');
 }
 
 // Natural Speed Slider: 1 = 20s (Very Slow), 5 = 8s (Normal), 10 = 3s (Very Fast)
@@ -1094,13 +1065,53 @@ function setMarqueeDir(dir) {
   showToast(`✓ ទិសដៅរត់៖ ${dir.toUpperCase()}`);
 }
 
+function updateMarqueeAnimation() {
+  if (!textElement) return;
+
+  const dir = state.marquee.direction || 'up';
+  const speedSec = parseFloat(state.marquee.speedSec) || 8.0;
+
+  if (!state.marquee.enabled) {
+    textElement.classList.remove('marquee-active', 'dir-up', 'dir-down', 'dir-left', 'dir-right');
+    textElement.style.animation = 'none';
+    textElement.style.left = `${state.textOverlay.x || 15}px`;
+    textElement.style.top = `${state.textOverlay.y || 30}px`;
+    textElement.style.transform = '';
+    return;
+  }
+
+  // Ensure text overlay is enabled and visible
+  state.textOverlay.enabled = true;
+  textElement.classList.add('active-visible', 'marquee-active');
+  textElement.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
+  textElement.classList.add('dir-' + dir);
+  textElement.style.display = 'block';
+
+  let animName = 'scrollUp';
+  switch (dir) {
+    case 'down':   animName = 'scrollDown';  break;
+    case 'left':   animName = 'scrollLeft';  break;
+    case 'right':  animName = 'scrollRight'; break;
+    default:       animName = 'scrollUp';    break;
+  }
+
+  // Force reflow to immediately restart animation seamlessly
+  textElement.style.animation = 'none';
+  void textElement.offsetHeight;
+  textElement.style.animation = `${animName} ${speedSec}s linear infinite`;
+}
+
 // Legacy Marquee Helpers for compatibility
 function toggleMarqueeOverlay(enabled) {
   toggleMarqueeAnimation(enabled);
 }
 
 function updateMarqueeText(val) {
-  updateMarqueeCustomText(val);
+  // Directly maps to Dual-Tone Part 1
+  if (document.getElementById('text-part1-input')) {
+    document.getElementById('text-part1-input').value = val;
+    updateDualTonePreview();
+  }
 }
 
 function setMarqueeDirection(dir) {
@@ -1113,94 +1124,6 @@ function setMarqueeSpeed(preset) {
   if (preset === 'normal') level = 5;
   if (preset === 'fast') level = 9;
   setMarqueeSpeedNatural(level);
-}
-
-function setMarqueeSpeedSeconds(sec) {
-  const s = parseInt(sec) || 8;
-  state.marquee.speedSec = s;
-  updateMarqueeAnimation();
-}
-
-function setMarqueeEffect(effect) {
-  state.marquee.effect = effect;
-  applyMarqueeStyles();
-}
-
-function applyMarqueeStyles() {
-  if (!marqueeTrack) return;
-  const font = document.getElementById('marquee-font-select')?.value || "'Kantumruy Pro', sans-serif";
-  const color = document.getElementById('marquee-color-picker')?.value || '#f59e0b';
-  const glowColor = document.getElementById('marquee-glow-color')?.value || '#c084fc';
-  const fontSize = parseInt(document.getElementById('marquee-size-slider')?.value || 22);
-
-  state.marquee.font = font;
-  state.marquee.color = color;
-  state.marquee.glowColor = glowColor;
-  state.marquee.fontSize = fontSize;
-
-  marqueeTrack.style.fontFamily = font;
-  marqueeTrack.style.color = color;
-  marqueeTrack.style.fontSize = fontSize + 'px';
-  marqueeTrack.style.textShadow = '';
-  marqueeTrack.style.webkitTextStroke = '';
-
-  switch (state.marquee.effect) {
-    case 'shadow':
-      marqueeTrack.style.textShadow = '2px 2px 6px rgba(0,0,0,0.9)';
-      break;
-    case 'glow':
-      marqueeTrack.style.textShadow = `0 0 10px ${glowColor}, 0 0 25px ${glowColor}88`;
-      break;
-    case 'outline':
-      marqueeTrack.style.webkitTextStroke = `2px rgba(0,0,0,0.9)`;
-      break;
-  }
-}
-
-function updateMarqueeAnimation() {
-  if (!marqueeElement || !marqueeTrack) return;
-
-  const dir = state.marquee.direction || 'up';
-  const speedSec = parseFloat(state.marquee.speedSec) || 8.0;
-
-  if (!state.marquee.enabled) {
-    marqueeElement.classList.remove('active-visible');
-    marqueeElement.style.display = 'none';
-    marqueeTrack.style.animation = 'none';
-    return;
-  }
-
-  marqueeElement.classList.add('active-visible');
-  marqueeElement.style.display = 'block';
-
-  // Set text if needed
-  if (state.marquee.text) {
-    marqueeTrack.innerText = state.marquee.text;
-  }
-
-  // Toggle directional classes
-  if (dir === 'left' || dir === 'right') {
-    marqueeTrack.classList.add('dir-horizontal');
-    marqueeTrack.classList.remove('dir-vertical');
-  } else {
-    marqueeTrack.classList.add('dir-vertical');
-    marqueeTrack.classList.remove('dir-horizontal');
-  }
-
-  let animName = 'scrollUp';
-  switch (dir) {
-    case 'down':   animName = 'scrollDown';  break;
-    case 'left':   animName = 'scrollLeft';  break;
-    case 'right':  animName = 'scrollRight'; break;
-    default:       animName = 'scrollUp';    break;
-  }
-
-  // Force reflow to immediately restart animation seamlessly
-  marqueeTrack.style.animation = 'none';
-  void marqueeTrack.offsetHeight;
-  marqueeTrack.style.animation = `${animName} ${speedSec}s linear infinite`;
-
-  applyMarqueeStyles();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1339,6 +1262,8 @@ function makeResizable(element) {
 
   handle.addEventListener('pointermove', (e) => {
     if (!isResizing) return;
+    const dw = e.clientX - startX;
+    const dh = e.clientY - startY;
     const parent = element.parentElement;
     const maxW = parent ? Math.max(30, parent.clientWidth - element.offsetLeft) : 280;
     const maxH = parent ? Math.max(15, parent.clientHeight - element.offsetTop) : 280;
@@ -1376,6 +1301,14 @@ function makeResizable(element) {
 // ⚡ 8. BUILD OPTIONS PAYLOAD (shared by auto-process & render)
 // ══════════════════════════════════════════════════════════
 function _buildRenderOptions() {
+  const vp = document.getElementById('video-viewport');
+  const vpW = (vp && vp.clientWidth) || 280;
+  const vpH = (vp && vp.clientHeight) || 320;
+  const bx = blurBox ? blurBox.offsetLeft : (state.blurMask.x || 15);
+  const by = blurBox ? blurBox.offsetTop : (state.blurMask.y || 15);
+  const bw = blurBox ? blurBox.offsetWidth : (state.blurMask.w || 140);
+  const bh = blurBox ? blurBox.offsetHeight : (state.blurMask.h || 45);
+
   return {
     flip_horizontal: state.flipHorizontal,
     crop_percent: state.cropPercent,
@@ -1383,22 +1316,27 @@ function _buildRenderOptions() {
     contrast: state.contrast,
     blur_mask: {
       enabled: state.blurMask.enabled,
-      x: blurBox.offsetLeft,
-      y: blurBox.offsetTop,
-      w: blurBox.offsetWidth,
-      h: blurBox.offsetHeight,
+      x: bx,
+      y: by,
+      w: bw,
+      h: bh,
+      x_pct: Math.max(0, Math.min(1.0, bx / vpW)),
+      y_pct: Math.max(0, Math.min(1.0, by / vpH)),
+      w_pct: Math.max(0.01, Math.min(1.0, bw / vpW)),
+      h_pct: Math.max(0.01, Math.min(1.0, bh / vpH)),
+      vp_w: vpW,
+      vp_h: vpH,
       intensity: state.blurMask.intensity || 25,
       tint_opacity: state.blurMask.tintOpacity !== undefined ? state.blurMask.tintOpacity : 0.40,
       tint_mode: state.blurMask.tintMode || 'dark'
     },
     marquee: {
       enabled: state.marquee.enabled,
-      text: state.marquee.text || 'រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ',
       direction: state.marquee.direction || 'up',
       speed_sec: state.marquee.speedSec || 8,
       speed: Math.round(300 / (state.marquee.speedSec || 8)),
-      color: _hexToFFmpegColor(state.marquee.color),
-      font_size: state.marquee.fontSize || 24,
+      color: _hexToFFmpegColor(state.textPart1.color || '#f59e0b'),
+      font_size: state.textOverlay.size || 26,
       font: 'kantumruy'
     },
     // Dual-tone text

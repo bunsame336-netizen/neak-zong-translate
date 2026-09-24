@@ -148,6 +148,7 @@ def apply_audio_ducking(
         
         cmd = [
             ffmpeg_bin, '-y',
+            '-threads', '4',
             '-i', original_audio_path,
             '-i', voiceover_path,
             '-filter_complex', filter_complex,
@@ -156,7 +157,7 @@ def apply_audio_ducking(
             output_path
         ]
         
-        res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=35)
         if res.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) > 500:
             return True
         # Fallback to copy voiceover
@@ -316,14 +317,15 @@ def generate_synced_cues_voiceover(
             # Strict Lip-Sync with FFmpeg atempo:
             # Match synthesized speech duration to the character's speaking duration (target_dur)
             # Speeds up if speech is longer, slows down if speech is shorter (bidirectional stretching)
-            if abs(actual_dur - target_dur) > 0.08 and target_dur >= 0.35:
+            if abs(actual_dur - target_dur) > 0.05 and target_dur >= 0.25:
                 raw_tempo = actual_dur / target_dur
-                # Clamped to [0.65, 1.85] for natural acoustic clarity and speech intelligibility
-                tempo = max(0.65, min(1.85, raw_tempo))
+                # Extended precision range [0.50, 2.75] preserves pitch while perfectly matching character speech duration
+                tempo = max(0.50, min(2.75, raw_tempo))
                 atempo_filter = _build_atempo_filter_chain(tempo)
                 seg_stretched = str(tmp_dir_p / f"cue_{i:04d}_stretched.raw")
                 cmd_stretch = [
                     ff, '-y',
+                    '-threads', '4',
                     '-i', seg_mp3,
                     '-filter:a', atempo_filter,
                     '-f', 's16le',
@@ -331,17 +333,17 @@ def generate_synced_cues_voiceover(
                     '-ac', '1',
                     seg_stretched
                 ]
-                res_stretch = subprocess.run(cmd_stretch, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+                res_stretch = subprocess.run(cmd_stretch, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=12)
                 if res_stretch.returncode == 0 and os.path.exists(seg_stretched):
                     stretched_bytes = Path(seg_stretched).read_bytes()
                     if stretched_bytes:
                         raw_bytes = stretched_bytes
 
-            # Clamp max samples strictly to target duration window (+40ms buffer)
-            max_allowed_samples = int((target_dur + 0.04) * sample_rate)
+            # Lock max samples strictly to target duration window (+20ms natural decay buffer)
+            max_allowed_samples = int((target_dur + 0.02) * sample_rate)
             total_cue_samples = len(raw_bytes) // 2
             if total_cue_samples > max_allowed_samples:
-                fade_len = min(480, max_allowed_samples)
+                fade_len = min(360, max_allowed_samples)
                 cue_pcm = bytearray(raw_bytes[:max_allowed_samples * 2])
                 for f_idx in range(fade_len):
                     s_pos = max_allowed_samples - fade_len + f_idx

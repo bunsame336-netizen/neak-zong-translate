@@ -332,23 +332,42 @@ def _build_filter_graph(
         current_pad = out
 
     # 4. Blur Mask Box using avgblur+overlay + optional pure/dark/white tint
+    # 4. Blur Mask Box using avgblur+overlay + optional pure/dark/white tint
     blur_opts = opts.get('blur_mask')
     if blur_opts and blur_opts.get('enabled'):
-        bx = max(0, min(710, int(blur_opts.get('x', 10))))
-        by = max(0, min(1270, int(blur_opts.get('y', 10))))
-        bw = max(10, min(720 - bx, int(blur_opts.get('w', 120))))
-        bh = max(10, min(1280 - by, int(blur_opts.get('h', 45))))
         intensity = max(5, min(60, int(blur_opts.get('intensity', 25))))
         tint_mode = str(blur_opts.get('tint_mode', 'dark')).lower()
         tint_opacity = max(0.0, min(1.0, float(blur_opts.get('tint_opacity', 0.4))))
-        
+
+        # Normalized coordinates from UI for 100% exact 9:16 and 16:9 matching
+        x_pct = blur_opts.get('x_pct')
+        y_pct = blur_opts.get('y_pct')
+        w_pct = blur_opts.get('w_pct')
+        h_pct = blur_opts.get('h_pct')
+
+        if x_pct is not None and y_pct is not None and w_pct is not None and h_pct is not None:
+            # Resolution-independent exact pixel formulas using FFmpeg iw & ih
+            bx_expr = f"trunc(iw*{max(0.0, min(0.95, float(x_pct))):.4f})"
+            by_expr = f"trunc(ih*{max(0.0, min(0.95, float(y_pct))):.4f})"
+            bw_expr = f"trunc(iw*{max(0.02, min(1.0, float(w_pct))):.4f})"
+            bh_expr = f"trunc(ih*{max(0.02, min(1.0, float(h_pct))):.4f})"
+        else:
+            bx = max(0, min(710, int(blur_opts.get('x', 10))))
+            by = max(0, min(1270, int(blur_opts.get('y', 10))))
+            bw = max(10, min(720 - bx, int(blur_opts.get('w', 120))))
+            bh = max(10, min(1280 - by, int(blur_opts.get('h', 45))))
+            bx_expr = str(bx)
+            by_expr = str(by)
+            bw_expr = str(bw)
+            bh_expr = str(bh)
+
         if tint_mode == 'white':
             tint_color = 'white'
         elif tint_mode == 'pure':
             tint_opacity = 0.0
             tint_color = 'black'
         else:
-            tint_color = blur_opts.get('tint_color', 'black')
+            tint_color = 'black'
 
         uid = f"bl{step_idx}"
         if tint_mode != 'pure' and tint_opacity > 0.02:
@@ -356,79 +375,33 @@ def _build_filter_graph(
             out = next_pad()
             blur_chain = (
                 f"{current_pad}split=2[base_{uid}][work_{uid}];"
-                f"[work_{uid}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
-                f"[base_{uid}][blurred_{uid}]overlay={bx}:{by}{out_blur};"
-                f"{out_blur}drawbox=x={bx}:y={by}:w={bw}:h={bh}:color={tint_color}@{tint_opacity:.2f}:t=fill{out}"
+                f"[work_{uid}]crop={bw_expr}:{bh_expr}:{bx_expr}:{by_expr},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
+                f"[base_{uid}][blurred_{uid}]overlay={bx_expr}:{by_expr}{out_blur};"
+                f"{out_blur}drawbox=x={bx_expr}:y={by_expr}:w={bw_expr}:h={bh_expr}:color={tint_color}@{tint_opacity:.2f}:t=fill{out}"
             )
         else:
             out = next_pad()
             blur_chain = (
                 f"{current_pad}split=2[base_{uid}][work_{uid}];"
-                f"[work_{uid}]crop={bw}:{bh}:{bx}:{by},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
-                f"[base_{uid}][blurred_{uid}]overlay={bx}:{by}{out}"
+                f"[work_{uid}]crop={bw_expr}:{bh_expr}:{bx_expr}:{by_expr},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
+                f"[base_{uid}][blurred_{uid}]overlay={bx_expr}:{by_expr}{out}"
             )
         steps.append(blur_chain)
         current_pad = out
 
-    # 5. Animated Vertical / Horizontal Scrolling Marquee Text (Up, Down, Left, Right)
-    marquee_opts = opts.get('marquee')
-    if marquee_opts and marquee_opts.get('enabled') and marquee_opts.get('text'):
-        m_raw_text = str(marquee_opts['text'])
-        m_tf_path = _write_temp_text_file(m_raw_text)
-        direction = marquee_opts.get('direction', 'up').lower()
-
-        # Compute traversal speed in seconds (Slow: 15s, Normal: 8s, Fast: 3.5s)
-        speed_sec = float(marquee_opts.get('speed_sec') or 0)
-        if speed_sec <= 0:
-            raw_s = float(marquee_opts.get('speed', 60))
-            if raw_s > 0:
-                speed_sec = max(3.0, min(30.0, 300.0 / raw_s))
-            else:
-                speed_sec = 8.0
-
-        font_size = int(marquee_opts.get('font_size', 28))
-        font_color = marquee_opts.get('color', 'yellow')
-        m_x = marquee_opts.get('x', '(w-text_w)/2')
-        # Resolve font safely, preferring Khmer font
-        m_font_name = marquee_opts.get('font', 'kantumruy')
-        m_font_path = _resolve_font_path(m_font_name)
-        if not m_font_path:
-            m_font_path = _resolve_font_path('kantumruy')
-        m_font_arg = f"fontfile='{m_font_path}':" if m_font_path else ""
-
-        # Incorporate time_offset so animation continues seamlessly across chunks
-        t_expr = f"(t+{time_offset:.3f})" if time_offset > 0 else "t"
-
-        if direction == 'up':
-            x_expr = str(m_x)
-            # Full traversal from bottom to top in speed_sec seconds
-            y_expr = f"h-mod({t_expr}*((h+text_h)/{speed_sec:.2f})\\,h+text_h)"
-        elif direction == 'down':
-            x_expr = str(m_x)
-            # Full traversal from top to bottom in speed_sec seconds
-            y_expr = f"-text_h+mod({t_expr}*((h+text_h)/{speed_sec:.2f})\\,h+text_h)"
-        elif direction == 'right':
-            # Full traversal from left to right in speed_sec seconds
-            x_expr = f"-text_w+mod({t_expr}*((w+text_w)/{speed_sec:.2f})\\,w+text_w)"
-            y_expr = "(h-text_h)/2"
-        else:  # 'left' (right-to-left scrolling)
-            x_expr = f"w-mod({t_expr}*((w+text_w)/{speed_sec:.2f})\\,w+text_w)"
-            y_expr = "(h-text_h)/2"
-
-        out = next_pad()
-        draw_marquee = (
-            f"{current_pad}drawtext="
-            f"{m_font_arg}"
-            f"textfile='{m_tf_path}':fontcolor={font_color}:fontsize={font_size}:"
-            f"box=1:boxcolor=black@0.65:boxborderw=6:"
-            f"x={x_expr}:y={y_expr}{out}"
-        )
-        steps.append(draw_marquee)
-        current_pad = out
-
-    # 6. Dual-Tone Text Overlay (Part1 + Part2 with individual color/effect)
+    # 5. Dual-Tone Title Overlay (Direct Header Marquee Integration)
     tp1 = opts.get('text_part1')
     tp2 = opts.get('text_part2')
+    text_opts = opts.get('text_overlay', {})
+    marquee_opts = opts.get('marquee', {})
+    marquee_enabled = bool(marquee_opts and marquee_opts.get('enabled'))
+
+    # Assemble Dual-Tone text
+    t1_text = (tp1.get('text') if tp1 else '').strip()
+    t2_text = (tp2.get('text') if tp2 else '').strip()
+    full_title = f"{t1_text} {t2_text}".strip()
+    if not full_title:
+        full_title = (text_opts.get('text') or 'នាគហ្សង បកប្រែ').strip()
 
     def _build_drawtext_with_effect(text: str, color: str, effect: str,
                                      outline_color: str, outline_w: int,
@@ -452,39 +425,76 @@ def _build_filter_graph(
             base += f":borderw={ow}:bordercolor={outline_color or 'black'}"
         return f"drawtext={base}"
 
-    if (tp1 and tp1.get('enabled') and tp1.get('text')) or \
-       (tp2 and tp2.get('enabled') and tp2.get('text')):
-        ty = opts.get('text_overlay', {}).get('y', 30)
-        font_size = opts.get('text_overlay', {}).get('size', 26)
-        if tp1 and tp1.get('enabled') and tp1.get('text'):
-            tx1 = opts.get('text_overlay', {}).get('x', 15)
+    if marquee_enabled and full_title:
+        # ── DIRECT MARQUEE ON DUAL-TONE TITLE ──
+        # Animate the actual Dual-Tone Title directly across the screen!
+        direction = marquee_opts.get('direction', 'up').lower()
+        speed_sec = float(marquee_opts.get('speed_sec') or 8.0)
+        font_size = int(text_opts.get('size', 26))
+        m_color = (tp1.get('color') if tp1 else None) or marquee_opts.get('color', '0xF59E0B')
+        m_font_name = (tp1.get('font') if tp1 else None) or 'moul'
+        m_font_path = _resolve_font_path(m_font_name) or _resolve_font_path('kantumruy')
+        m_font_arg = f"fontfile='{m_font_path}':" if m_font_path else ""
+        m_tf_path = _write_temp_text_file(full_title)
+
+        t_expr = f"(t+{time_offset:.3f})" if time_offset > 0 else "t"
+
+        if direction == 'up':
+            x_expr = "(w-text_w)/2"
+            y_expr = f"h-mod({t_expr}*((h+text_h)/{speed_sec:.2f})\\,h+text_h)"
+        elif direction == 'down':
+            x_expr = "(w-text_w)/2"
+            y_expr = f"-text_h+mod({t_expr}*((h+text_h)/{speed_sec:.2f})\\,h+text_h)"
+        elif direction == 'right':
+            x_expr = f"-text_w+mod({t_expr}*((w+text_w)/{speed_sec:.2f})\\,w+text_w)"
+            y_expr = "(h-text_h)/2"
+        else:  # 'left'
+            x_expr = f"w-mod({t_expr}*((w+text_w)/{speed_sec:.2f})\\,w+text_w)"
+            y_expr = "(h-text_h)/2"
+
+        out = next_pad()
+        draw_marquee = (
+            f"{current_pad}drawtext="
+            f"{m_font_arg}"
+            f"textfile='{m_tf_path}':fontcolor={m_color}:fontsize={font_size}:"
+            f"box=1:boxcolor=black@0.65:boxborderw=5:"
+            f"x={x_expr}:y={y_expr}{out}"
+        )
+        steps.append(draw_marquee)
+        current_pad = out
+
+    elif (tp1 and tp1.get('enabled') and t1_text) or (tp2 and tp2.get('enabled') and t2_text):
+        # ── STATIC DUAL-TONE TITLE ──
+        ty = text_opts.get('y', 30)
+        font_size = text_opts.get('size', 26)
+        if tp1 and tp1.get('enabled') and t1_text:
+            tx1 = text_opts.get('x', 15)
             out = next_pad()
             dt1 = _build_drawtext_with_effect(
-                tp1['text'], tp1.get('color', 'white'),
+                t1_text, tp1.get('color', 'white'),
                 tp1.get('effect', 'none'),
                 tp1.get('outline_color', 'black'),
                 int(tp1.get('outline_w', 2)),
                 str(tx1), str(ty), font_size,
-                font_name=tp1.get('font', 'noto')
+                font_name=tp1.get('font', 'moul')
             )
             steps.append(f"{current_pad}{dt1}{out}")
             current_pad = out
-        if tp2 and tp2.get('enabled') and tp2.get('text'):
-            part1_len = len((tp1 or {}).get('text', '')) if tp1 else 0
-            x2_offset = int(opts.get('text_overlay', {}).get('x', 15)) + int(part1_len * font_size * 0.7)
+        if tp2 and tp2.get('enabled') and t2_text:
+            part1_len = len(t1_text)
+            x2_offset = int(text_opts.get('x', 15)) + int(part1_len * font_size * 0.72)
             out = next_pad()
             dt2 = _build_drawtext_with_effect(
-                tp2['text'], tp2.get('color', 'yellow'),
+                t2_text, tp2.get('color', 'yellow'),
                 tp2.get('effect', 'none'),
                 tp2.get('outline_color', 'black'),
                 int(tp2.get('outline_w', 2)),
                 str(x2_offset), str(ty), font_size,
-                font_name=tp2.get('font', 'noto')
+                font_name=tp2.get('font', 'kantumruy')
             )
             steps.append(f"{current_pad}{dt2}{out}")
             current_pad = out
-    elif opts.get('text_overlay') and opts['text_overlay'].get('enabled') and opts['text_overlay'].get('text'):
-        text_opts = opts['text_overlay']
+    elif text_opts and text_opts.get('enabled') and text_opts.get('text'):
         s_text = _sanitize_ffmpeg_text(text_opts['text'])
         tx = text_opts.get('x', '20')
         ty = text_opts.get('y', '20')
@@ -501,6 +511,7 @@ def _build_filter_graph(
             f"borderw={border_w}:bordercolor={border_c}:x={tx}:y={ty}{out}"
         )
         current_pad = out
+
 
     # 7. Sponsor Banner Overlay (2 Lines: Top Ad Line + Bottom Contact Line)
     sponsor_opts = opts.get('sponsor')
@@ -659,11 +670,11 @@ def render_segment(
     elif orig_has_audio:
         cmd.extend(['-map', '0:a', '-c:a', 'aac', '-b:a', '192k'])
         
-    # Ultrafast encode per segment for ultra-speed and low RAM
+    # Ultrafast encode per segment with Multi-threading (threads=4)
     cmd.extend([
         '-c:v', 'libx264',
         '-preset', 'ultrafast',
-        '-threads', '1',
+        '-threads', '4',
         '-crf', '23',
         '-pix_fmt', 'yuv420p',
         output_segment_path
@@ -793,7 +804,7 @@ def _render_direct_fast(
     ffmpeg_bin: Optional[str] = None,
     progress_callback: Optional[Callable[[int, str], None]] = None
 ) -> bool:
-    """Direct single-pass render with generous 4-hour dynamic timeout and ultrafast preset."""
+    """Direct single-pass render with multi-threading (-threads 4), ultrafast preset, and active progress reporting."""
     ff = ffmpeg_bin or find_ffmpeg()
     opts = options or {}
     
@@ -840,22 +851,50 @@ def _render_direct_fast(
     cmd.extend([
         '-c:v', 'libx264',
         '-preset', 'ultrafast',
-        '-threads', '1',
+        '-threads', '4',
         '-crf', '23',
         '-pix_fmt', 'yuv420p',
         '-movflags', '+faststart',
         output_video_path
     ])
     
-    # 4-hour timeout (14400s) ensures 1-2 hour videos never get killed!
+    # Active Progress Monitor Thread to advance 80% -> 98% smoothly
+    stop_event = threading.Event()
+    def _progress_advancer():
+        curr_pct = 82
+        steps = [
+            (83, "កំពុង Encode វីដេអូ HD (Threads: 4)..."),
+            (86, "កំពុងដំណើរការ Overlays & Blur..."),
+            (89, "កំពុងបញ្ចូលសំឡេងខ្មែរ Neural..."),
+            (93, "កំពុង Mux MP4 Streams..."),
+            (96, "រៀបចំសម្រេច ១០០%..."),
+            (98, "សរសេរឯកសារចុងក្រោយ...")
+        ]
+        for pct, msg in steps:
+            if stop_event.wait(timeout=1.8):
+                break
+            if progress_callback:
+                progress_callback(pct, msg)
+
+    advancer_thread = threading.Thread(target=_progress_advancer, daemon=True)
+    advancer_thread.start()
+
     try:
         res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=14400)
+        stop_event.set()
+        advancer_thread.join(timeout=0.5)
+
         if res.returncode != 0:
             err_output = (res.stderr or b'').decode('utf-8', errors='replace')
             print(f"[Direct Render Error] FFmpeg exit {res.returncode}:\n{err_output[-3000:]}", flush=True)
             return False
-        return os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
+
+        ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
+        if ok and progress_callback:
+            progress_callback(100, "✓ Render ជោគជ័យ ១០០%!")
+        return ok
     except Exception as e:
+        stop_event.set()
         print(f"[Direct Render Exception] {e}", flush=True)
         return False
 
