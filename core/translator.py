@@ -119,6 +119,54 @@ DRAMA_TERMS_DICT = {
     '岂有此理': 'គ្មានហេតុផលសោះ'
 }
 
+DRAMA_SYSTEM_PROMPT = """You are a master Chinese-to-Khmer period & modern drama dialogue translator.
+បកប្រែឱ្យត្រូវតាមសាច់រឿងភាគចិន ប្រើពាក្យធម្មជាតិ រស់រវើក មានអារម្មណ៍ (Natural conversational Khmer Drama style) មិនបកប្រែពាក្យរឹងស្តូកដូចអានសៀវភៅឡើយ។ ប្រយោគខ្លីខ្លឹម ត្រូវនឹងកាយវិការតួអង្គ!"""
+
+# Post-processing replacements for fluent Khmer drama style
+FLUENT_KHMER_REPLACEMENTS = [
+    (r'តើអ្នកកំពុងធ្វើអ្វី\??', 'ឯងកំពុងធ្វើស្អីហ្នឹង?'),
+    (r'តើអ្នកចង់បានអ្វី\??', 'ឯងចង់បានអី?'),
+    (r'តើអ្នក\b', 'តើឯង'),
+    (r'តើលោក\b', 'តើបង'),
+    (r'ខ្ញុំស្រឡាញ់អ្នក', 'បងស្រឡាញ់អូន'),
+    (r'អ្នកជាអ្នកណា\??', 'ឯងជាអ្នកណា?'),
+    (r'ហេតុអ្វីបានជាអ្នក', 'ហេតុអ្វីបានជាឯង'),
+    (r'អ្នកមិនដឹង', 'ឯងមិនដឹង'),
+    (r'អ្នកត្រូវតែ', 'ឯងត្រូវតែ'),
+    (r'ទៅឱ្យឆ្ងាយ', 'ចេញឱ្យឆ្ងាយទៅ!'),
+    (r'មិនអីទេបាទ/ចាស', 'មិនអីទេ'),
+    (r'លោកឪពុករបស់ខ្ញុំ', 'លោកឪពុកខ្ញុំ'),
+    (r'អ្នកម្តាយរបស់ខ្ញុំ', 'អ្នកម្តាយខ្ញុំ'),
+    (r'ហេតុអ្វីបានជាអ្នកញ៉ាំខ្ញុំ\??', 'កំពុងធ្វើស្អីដាក់ខ្ញុំហ្នឹង?'),
+]
+
+def detect_dialogue_gender(zh_text: str = '', km_text: str = '') -> str:
+    """
+    Detects whether speaker is Male or Female based on Chinese original and Khmer translation.
+    Returns 'male' or 'female'.
+    """
+    zh = str(zh_text or '')
+    km = str(km_text or '')
+
+    female_zh = ['妈', '妹', '姐', '女', '娘', '妻', '妾', '夫人', '姑娘', '她', '这女人', '丫鬟', '婆婆', '阿姨', '小姨']
+    male_zh = ['爸', '哥', '弟', '男', '爷', '夫君', '相公', '皇上', '朕', '他', '少爷', '公子', '兄弟', '大人', '叔叔', '舅舅']
+
+    female_km = ['នាង', 'អូន', 'អ្នកនាង', 'ម៉ាក់', 'ម៉ែ', 'យាយ', 'កូនស្រី', 'ម្ចាស់ក្សត្រី', 'អ្នកស្រី', 'ស្រី', 'ប្អូនស្រី', 'នារី', 'នាងខ្ញុំ', 'អ្នកម្តាយ']
+    male_km = ['បង', 'លោក', 'ពូ', 'តា', 'ស្ដេច', 'ឪពុក', 'ប៉ា', 'កូនប្រុស', 'បុរស', 'ចៅហ្វាយ', 'ប្រុស', 'មេទ័ព', 'បងប្រុស', 'ខ្ញុំបាទ', 'ព្រះអង្គ']
+
+    f_score = sum(2 for k in female_zh if k in zh) + sum(1 for k in female_km if k in km)
+    m_score = sum(2 for k in male_zh if k in zh) + sum(1 for k in male_km if k in km)
+
+    if f_score > m_score:
+        return 'female'
+    elif m_score > f_score:
+        return 'male'
+    
+    # Context hints: if addressing '爸' (Dad) angrily or talking about money, default to male actor
+    if any(k in zh for k in ['爸', '哥', '兄弟', '钱']):
+        return 'male'
+    return 'male'
+
 def translate_single_query(text: str, source_lang: str = 'zh-CN', target_lang: str = 'km') -> str:
     """Translates text using Google Translate public API with fallback."""
     if not text or not text.strip():
@@ -130,13 +178,6 @@ def translate_single_query(text: str, source_lang: str = 'zh-CN', target_lang: s
     if text_clean in DRAMA_TERMS_DICT:
         return DRAMA_TERMS_DICT[text_clean]
         
-    # Apply dictionary substitutions on sub-phrases
-    preprocessed = text_clean
-    for zh, km in sorted(DRAMA_TERMS_DICT.items(), key=lambda x: len(x[0]), reverse=True):
-        if len(zh) >= 2 and zh in preprocessed:
-            # We preserve high-confidence replacements
-            pass
-
     encoded = urllib.parse.quote(text_clean)
     url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={target_lang}&dt=t&q={encoded}"
     
@@ -158,10 +199,12 @@ def translate_single_query(text: str, source_lang: str = 'zh-CN', target_lang: s
                 # Post-process with drama idioms
                 for zh, km in DRAMA_TERMS_DICT.items():
                     if zh in text_clean and km not in result:
-                        # Refine royal titles if detected
                         if zh in ['皇上', '朕', '陛下'] and 'ស្តេច' in result:
                             result = result.replace('ស្តេច', km)
-                return result
+                # Apply conversational drama replacements
+                for pat, rep in FLUENT_KHMER_REPLACEMENTS:
+                    result = re.sub(pat, rep, result)
+                return result.strip()
     except Exception as e:
         print(f"[Translator Error] {e}", flush=True)
 
@@ -210,7 +253,7 @@ def format_srt(cues: List[Dict[str, Any]], use_km: bool = True) -> str:
     return '\n'.join(out)
 
 def translate_srt(srt_content: str, progress_callback=None) -> Tuple[str, List[Dict[str, Any]]]:
-    """Translates entire SRT content from Chinese to natural Khmer."""
+    """Translates entire SRT content from Chinese to natural Khmer and assigns speaker gender."""
     cues = parse_srt(srt_content)
     total = len(cues)
     
@@ -218,6 +261,11 @@ def translate_srt(srt_content: str, progress_callback=None) -> Tuple[str, List[D
         orig = cue.get('text', '')
         km = translate_single_query(orig, source_lang='zh-CN', target_lang='km')
         cue['text_km'] = km
+        
+        # Dual-Voice Speaker Detection: Piseth (male) vs Sreymom (female)
+        gender = detect_dialogue_gender(orig, km)
+        cue['gender'] = gender
+        cue['voice'] = 'male' if gender == 'male' else 'female'
         
         if progress_callback:
             progress_callback(int(((i + 1) / total) * 100), cue)

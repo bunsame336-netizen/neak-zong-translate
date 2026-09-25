@@ -632,6 +632,7 @@
             </div>
 
             <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
+            <img id="video-fallback-poster" alt="Video Preview Frame" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:2; pointer-events:none; background:#050408;" />
 
             <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
             <div class="video-overlay-layer" id="video-overlay-layer">
@@ -1477,6 +1478,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=8.1.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.2.0"></script>
 </body>
 </html>

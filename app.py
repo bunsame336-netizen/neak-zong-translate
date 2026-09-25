@@ -37,7 +37,7 @@ sys.path.insert(0, str(BASE_DIR))
 from core.translator import translate_single_query, translate_srt, parse_srt, format_srt
 from core.tts_engine import synthesize_khmer_voice, apply_audio_ducking, generate_synced_cues_voiceover
 from core.audio_separator import separate_vocals_and_bgm
-from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg, get_video_duration
+from core.video_processor import extract_audio_from_video, render_final_video, find_ffmpeg, get_video_duration, extract_video_thumbnail
 from core.asr_engine import ChineseSpeechRecognizer
 from core.license_manager import license_mgr, DEFAULT_ADMIN_PASSWORD
 from core.telegram_bot_service import bot_service, BOT_USERNAME, ADMIN_ID
@@ -306,7 +306,7 @@ def download_export(filename):
 
 @app.route('/api/upload', methods=['POST'])
 def api_upload():
-    """Uploads a video or subtitle file from phone/PC."""
+    """Uploads a video or subtitle file from phone/PC and auto-extracts video thumbnail."""
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
         
@@ -321,16 +321,57 @@ def api_upload():
     f.save(str(dest_path))
     
     file_url = f"/api/files/{safe_name}"
+    is_video = ext in ['.mp4', '.mov', '.mkv', '.webm', '.avi', '.flv', '.ts', '.3gp', '.m4v']
+    is_srt = ext in ['.srt', '.vtt', '.txt']
+
+    thumbnail_url = None
+    if is_video:
+        thumb_name = f"thumb_{file_id}.jpg"
+        thumb_path = UPLOADS_DIR / thumb_name
+        try:
+            if extract_video_thumbnail(str(dest_path), str(thumb_path)):
+                thumbnail_url = f"/api/files/{thumb_name}"
+        except Exception as e:
+            print(f"[Upload] Thumbnail generation failed: {e}", flush=True)
+
     return jsonify({
         'status': 'ok',
         'filename': safe_name,
         'original_name': f.filename,
         'filepath': str(dest_path),
         'file_url': file_url,
+        'thumbnail_url': thumbnail_url or f"/api/thumbnail/{safe_name}",
         'size': os.path.getsize(dest_path),
-        'is_video': ext in ['.mp4', '.mov', '.mkv', '.webm', '.avi'],
-        'is_srt': ext in ['.srt', '.vtt', '.txt']
+        'is_video': is_video,
+        'is_srt': is_srt
     })
+
+@app.route('/api/thumbnail/<filename>')
+def serve_video_thumbnail(filename):
+    """Serves or dynamically extracts a poster thumbnail image for a video."""
+    stem = Path(filename).stem
+    if stem.startswith('thumb_'):
+        thumb_file = UPLOADS_DIR / f"{stem}.jpg"
+        if thumb_file.exists():
+            return send_from_directory(UPLOADS_DIR, f"{stem}.jpg")
+
+    thumb_name = f"thumb_{stem.replace('upload_', '')}.jpg"
+    thumb_path = UPLOADS_DIR / thumb_name
+    if thumb_path.exists():
+        return send_from_directory(UPLOADS_DIR, thumb_name)
+
+    video_path = UPLOADS_DIR / filename
+    if not video_path.exists():
+        for candidate in UPLOADS_DIR.glob(f"*{stem}*"):
+            if candidate.suffix.lower() in ['.mp4', '.mov', '.mkv', '.webm', '.avi', '.flv', '.ts', '.3gp', '.m4v']:
+                video_path = candidate
+                break
+
+    if video_path.exists():
+        if extract_video_thumbnail(str(video_path), str(thumb_path)):
+            return send_from_directory(UPLOADS_DIR, thumb_name)
+
+    return jsonify({'error': 'Thumbnail not found'}), 404
 
 @app.route('/api/files/<filename>')
 def serve_uploaded_file(filename):

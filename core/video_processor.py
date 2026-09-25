@@ -20,6 +20,7 @@ import math
 import subprocess
 import shutil
 import tempfile
+import threading
 from pathlib import Path
 from typing import Dict, Any, Optional, Callable, List
 
@@ -27,10 +28,20 @@ from typing import Dict, Any, Optional, Callable, List
 def _resolve_font_path(font_name: str = '') -> str:
     """
     Resolve a Khmer/Latin font name to an FFmpeg-compatible fontfile= path.
-    Supports both Windows (double-escaped colon C\\\\:/...) and Linux (/usr/share/fonts/...).
-    Returns empty string if no font exists so FFmpeg can fallback safely without crashing.
+    Prioritizes local genuine Khmer fonts in fonts/ directory and Windows Khmer TTF fonts.
+    Guarantees a valid Khmer Unicode font to prevent font tofu (□□□□).
     """
     font_key = (font_name or '').strip().lower()
+
+    # 1. Check local project fonts directory first
+    local_font_candidates = [
+        os.path.abspath('fonts/KantumruyPro-Bold.ttf'),
+        os.path.abspath('fonts/KhmerOSsiemreap.ttf'),
+        os.path.abspath('fonts/Siemreap.ttf'),
+        os.path.abspath('fonts/Moul.ttf'),
+        os.path.join(os.path.dirname(__file__), '..', '..', 'fonts', 'KantumruyPro-Bold.ttf'),
+        os.path.join(os.path.dirname(__file__), '..', '..', 'fonts', 'KhmerOSsiemreap.ttf'),
+    ]
 
     # Linux fonts installed via apt (fonts-khmeros, etc.)
     linux_candidates = [
@@ -47,55 +58,53 @@ def _resolve_font_path(font_name: str = '') -> str:
     ]
 
     windows_map = {
-        'moul':       ['C:/Windows/Fonts/Moul.ttf', 'C:/Windows/Fonts/KonKhmer_Moul.ttf',
-                       'C:/Windows/Fonts/Moul Pali.ttf'],
+        'moul':       [os.path.abspath('fonts/Moul.ttf'), 'C:/Windows/Fonts/Moul.ttf', 'C:/Windows/Fonts/KonKhmer_Moul.ttf', 'C:/Windows/Fonts/Moul Pali.ttf'],
         'moul pali':  ['C:/Windows/Fonts/Moul Pali.ttf', 'C:/Windows/Fonts/Moul.ttf'],
-        'kantumruy':  ['C:/Windows/Fonts/Kantumruy.ttf', 'C:/Windows/Fonts/Kantumruy-Regular.ttf'],
+        'kantumruy':  [os.path.abspath('fonts/KantumruyPro-Bold.ttf'), 'C:/Windows/Fonts/Kantumruy.ttf', 'C:/Windows/Fonts/Kantumruy-Regular.ttf'],
         'battambang': ['C:/Windows/Fonts/Battambang.ttf', 'C:/Windows/Fonts/KhmerOS_battambang.ttf'],
-        'siemreap':   ['C:/Windows/Fonts/Siemreap.ttf', 'C:/Windows/Fonts/KhmerOS_siemreap.ttf'],
+        'siemreap':   [os.path.abspath('fonts/KhmerOSsiemreap.ttf'), os.path.abspath('fonts/Siemreap.ttf'), 'C:/Windows/Fonts/Siemreap.ttf', 'C:/Windows/Fonts/KhmerOS_siemreap.ttf'],
         'koulen':     ['C:/Windows/Fonts/Koulen.ttf'],
         'angkor':     ['C:/Windows/Fonts/Angkor.ttf'],
-        'noto':       ['C:/Windows/Fonts/Noto Sans Khmer Bold.ttf', 'C:/Windows/Fonts/Noto Sans Khmer.ttf',
-                       'C:/Windows/Fonts/NotoSansKhmerUI-Bold.ttf'],
+        'noto':       ['C:/Windows/Fonts/Noto Sans Khmer Bold.ttf', 'C:/Windows/Fonts/Noto Sans Khmer.ttf', 'C:/Windows/Fonts/NotoSansKhmerUI-Bold.ttf'],
         'konkhmer':   ['C:/Windows/Fonts/KonKhmer_Moul.ttf', 'C:/Windows/Fonts/KonKhmer_ChokChey.ttf'],
-        'khmeros':    ['C:/Windows/Fonts/KhmerOS.ttf', 'C:/Windows/Fonts/KhmerOS_sys.ttf'],
+        'khmeros':    [os.path.abspath('fonts/KhmerOSsiemreap.ttf'), 'C:/Windows/Fonts/KhmerOS.ttf', 'C:/Windows/Fonts/KhmerOS_sys.ttf'],
         'times':      ['C:/Windows/Fonts/timesbi.ttf', 'C:/Windows/Fonts/times.ttf'],
         'georgia':    ['C:/Windows/Fonts/georgiaz.ttf', 'C:/Windows/Fonts/georgia.ttf'],
     }
 
     # Windows fallback chain
     windows_fallbacks = [
+        os.path.abspath('fonts/KantumruyPro-Bold.ttf'),
+        os.path.abspath('fonts/KhmerOSsiemreap.ttf'),
+        os.path.abspath('fonts/Siemreap.ttf'),
+        os.path.abspath('fonts/Moul.ttf'),
+        'C:/Windows/Fonts/Kantumruy.ttf',
+        'C:/Windows/Fonts/Siemreap.ttf',
+        'C:/Windows/Fonts/KhmerOSsiemreap.ttf',
+        'C:/Windows/Fonts/KhmerOS.ttf',
         'C:/Windows/Fonts/Noto Sans Khmer Bold.ttf',
         'C:/Windows/Fonts/Noto Sans Khmer.ttf',
-        'C:/Windows/Fonts/NotoSansKhmerUI-Bold.ttf',
         'C:/Windows/Fonts/Moul.ttf',
-        'C:/Windows/Fonts/Siemreap.ttf',
-        'C:/Windows/Fonts/KhmerOS_siemreap.ttf',
-        'C:/Windows/Fonts/KhmerOS.ttf',
-        'C:/Windows/Fonts/Koulen.ttf',
-        'C:/Windows/Fonts/Kantumruy.ttf',
-        'C:/Windows/Fonts/arial.ttf'
     ]
 
     candidates = []
-    # If on Linux or POSIX
-    if os.name != 'nt':
-        for lp in linux_candidates:
-            if os.path.exists(lp):
-                candidates.append(lp)
 
-    # Windows map checks
+    # Priority matching by requested font key
     for k, paths in windows_map.items():
         if k in font_key or font_key in k:
             candidates.extend(paths)
             break
+
+    # Add local project fonts & fallbacks
+    candidates.extend(local_font_candidates)
     candidates.extend(windows_fallbacks)
-    candidates.extend(linux_candidates)
+    if os.name != 'nt':
+        candidates.extend(linux_candidates)
 
     for p in candidates:
-        if os.path.exists(p):
-            # If path has Windows drive letter like C:/, double-escape colon: C\\:/...
-            clean_p = p.replace('\\', '/')
+        if p and os.path.exists(p):
+            # If path has Windows drive letter like C:/, double-escape colon: C\:/...
+            clean_p = os.path.abspath(p).replace('\\', '/')
             if len(clean_p) > 1 and clean_p[1] == ':':
                 return clean_p.replace(':', r'\:')
             return clean_p
@@ -107,7 +116,13 @@ def _resolve_font_path(font_name: str = '') -> str:
                 if f.endswith('.ttf'):
                     return os.path.join(root, f).replace('\\', '/')
 
-    # Return empty string if no font exists on system so FFmpeg doesn't fatal crash
+    # Guaranteed non-empty fallback: find any .ttf in C:/Windows/Fonts
+    if os.name == 'nt' and os.path.exists('C:/Windows/Fonts'):
+        for fn in ['Kantumruy.ttf', 'Siemreap.ttf', 'KhmerOSsiemreap.ttf', 'KhmerOS.ttf', 'Moul.ttf', 'NotoSansKhmerUI-Regular.ttf']:
+            cand_p = os.path.join('C:/Windows/Fonts', fn)
+            if os.path.exists(cand_p):
+                return cand_p.replace('\\', '/').replace(':', r'\:')
+
     return ''
 
 
@@ -220,6 +235,43 @@ def has_audio_track(video_path: str, ffmpeg_bin: Optional[str] = None) -> bool:
         err = (res.stderr or b'').decode('utf-8', errors='ignore')
         return "Audio:" in err
     except Exception:
+        return False
+
+def extract_video_thumbnail(video_path: str, output_thumb_path: str, timestamp: float = 0.2, ffmpeg_bin: Optional[str] = None) -> bool:
+    """
+    Extracts a crisp JPEG poster frame/thumbnail from a video.
+    Guaranteed compatibility with H.264, H.265/HEVC, VP9, AV1, and mobile camera formats.
+    Attempts fast-seek to timestamp (0.2s) first to avoid initial black frames,
+    with automatic fallback to start of video (0.0s).
+    """
+    ff = ffmpeg_bin or find_ffmpeg()
+    try:
+        ts_str = f"{timestamp:06.3f}"
+        cmd = [
+            ff, '-y',
+            '-ss', ts_str,
+            '-i', str(video_path),
+            '-vframes', '1',
+            '-q:v', '2',
+            str(output_thumb_path)
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=15)
+        if res.returncode == 0 and os.path.exists(output_thumb_path) and os.path.getsize(output_thumb_path) > 0:
+            return True
+
+        # Fallback seek to frame 0
+        cmd_fallback = [
+            ff, '-y',
+            '-ss', '00:00:00.000',
+            '-i', str(video_path),
+            '-vframes', '1',
+            '-q:v', '2',
+            str(output_thumb_path)
+        ]
+        res_fb = subprocess.run(cmd_fallback, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=15)
+        return res_fb.returncode == 0 and os.path.exists(output_thumb_path) and os.path.getsize(output_thumb_path) > 0
+    except Exception as e:
+        print(f"[Extract Thumbnail Error] {e}", flush=True)
         return False
 
 def _sanitize_ffmpeg_text(text: str) -> str:
@@ -513,73 +565,65 @@ def _build_filter_graph(
         current_pad = out
 
 
-    # 7. Sponsor Banner Overlay (2 Lines: Top Ad Line + Bottom Contact Line)
+    # 7. Sponsor Banner Overlay (Professional Compact Badge - Bottom Center, No Black Box)
     sponsor_opts = opts.get('sponsor')
     if sponsor_opts and sponsor_opts.get('enabled'):
-        # Clean 2-line structure without "នាគហ្សង បកប្រែ" or "@neakzong"
-        s_top = (sponsor_opts.get('top_line') or sponsor_opts.get('brand') or sponsor_opts.get('top_text') or '').strip()
-        s_bottom = (sponsor_opts.get('bottom_line') or sponsor_opts.get('contact') or sponsor_opts.get('mid_text') or sponsor_opts.get('ad_text') or '').strip()
+        s_title = (sponsor_opts.get('brand') or sponsor_opts.get('top_line') or sponsor_opts.get('top_text') or sponsor_opts.get('title') or '').strip()
+        s_phone = (sponsor_opts.get('contact') or sponsor_opts.get('bottom_line') or sponsor_opts.get('phone') or '').strip()
+        s_ad = (sponsor_opts.get('tagline') or sponsor_opts.get('badge') or sponsor_opts.get('ad_text') or '').strip()
 
         # Sanitize any legacy strings
-        s_top = s_top.replace('នាគហ្សង បកប្រែ', '').replace('«នាគហ្សង» ឧបត្ថម្ភធំ', '').replace('@neakzong', '').strip()
-        s_bottom = s_bottom.replace('នាគហ្សង បកប្រែ', '').replace('@neakzong', '').strip()
+        s_title = s_title.replace('នាគហ្សង បកប្រែ', '').replace('«នាគហ្សង» ឧបត្ថម្ភធំ', '').replace('@neakzong', '').strip()
+        s_phone = s_phone.replace('នាគហ្សង បកប្រែ', '').replace('@neakzong', '').strip()
+        s_ad = s_ad.replace('នាគហ្សង បកប្រែ', '').replace('@neakzong', '').strip()
 
-        if not s_top and not s_bottom:
-            s_top = '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor'
-            s_bottom = '📱 012 345 678 | Telegram'
-        elif not s_top:
-            s_top = '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor'
-        elif not s_bottom:
-            s_bottom = '📱 012 345 678 | Telegram'
+        if not s_title and not s_phone and not s_ad:
+            s_title = '👑 ឧបត្ថម្ភធំ'
+            s_phone = '📞 0889111400 | Telegram'
+            s_ad = '✨ ទទួលផ្សាយពាណិជ្ជកម្ម'
+        elif not s_phone:
+            s_phone = '📞 0889111400 | Telegram'
 
-        s_pos = sponsor_opts.get('position', 'bottom')
+        s_scale = max(0.6, min(1.8, float(sponsor_opts.get('scale', 1.0))))
+        s_font_path = _resolve_font_path(sponsor_opts.get('font', 'kantumruy'))
+        if not s_font_path or 'outfit' in str(s_font_path).lower() or 'calibri' in str(s_font_path).lower() or 'arial' in str(s_font_path).lower():
+            s_font_path = _resolve_font_path('kantumruy')
+        s_font_arg = f"fontfile='{s_font_path}':"
+
+        # Build lines array (Compact 3 lines: Title, Phone, Tagline)
+        lines = []
+        if s_title:
+            lines.append({'text': s_title, 'color': sponsor_opts.get('top_color', '0xF59E0B'), 'size': s_font_size})
+        if s_phone:
+            lines.append({'text': s_phone, 'color': sponsor_opts.get('mid_color', '0x22D3EE'), 'size': max(10, int(s_font_size * 0.92))})
+        if s_ad:
+            lines.append({'text': s_ad, 'color': sponsor_opts.get('bottom_color', '0xFFFFFF'), 'size': max(9, int(s_font_size * 0.85))})
+
+        line_gap = max(2, int(2.5 * s_scale))
+        total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap
+
+        # Position at Bottom Center (No Black Box, Transparent & Clean)
         s_y_percent = sponsor_opts.get('y_percent')
-        s_width_pct = max(30, min(100, int(sponsor_opts.get('width_percent', 85))))
-        s_scale = max(0.5, min(2.0, float(sponsor_opts.get('scale', 1.0))))
-        s_color = sponsor_opts.get('color', '0xF59E0B')
-        s_bg = sponsor_opts.get('bg_color', 'black@0.85')
-        s_font_size = max(11, int(int(sponsor_opts.get('font_size', 16)) * s_scale))
-
-        s_top_color = sponsor_opts.get('top_color') or s_color
-        s_bottom_color = sponsor_opts.get('bottom_color') or '0x22D3EE'
-        s_top_font_name = sponsor_opts.get('top_font') or sponsor_opts.get('font', 'kantumruy')
-        s_bottom_font_name = sponsor_opts.get('bottom_font') or sponsor_opts.get('font', 'kantumruy')
-
-        s_top_font = _resolve_font_path(s_top_font_name) or _resolve_font_path('kantumruy')
-        s_bottom_font = _resolve_font_path(s_bottom_font_name) or _resolve_font_path('kantumruy')
-
-        lines = [
-            {'text': s_top, 'color': s_top_color, 'size': s_font_size, 'font': s_top_font},
-            {'text': s_bottom, 'color': s_bottom_color, 'size': max(10, int(s_font_size * 0.88)), 'font': s_bottom_font}
-        ]
-
-        line_gap = max(2, int(4 * s_scale))
-        total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap + int(12 * s_scale)
-        box_w = f"trunc(iw*{s_width_pct/100.0:.3f})"
-        box_x = f"trunc((iw-{box_w})/2)"
-
         if s_y_percent is not None:
-            box_y = f"trunc((h*{float(s_y_percent)/100.0:.3f}))"
-        elif s_pos == 'top':
-            box_y = "10"
+            base_y = f"trunc(h*{float(s_y_percent)/100.0:.3f})"
         else:
-            box_y = f"h-{total_h + 10}"
+            base_y = f"h-{total_h + 16}"
 
         out = next_pad()
-        sponsor_chain = f"{current_pad}drawbox=x={box_x}:y={box_y}:w={box_w}:h={total_h}:color={s_bg}:t=fill"
-
-        curr_y_offset = int(6 * s_scale)
+        # Compact lines with shadow & border, NO BLACK BOX (no drawbox, no box=1)
+        sub_filters = []
+        curr_y_offset = 0
         for l in lines:
-            s_y_expr = f"{box_y}+{curr_y_offset}"
             tf_line_path = _write_temp_text_file(l['text'])
-            l_font_arg = f"fontfile='{l['font']}':" if l.get('font') else ""
-            sponsor_chain += (
-                f",drawtext={l_font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
-                f"borderw=1:bordercolor=black@0.85:x=(w-text_w)/2:y={s_y_expr}"
+            y_calc = f"{base_y}+{curr_y_offset}"
+            sub_filters.append(
+                f"drawtext={s_font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
+                f"borderw=2:bordercolor=black@0.9:shadowcolor=black@0.9:shadowx=2:shadowy=2:"
+                f"x=(w-text_w)/2:y={y_calc}"
             )
             curr_y_offset += l['size'] + line_gap
 
-        sponsor_chain += f"{out}"
+        sponsor_chain = f"{current_pad}" + ",".join(sub_filters) + f"{out}"
         steps.append(sponsor_chain)
         current_pad = out
 

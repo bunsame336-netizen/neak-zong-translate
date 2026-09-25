@@ -414,41 +414,84 @@ async function handleVideoUpload(input) {
   if (!input.files || input.files.length === 0) return;
   const file = input.files[0];
   state.videoFile = file;
+  state.hasVideoDecodeError = false;
+  state.thumbnailUrl = null;
 
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  const localUrl = URL.createObjectURL(file);
-  previewVideo.style.display = 'block';
-  previewVideo.src = localUrl;
-  previewVideo.muted = true;
-  previewVideo.playsInline = true;
-  previewVideo.setAttribute('playsinline', '');
-  previewVideo.setAttribute('webkit-playsinline', '');
-  previewVideo.load();
+  // Clean up any previously created fallback poster
+  const prevFallback = document.getElementById('video-fallback-poster');
+  if (prevFallback) prevFallback.style.display = 'none';
 
-  previewVideo.onloadedmetadata = () => {
-    try {
-      previewVideo.currentTime = 0.05;
-    } catch (err) {}
-    // Auto-adapt viewport to video aspect ratio (e.g. 16:9 landscape vs 9:16 vertical)
-    const isLandscape = (previewVideo.videoWidth || 9) > (previewVideo.videoHeight || 16);
-    const vp = document.getElementById('video-viewport');
-    if (vp) {
-      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
+  // 1. Create proper Object URL and load into HTML5 <video> element
+  if (state.localVideoUrl) {
+    try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
+  }
+  const videoUrl = URL.createObjectURL(file);
+  state.localVideoUrl = videoUrl;
+
+  const videoElement = previewVideo;
+  videoElement.style.display = 'block';
+  videoElement.src = videoUrl;
+  videoElement.muted = true;
+  videoElement.playsInline = true;
+  videoElement.setAttribute('playsinline', '');
+  videoElement.setAttribute('webkit-playsinline', '');
+  videoElement.removeAttribute('poster');
+
+  // Handle format unsupported or decode error (common with H.265/HEVC on mobile webview)
+  videoElement.onerror = (e) => {
+    console.warn('HTML5 <video> playback error / unsupported codec (e.g. H.265/HEVC):', videoElement.error);
+    state.hasVideoDecodeError = true;
+    showToast('⚠️ ទម្រង់វីដេអូទូរសព្ទ (H.265/HEVC) Webview មិនគាំទ្រចាក់ផ្ទាល់ - កំពុងទាញយក Frame Preview ពី Server...');
+
+    // If server thumbnail has already loaded, apply fallback immediately
+    if (state.thumbnailUrl) {
+      applyThumbnailFallback(state.thumbnailUrl);
     }
-    updateBlurBoxLimits();
-    updateBlurBoxFromSliders();
-    updateVideoTime();
   };
 
-  previewVideo.oncanplay = () => {
-    previewVideo.play().catch(() => {});
+  videoElement.onloadedmetadata = () => {
+    if (!state.hasVideoDecodeError) {
+      try {
+        videoElement.currentTime = 0.05;
+      } catch (err) {}
+      // Auto-adapt viewport to video aspect ratio (e.g. 16:9 landscape vs 9:16 vertical)
+      const isLandscape = (videoElement.videoWidth || 9) > (videoElement.videoHeight || 16);
+      const vp = document.getElementById('video-viewport');
+      if (vp) {
+        vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
+      }
+      updateBlurBoxLimits();
+      updateBlurBoxFromSliders();
+      updateVideoTime();
+    }
   };
 
+  videoElement.oncanplay = () => {
+    // Safe autoplay attempt
+    videoElement.play().catch(() => {});
+  };
+
+  videoElement.onplaying = () => {
+    const fb = document.getElementById('video-fallback-poster');
+    if (fb && !state.hasVideoDecodeError) {
+      fb.style.display = 'none';
+    }
+  };
+
+  videoElement.onpause = () => {
+    const fb = document.getElementById('video-fallback-poster');
+    if (fb && state.thumbnailUrl) {
+      fb.style.display = 'block';
+    }
+  };
+
+  videoElement.load();
   showToast('✓ វីដេអូបានបើកក្នុង Player Preview ត្រូវទម្រង់ ១០០%!');
 
-  // Upload to Cloud Server in background
+  // 2. Upload to Cloud Server in background and get first frame/thumbnail
   const formData = new FormData();
   formData.append('file', file);
   
@@ -457,11 +500,62 @@ async function handleVideoUpload(input) {
     const data = await res.json();
     if (data.status === 'ok') {
       state.videoFilename = data.filename;
+      if (data.thumbnail_url) {
+        state.thumbnailUrl = data.thumbnail_url;
+        videoElement.poster = data.thumbnail_url;
+        // Guarantee video preview is NEVER a black box on mobile: show thumbnail frame immediately
+        applyThumbnailFallback(data.thumbnail_url);
+      }
       showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)');
     }
   } catch (err) {
     console.warn('Local preview active, cloud sync note:', err);
   }
+}
+
+function applyThumbnailFallback(thumbUrl) {
+  if (!thumbUrl) return;
+  let fallback = document.getElementById('video-fallback-poster');
+  if (!fallback) {
+    fallback = document.createElement('img');
+    fallback.id = 'video-fallback-poster';
+    fallback.alt = 'Video Preview Poster';
+    fallback.style.position = 'absolute';
+    fallback.style.inset = '0';
+    fallback.style.width = '100%';
+    fallback.style.height = '100%';
+    fallback.style.objectFit = 'contain';
+    fallback.style.zIndex = '2';
+    fallback.style.pointerEvents = 'none';
+    fallback.style.background = '#050408';
+
+    const vp = document.getElementById('video-viewport');
+    if (vp) {
+      const overlayLayer = document.getElementById('video-overlay-layer');
+      if (overlayLayer) {
+        vp.insertBefore(fallback, overlayLayer);
+      } else {
+        vp.appendChild(fallback);
+      }
+    }
+  }
+  fallback.src = thumbUrl;
+  fallback.style.display = 'block';
+
+  // Adapt viewport aspect ratio to server thumbnail image
+  const img = new Image();
+  img.onload = () => {
+    const isLandscape = img.naturalWidth > img.naturalHeight;
+    const vp = document.getElementById('video-viewport');
+    if (vp) {
+      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
+    }
+    updateBlurBoxLimits();
+    updateBlurBoxFromSliders();
+  };
+  img.src = thumbUrl;
+
+  showToast('✓ បានបង្ហាញ Frame វីដេអូពី Server ជំនួសផ្ទាំងខ្មៅ!');
 }
 
 async function handleSrtUpload(input) {

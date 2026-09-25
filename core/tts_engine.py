@@ -290,8 +290,23 @@ def generate_synced_cues_voiceover(
             seg_mp3 = str(tmp_dir_p / f"cue_{i:04d}.mp3")
             seg_raw = str(tmp_dir_p / f"cue_{i:04d}.raw")
 
+            # Dual-Voice Casting per cue (Piseth for Male, Sreymom for Female)
+            cue_v = cue.get('voice') or cue.get('suggested_voice')
+            if not cue_v:
+                c_gender = cue.get('gender')
+                if c_gender == 'female' or any(k in txt for k in ['នាង', 'ម៉ាក់', 'ម៉ែ', 'អូន', 'ស្រី']):
+                    cue_v = 'female'
+                else:
+                    cue_v = 'male'
+            elif any(k in str(cue_v).lower() for k in ['female', 'sreymom', 'girl', 'maid']):
+                cue_v = 'female'
+            elif any(k in str(cue_v).lower() for k in ['male', 'piseth', 'boy']):
+                cue_v = 'male'
+            else:
+                cue_v = voice_type
+
             # Synthesize Khmer voice for this cue
-            ok = synthesize_khmer_voice(txt, seg_mp3, voice_type=voice_type, speed=speed)
+            ok = synthesize_khmer_voice(txt, seg_mp3, voice_type=cue_v, speed=speed)
             if not ok or not os.path.exists(seg_mp3):
                 continue
 
@@ -316,11 +331,10 @@ def generate_synced_cues_voiceover(
 
             # Strict Lip-Sync with FFmpeg atempo:
             # Match synthesized speech duration to the character's speaking duration (target_dur)
-            # Speeds up if speech is longer, slows down if speech is shorter (bidirectional stretching)
-            if abs(actual_dur - target_dur) > 0.05 and target_dur >= 0.25:
+            # Clamped strictly between 0.7x and 1.8x to preserve natural speech
+            if abs(actual_dur - target_dur) > 0.04 and target_dur >= 0.25:
                 raw_tempo = actual_dur / target_dur
-                # Extended precision range [0.50, 2.75] preserves pitch while perfectly matching character speech duration
-                tempo = max(0.50, min(2.75, raw_tempo))
+                tempo = max(0.70, min(1.80, raw_tempo))
                 atempo_filter = _build_atempo_filter_chain(tempo)
                 seg_stretched = str(tmp_dir_p / f"cue_{i:04d}_stretched.raw")
                 cmd_stretch = [
