@@ -117,7 +117,7 @@ const sponsorElement = document.getElementById('sponsor-overlay-element');
 const sponsorTopTag = document.getElementById('sponsor-top-tag') || document.getElementById('sponsor-brand-tag');
 const sponsorBottomTag = document.getElementById('sponsor-bottom-tag') || document.getElementById('sponsor-contact-tag');
 
-// Tab Navigation Switching (Zero Layout Shift)
+// Tab Navigation Switching with 1-Tap Instant Activation (Auto-toggle ON)
 function switchStudioTab(tabId) {
   state.activeTab = tabId;
   document.querySelectorAll('.tab-nav-btn').forEach(btn => {
@@ -131,9 +131,64 @@ function switchStudioTab(tabId) {
   if (targetPanel) {
     targetPanel.classList.add('active');
   }
-  if (tabId === 'blur') {
+
+  // ⚡ 1-TAP INSTANT ACTIVATION ON BUTTON CLICK:
+  if (tabId === 'text') {
+    // 1. Text Overlay Auto-ON
+    state.textOverlay.enabled = true;
+    const toggleText = document.getElementById('toggle-text');
+    if (toggleText) toggleText.checked = true;
+    if (textElement) {
+      textElement.classList.add('active-visible');
+      textElement.style.display = 'block';
+    }
+
+    // 2. Auto-Marquee Running immediately! (Default: bottom-to-top / 'up')
+    state.marquee.enabled = true;
+    if (!state.marquee.direction || state.marquee.direction === 'left') {
+      state.marquee.direction = 'up';
+    }
+    const toggleMarquee = document.getElementById('toggle-marquee');
+    if (toggleMarquee) toggleMarquee.checked = true;
+    ['up', 'down', 'left', 'right'].forEach(d => {
+      const btn = document.getElementById(`btn-marquee-dir-${d}`);
+      if (btn) btn.classList.toggle('active', d === state.marquee.direction);
+    });
+
+    updateDualTonePreview();
+    updateMarqueeAnimation();
+    showToast('📝 ដាក់អក្សរ & ចាប់ផ្ដើមរត់ Marquee ស្វ័យប្រវត្តិតែម្ដង!');
+  } else if (tabId === 'blur') {
+    // Blur Mask Auto-ON
+    state.blurMask.enabled = true;
+    const toggleBlur = document.getElementById('toggle-blur');
+    if (toggleBlur) toggleBlur.checked = true;
+    if (blurBox) {
+      blurBox.classList.add('active-visible');
+      blurBox.style.display = 'block';
+    }
     updateBlurBoxLimits();
+    updateBlurBoxFromSliders();
+    showToast('🌫️ ផ្ទាំងព្រិល Blur បានបើកបង្ហាញភ្លាមៗ!');
+  } else if (tabId === 'sponsor') {
+    // Sponsor Badge Auto-ON
+    state.sponsor.enabled = true;
+    const toggleSponsor = document.getElementById('toggle-sponsor');
+    if (toggleSponsor) toggleSponsor.checked = true;
+    toggleSponsorOverlay(true);
+    showToast('🤝 Sponsor Badge បានបើកបង្ហាញភ្លាមៗ!');
+  } else if (tabId === 'logo') {
+    // Logo Overlay Auto-ON
+    state.logoOverlay.enabled = true;
+    const toggleLogo = document.getElementById('toggle-logo');
+    if (toggleLogo) toggleLogo.checked = true;
+    if (logoElement) {
+      logoElement.classList.add('active-visible');
+      logoElement.style.display = 'block';
+    }
+    showToast('🖼️ Logo Overlay បានបើកបង្ហាញភ្លាមៗ!');
   }
+
   const bottomPanel = document.getElementById('studio-dynamic-controls-area');
   if (bottomPanel) {
     bottomPanel.scrollTop = 0;
@@ -429,31 +484,28 @@ function handleVideoUpload(input) {
 
   const videoElement = previewVideo;
   videoElement.style.display = 'block';
-  videoElement.crossOrigin = 'anonymous';
+  // IMPORTANT: Blob URLs must NOT have crossOrigin set to avoid browser CORS/decoding errors
+  videoElement.removeAttribute('crossorigin');
+  videoElement.removeAttribute('poster');
   videoElement.src = videoUrl;
   videoElement.playsInline = true;
   videoElement.controls = true;
   videoElement.setAttribute('playsinline', '');
   videoElement.setAttribute('webkit-playsinline', '');
   videoElement.setAttribute('controls', 'true');
-  videoElement.setAttribute('crossorigin', 'anonymous');
   videoElement.setAttribute('preload', 'auto');
-  videoElement.removeAttribute('poster');
 
   // Handle format unsupported or decode error (common with H.265/HEVC on mobile webview)
   videoElement.onerror = (e) => {
     console.warn('HTML5 <video> error:', videoElement.error);
     state.hasVideoDecodeError = true;
-    showToast('⚠️ ទម្រង់វីដេអូទូរសព្ទ Webview - កំពុងទាញយក Frame Preview ពី Server...');
+    showToast('⚠️ កំពុងទាញយក Frame Preview ពី Server...');
     if (state.thumbnailUrl) {
       applyThumbnailFallback(state.thumbnailUrl);
     }
   };
 
   videoElement.onloadedmetadata = () => {
-    try {
-      videoElement.currentTime = 0.05;
-    } catch (err) {}
     // Auto-adapt viewport to video aspect ratio (e.g. 16:9 landscape vs 9:16 vertical)
     const isLandscape = (videoElement.videoWidth || 9) > (videoElement.videoHeight || 16);
     const vp = document.getElementById('video-viewport');
@@ -461,11 +513,28 @@ function handleVideoUpload(input) {
       vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
     }
     updateBlurBoxLimits();
-    // Keep blur box strictly OFF on upload unless already enabled by user
     if (state.blurMask.enabled) {
       updateBlurBoxFromSliders();
     }
     updateVideoTime();
+
+    // Start native smooth playback immediately (muted for autoplay policy compliance)
+    videoElement.muted = true;
+    const playP = videoElement.play();
+    if (playP !== undefined) {
+      playP.then(() => {
+        const btn = document.getElementById('btn-play-toggle');
+        if (btn) btn.innerText = '⏸ ផ្អាក';
+      }).catch(err => {
+        console.log('Autoplay muted note:', err);
+      });
+    }
+  };
+
+  // Direct tap on video toggles playback
+  videoElement.onclick = (e) => {
+    e.stopPropagation();
+    toggleVideoPlayback();
   };
 
   videoElement.ontimeupdate = updateVideoTime;
@@ -531,7 +600,9 @@ function uploadVideoToCloud(file) {
           state.videoFilename = data.filename;
           if (data.thumbnail_url) {
             state.thumbnailUrl = data.thumbnail_url;
-            applyThumbnailFallback(data.thumbnail_url);
+            if (state.hasVideoDecodeError) {
+              applyThumbnailFallback(data.thumbnail_url);
+            }
           }
           if (progressBar) progressBar.style.width = '100%';
           if (percentText) percentText.innerText = '100%';
@@ -556,7 +627,7 @@ function uploadVideoToCloud(file) {
 
 function applyThumbnailFallback(thumbUrl) {
   if (!thumbUrl) return;
-  if (previewVideo) {
+  if (previewVideo && state.hasVideoDecodeError) {
     previewVideo.poster = thumbUrl;
   }
   // Adapt viewport aspect ratio to server thumbnail image
@@ -602,27 +673,31 @@ function toggleVideoPlayback() {
   const btn = document.getElementById('btn-play-toggle');
 
   if (previewVideo.paused || previewVideo.ended) {
-    // Unmute on explicit user gesture
     previewVideo.muted = false;
     const playPromise = previewVideo.play();
     if (playPromise !== undefined) {
       playPromise.then(() => {
         if (btn) btn.innerText = '⏸ ផ្អាក';
       }).catch(err => {
-        console.warn('Playback on blob URL note:', err);
-        // Fallback to streaming uploaded file from cloud server if local blob fails
-        if (state.videoFilename) {
-          showToast('⚡ កំពុងបើកចាក់វីដេអូពី Server...');
-          previewVideo.src = `/uploads/${state.videoFilename}`;
-          previewVideo.crossOrigin = 'anonymous';
-          previewVideo.load();
-          previewVideo.play().then(() => {
-            if (btn) btn.innerText = '⏸ ផ្អាក';
-          }).catch(e => {
-            console.warn('Server URL playback error:', e);
-            showToast('⚠️ Webview មិនគាំទ្រចាក់ទម្រង់ Codec វីដេអូនេះ');
-          });
-        }
+        console.warn('Playback unmuted error, retrying muted:', err);
+        previewVideo.muted = true;
+        previewVideo.play().then(() => {
+          if (btn) btn.innerText = '⏸ ផ្អាក';
+        }).catch(err2 => {
+          console.warn('Playback on blob failed, checking server fallback:', err2);
+          if (state.videoFilename) {
+            showToast('⚡ កំពុងបើកចាក់វីដេអូពី Server...');
+            previewVideo.removeAttribute('crossorigin');
+            previewVideo.src = `/uploads/${state.videoFilename}`;
+            previewVideo.load();
+            previewVideo.play().then(() => {
+              if (btn) btn.innerText = '⏸ ផ្អាក';
+            }).catch(e => {
+              console.warn('Server URL playback error:', e);
+              showToast('⚠️ Webview មិនគាំទ្រចាក់ទម្រង់ Codec វីដេអូនេះ');
+            });
+          }
+        });
       });
     }
   } else {
@@ -1269,10 +1344,17 @@ function updateSponsorContent() {
     bannerBar.style.padding = `${Math.round(4 * scale)}px ${Math.round(8 * scale)}px`;
   }
   if (sponsorElement) {
-    sponsorElement.style.bottom = 'auto';
-    sponsorElement.style.top = `${yPercent}%`;
-    sponsorElement.style.width = `${widthPct}%`;
-    sponsorElement.style.left = `${(100 - widthPct) / 2}%`;
+    sponsorElement.style.width = 'max-content';
+    sponsorElement.style.maxWidth = `${Math.min(94, Math.max(50, widthPct))}%`;
+    sponsorElement.style.left = '50%';
+    sponsorElement.style.transform = 'translateX(-50%)';
+    if (state.sponsor.position === 'top') {
+      sponsorElement.style.top = '12px';
+      sponsorElement.style.bottom = 'auto';
+    } else {
+      sponsorElement.style.bottom = '12px';
+      sponsorElement.style.top = 'auto';
+    }
   }
 }
 

@@ -331,10 +331,10 @@ def generate_synced_cues_voiceover(
 
             # Strict Lip-Sync with FFmpeg atempo:
             # Match synthesized speech duration to the character's speaking duration (target_dur)
-            # Clamped strictly between 0.7x and 1.8x to preserve natural speech
+            # Clamped strictly between 0.90x and 1.20x to preserve human voice quality
             if abs(actual_dur - target_dur) > 0.04 and target_dur >= 0.25:
                 raw_tempo = actual_dur / target_dur
-                tempo = max(0.70, min(1.80, raw_tempo))
+                tempo = max(0.90, min(1.20, raw_tempo))
                 atempo_filter = _build_atempo_filter_chain(tempo)
                 seg_stretched = str(tmp_dir_p / f"cue_{i:04d}_stretched.raw")
                 cmd_stretch = [
