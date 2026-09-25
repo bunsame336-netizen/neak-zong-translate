@@ -433,11 +433,16 @@ function handleVideoUpload(input) {
 
   const videoElement = previewVideo;
   videoElement.style.display = 'block';
+  videoElement.crossOrigin = 'anonymous';
   videoElement.src = videoUrl;
   videoElement.muted = true;
   videoElement.playsInline = true;
+  videoElement.controls = true;
   videoElement.setAttribute('playsinline', '');
   videoElement.setAttribute('webkit-playsinline', '');
+  videoElement.setAttribute('controls', 'true');
+  videoElement.setAttribute('crossorigin', 'anonymous');
+  videoElement.setAttribute('preload', 'auto');
   videoElement.removeAttribute('poster');
 
   // Handle format unsupported or decode error (common with H.265/HEVC on mobile webview)
@@ -464,7 +469,10 @@ function handleVideoUpload(input) {
         vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
       }
       updateBlurBoxLimits();
-      updateBlurBoxFromSliders();
+      // Keep blur box strictly OFF on upload unless already enabled by user
+      if (state.blurMask.enabled) {
+        updateBlurBoxFromSliders();
+      }
       updateVideoTime();
     }
   };
@@ -491,17 +499,28 @@ function handleVideoUpload(input) {
     videoElement.play().catch(() => {});
   };
 
+  videoElement.onplay = () => {
+    const fb = document.getElementById('video-fallback-poster');
+    if (fb) fb.style.display = 'none';
+    const btn = document.getElementById('btn-play-toggle');
+    if (btn) btn.innerText = '⏸ ផ្អាក';
+  };
+
   videoElement.onplaying = () => {
     const fb = document.getElementById('video-fallback-poster');
     if (fb && !state.hasVideoDecodeError) {
       fb.style.display = 'none';
     }
+    const btn = document.getElementById('btn-play-toggle');
+    if (btn) btn.innerText = '⏸ ផ្អាក';
   };
 
   videoElement.onpause = () => {
-    const fb = document.getElementById('video-fallback-poster');
-    if (fb && state.thumbnailUrl) {
-      fb.style.display = 'block';
+    const btn = document.getElementById('btn-play-toggle');
+    if (btn) btn.innerText = '▶️ ចាក់';
+    if (state.hasVideoDecodeError) {
+      const fb = document.getElementById('video-fallback-poster');
+      if (fb && state.thumbnailUrl) fb.style.display = 'block';
     }
   };
 
@@ -616,7 +635,9 @@ function applyThumbnailFallback(thumbUrl) {
       vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
     }
     updateBlurBoxLimits();
-    updateBlurBoxFromSliders();
+    if (state.blurMask.enabled) {
+      updateBlurBoxFromSliders();
+    }
   };
   img.src = thumbUrl;
 
@@ -636,11 +657,52 @@ async function handleSrtUpload(input) {
 }
 
 function updateVideoTime() {
+  if (!previewVideo) return;
   const cur = Math.floor(previewVideo.currentTime || 0);
   const dur = Math.floor(previewVideo.duration || 0);
   const format = (s) => `${Math.floor(s/60).toString().padStart(2, '0')}:${(s%60).toString().padStart(2, '0')}`;
   const el = document.getElementById('video-time-display');
   if (el) el.innerText = `${format(cur)} / ${format(dur)}`;
+}
+
+// ── ROBUST VIDEO PLAYBACK HANDLERS FOR MOBILE WEBVIEW ─────────────
+function toggleVideoPlayback() {
+  if (!previewVideo) return;
+  const fb = document.getElementById('video-fallback-poster');
+  const btn = document.getElementById('btn-play-toggle');
+
+  if (previewVideo.paused || previewVideo.ended) {
+    if (fb) fb.style.display = 'none';
+    const playPromise = previewVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        if (btn) btn.innerText = '⏸ ផ្អាក';
+      }).catch(err => {
+        console.warn('Playback on blob URL note:', err);
+        // Fallback to streaming uploaded file from cloud server if local blob fails
+        if (state.videoFilename) {
+          previewVideo.src = `/uploads/${state.videoFilename}`;
+          previewVideo.crossOrigin = 'anonymous';
+          previewVideo.load();
+          previewVideo.play().then(() => {
+            if (btn) btn.innerText = '⏸ ផ្អាក';
+          }).catch(e => console.warn('Server URL playback error:', e));
+        }
+      });
+    }
+  } else {
+    previewVideo.pause();
+    if (btn) btn.innerText = '▶️ ចាក់';
+  }
+}
+
+function resetVideoPlayback() {
+  if (!previewVideo) return;
+  previewVideo.currentTime = 0;
+  previewVideo.pause();
+  const btn = document.getElementById('btn-play-toggle');
+  if (btn) btn.innerText = '▶️ ចាក់';
+  updateVideoTime();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1037,17 +1099,23 @@ function updateBlurBoxLimits() {
   }
 }
 
-function updateBlurBoxFromSliders() {
-  if (!state.blurMask.enabled) {
-    state.blurMask.enabled = true;
-    const toggle = document.getElementById('toggle-blur');
-    if (toggle) toggle.checked = true;
-    if (blurBox) {
-      blurBox.classList.add('active-visible');
-      blurBox.style.display = 'block';
-    }
-  }
+// ── DEBOUNCED / RAF BLUR SLIDER INPUT FOR SMOOTH 60FPS TOUCH ──────
+let blurSliderInputRaf = null;
+function handleBlurSliderInput() {
+  if (blurSliderInputRaf) cancelAnimationFrame(blurSliderInputRaf);
+  blurSliderInputRaf = requestAnimationFrame(() => {
+    updateBlurBoxFromSliders();
+  });
+}
 
+function initPassiveSliderTouch() {
+  document.querySelectorAll('.cyber-slider').forEach(slider => {
+    slider.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+    slider.addEventListener('touchmove', (e) => { e.stopPropagation(); }, { passive: true });
+  });
+}
+
+function updateBlurBoxFromSliders() {
   let w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
   let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
   let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
@@ -1069,6 +1137,9 @@ function updateBlurBoxFromSliders() {
     blurBox.style.top = `${y}px`;
     blurBox.style.width = `${w}px`;
     blurBox.style.height = `${h}px`;
+    // Respect user's explicit enabled switch: strictly OFF by default
+    blurBox.style.display = state.blurMask.enabled ? 'block' : 'none';
+    blurBox.classList.toggle('active-visible', state.blurMask.enabled);
   }
 
   const wVal = document.getElementById('blur-w-val');
@@ -1082,15 +1153,6 @@ function updateBlurBoxFromSliders() {
 }
 
 function updateBlurIntensity(val) {
-  if (!state.blurMask.enabled) {
-    state.blurMask.enabled = true;
-    const toggle = document.getElementById('toggle-blur');
-    if (toggle) toggle.checked = true;
-    if (blurBox) {
-      blurBox.classList.add('active-visible');
-      blurBox.style.display = 'block';
-    }
-  }
   const intVal = parseInt(val) || 25;
   state.blurMask.intensity = intVal;
   let label = `${intVal}`;
@@ -1149,15 +1211,6 @@ function setBlurTintPreset(mode) {
 }
 
 function updateBlurTint(val) {
-  if (!state.blurMask.enabled) {
-    state.blurMask.enabled = true;
-    const toggle = document.getElementById('toggle-blur');
-    if (toggle) toggle.checked = true;
-    if (blurBox) {
-      blurBox.classList.add('active-visible');
-      blurBox.style.display = 'block';
-    }
-  }
   const pct = parseInt(val) || 0;
   state.blurMask.tintOpacity = pct / 100.0;
   const tintValEl = document.getElementById('blur-tint-val');
@@ -1367,26 +1420,38 @@ function updateMarqueeAnimation() {
   if (!state.marquee.enabled) {
     textElement.classList.remove('marquee-active', 'dir-up', 'dir-down', 'dir-left', 'dir-right');
     textElement.style.animation = 'none';
+    textElement.style.removeProperty('--marquee-duration');
     textElement.style.left = `${state.textOverlay.x || 15}px`;
     textElement.style.top = `${state.textOverlay.y || 30}px`;
     textElement.style.transform = '';
+    textElement.style.display = state.textOverlay.enabled ? 'block' : 'none';
     return;
   }
 
   // Ensure text overlay is enabled and visible
   state.textOverlay.enabled = true;
+  const toggleText = document.getElementById('toggle-text');
+  if (toggleText) toggleText.checked = true;
+
+  // IMPORTANT: Remove inline left/top/transform so CSS @keyframes can take full control!
+  textElement.style.removeProperty('left');
+  textElement.style.removeProperty('top');
+  textElement.style.removeProperty('transform');
+  textElement.style.removeProperty('right');
+  textElement.style.removeProperty('bottom');
+
+  textElement.style.display = 'block';
   textElement.classList.add('active-visible', 'marquee-active');
   textElement.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
   textElement.classList.add('dir-' + dir);
-  textElement.style.display = 'block';
 
-  let animName = 'scrollUp';
-  switch (dir) {
-    case 'down':   animName = 'scrollDown';  break;
-    case 'left':   animName = 'scrollLeft';  break;
-    case 'right':  animName = 'scrollRight'; break;
-    default:       animName = 'scrollUp';    break;
-  }
+  // Set duration via CSS variable
+  textElement.style.setProperty('--marquee-duration', `${speedSec}s`);
+
+  let animName = 'marqueeScrollUp';
+  if (dir === 'down') animName = 'marqueeScrollDown';
+  else if (dir === 'left') animName = 'marqueeScrollLeft';
+  else if (dir === 'right') animName = 'marqueeScrollRight';
 
   // Force reflow to immediately restart animation seamlessly
   textElement.style.animation = 'none';
@@ -2056,8 +2121,11 @@ window.addEventListener('DOMContentLoaded', () => {
   // Initialize sponsor preview
   updateSponsorContent();
 
-  // Initialize and clamp blur box limits & default horizontal shape
+  // Initialize and clamp blur box limits (Default strictly OFF)
+  state.blurMask.enabled = false;
   if (blurBox) {
+    blurBox.style.display = 'none';
+    blurBox.classList.remove('active-visible');
     blurBox.style.width = '140px';
     blurBox.style.height = '45px';
     blurBox.style.left = '15px';
@@ -2071,17 +2139,36 @@ window.addEventListener('DOMContentLoaded', () => {
   const initHVal = document.getElementById('blur-h-val');
   if (initWVal) initWVal.innerText = '140px';
   if (initHVal) initHVal.innerText = '45px';
+  const blurToggle = document.getElementById('toggle-blur');
+  if (blurToggle) blurToggle.checked = false;
 
   updateBlurBoxLimits();
   window.addEventListener('resize', () => {
     updateBlurBoxLimits();
   });
 
+  // Enable passive touch listeners on all sliders for smooth mobile interactions
+  initPassiveSliderTouch();
+
   // Set default marquee animation
   updateMarqueeAnimation();
 
-  // Video Time Update listener
+  // Video Time Update & Playback listeners
   previewVideo.addEventListener('timeupdate', updateVideoTime);
+  previewVideo.addEventListener('play', () => {
+    const fb = document.getElementById('video-fallback-poster');
+    if (fb) fb.style.display = 'none';
+    const btn = document.getElementById('btn-play-toggle');
+    if (btn) btn.innerText = '⏸ ផ្អាក';
+  });
+  previewVideo.addEventListener('pause', () => {
+    const btn = document.getElementById('btn-play-toggle');
+    if (btn) btn.innerText = '▶️ ចាក់';
+  });
+  previewVideo.addEventListener('ended', () => {
+    const btn = document.getElementById('btn-play-toggle');
+    if (btn) btn.innerText = '▶️ ចាក់';
+  });
 
   // Effect button watcher: Part1 effect change
   document.getElementById('text-part1-effect')?.addEventListener('change', () => {

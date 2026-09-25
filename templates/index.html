@@ -603,6 +603,84 @@
       text-shadow: none !important;
       -webkit-text-stroke: 0px !important;
     }
+
+    /* 🎬 HARDWARE-ACCELERATED 60FPS DUAL-TONE MARQUEE ANIMATIONS */
+    #text-overlay-element.marquee-active {
+      position: absolute !important;
+      width: max-content !important;
+      white-space: nowrap !important;
+      pointer-events: none !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      will-change: transform, left, top !important;
+      display: block !important;
+      z-index: 25 !important;
+    }
+    #text-overlay-element.marquee-active.dir-up {
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      animation: marqueeScrollUp var(--marquee-duration, 8s) linear infinite !important;
+    }
+    #text-overlay-element.marquee-active.dir-down {
+      left: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      animation: marqueeScrollDown var(--marquee-duration, 8s) linear infinite !important;
+    }
+    #text-overlay-element.marquee-active.dir-left {
+      top: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      animation: marqueeScrollLeft var(--marquee-duration, 8s) linear infinite !important;
+    }
+    #text-overlay-element.marquee-active.dir-right {
+      top: 50% !important;
+      right: auto !important;
+      bottom: auto !important;
+      animation: marqueeScrollRight var(--marquee-duration, 8s) linear infinite !important;
+    }
+
+    @keyframes marqueeScrollUp {
+      0% {
+        top: 100%;
+        transform: translate3d(-50%, 0, 0);
+      }
+      100% {
+        top: 0%;
+        transform: translate3d(-50%, -100%, 0);
+      }
+    }
+    @keyframes marqueeScrollDown {
+      0% {
+        top: 0%;
+        transform: translate3d(-50%, -100%, 0);
+      }
+      100% {
+        top: 100%;
+        transform: translate3d(-50%, 0, 0);
+      }
+    }
+    @keyframes marqueeScrollLeft {
+      0% {
+        left: 100%;
+        transform: translate3d(0, -50%, 0);
+      }
+      100% {
+        left: 0%;
+        transform: translate3d(-100%, -50%, 0);
+      }
+    }
+    @keyframes marqueeScrollRight {
+      0% {
+        left: 0%;
+        transform: translate3d(-100%, -50%, 0);
+      }
+      100% {
+        left: 100%;
+        transform: translate3d(0, -50%, 0);
+      }
+    }
   </style>
 </head>
 <body>
@@ -667,7 +745,7 @@
               <div class="placeholder-sub">Live Preview 9:16 បញ្ឈរធំច្បាស់</div>
             </div>
 
-            <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
+            <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" crossorigin="anonymous" style="display:none; position:relative; z-index:1; width:100%; height:100%; object-fit:contain;"></video>
             <img id="video-fallback-poster" alt="Video Preview Frame" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:2; pointer-events:none; background:#050408;" />
 
             <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
@@ -710,10 +788,10 @@
           <!-- Playback Bar below Video -->
           <div class="video-toolbar">
             <div class="playback-controls">
-              <button type="button" class="btn-ctrl" onclick="previewVideo.paused ? previewVideo.play() : previewVideo.pause()">
-                ⏯ ចាក់
+              <button type="button" class="btn-ctrl" id="btn-play-toggle" onclick="toggleVideoPlayback()">
+                ▶️ ចាក់
               </button>
-              <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
+              <button type="button" class="btn-ctrl" onclick="resetVideoPlayback()">
                 ⏮ ដើម
               </button>
             </div>
@@ -1057,7 +1135,7 @@
                 <span class="form-label-val" id="blur-w-val">140px</span>
               </div>
               <input type="range" min="20" max="258" step="2" value="140" class="cyber-slider" id="blur-w-slider"
-                oninput="updateBlurBoxFromSliders();">
+                oninput="handleBlurSliderInput();">
             </div>
             <div class="form-row">
               <div class="form-label">
@@ -1065,7 +1143,7 @@
                 <span class="form-label-val" id="blur-h-val">45px</span>
               </div>
               <input type="range" min="10" max="140" step="2" value="45" class="cyber-slider" id="blur-h-slider"
-                oninput="updateBlurBoxFromSliders();">
+                oninput="handleBlurSliderInput();">
             </div>
           </div>
         </div>
@@ -1080,7 +1158,7 @@
                 <span class="form-label-val" id="blur-x-val">15px</span>
               </div>
               <input type="range" min="0" max="238" step="2" value="15" class="cyber-slider" id="blur-x-slider"
-                oninput="updateBlurBoxFromSliders();">
+                oninput="handleBlurSliderInput();">
             </div>
             <div class="form-row">
               <div class="form-label">
@@ -1088,7 +1166,7 @@
                 <span class="form-label-val" id="blur-y-val">15px</span>
               </div>
               <input type="range" min="0" max="320" step="2" value="15" class="cyber-slider" id="blur-y-slider"
-                oninput="updateBlurBoxFromSliders();">
+                oninput="handleBlurSliderInput();">
             </div>
           </div>
           <!-- Quick Corners -->
@@ -1514,6 +1592,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=8.3.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.4.0"></script>
 </body>
 </html>
