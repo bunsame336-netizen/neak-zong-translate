@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.1.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.6.0">
 
   <!-- ⚡ CRITICAL MOBILE STUDIO 3-TIER RESTRUCTURE (NO WHOLE-PAGE SCROLL / 100dvh LOCK) -->
   <style>
@@ -565,12 +565,12 @@
     /* Touch-optimized Resizer Handles for Mobile Screens */
     .resizer-handle {
       position: absolute !important;
-      width: 20px !important;
-      height: 20px !important;
+      width: 14px !important;
+      height: 14px !important;
       background: var(--neon-cyan-bright) !important;
       border: 2px solid #ffffff !important;
       border-radius: 50% !important;
-      box-shadow: 0 0 8px rgba(34, 211, 238, 0.9) !important;
+      box-shadow: 0 0 6px rgba(34, 211, 238, 0.9) !important;
       z-index: 30 !important;
       touch-action: none !important;
       cursor: pointer !important;
@@ -578,17 +578,17 @@
       align-items: center !important;
       justify-content: center !important;
     }
-    /* Invisible expanded hit-target (40px x 40px) for finger touch */
+    /* Invisible hit-target (30px x 30px) that does not engulf the small blur box */
     .resizer-handle::before {
       content: '' !important;
       position: absolute !important;
-      inset: -10px !important;
+      inset: -8px !important;
       background: transparent !important;
     }
-    .resizer-handle.nw { top: -10px !important; left: -10px !important; cursor: nwse-resize !important; }
-    .resizer-handle.ne { top: -10px !important; right: -10px !important; cursor: nesw-resize !important; }
-    .resizer-handle.sw { bottom: -10px !important; left: -10px !important; cursor: nesw-resize !important; }
-    .resizer-handle.se { bottom: -10px !important; right: -10px !important; cursor: nwse-resize !important; }
+    .resizer-handle.nw { top: -7px !important; left: -7px !important; cursor: nwse-resize !important; }
+    .resizer-handle.ne { top: -7px !important; right: -7px !important; cursor: nesw-resize !important; }
+    .resizer-handle.sw { bottom: -7px !important; left: -7px !important; cursor: nesw-resize !important; }
+    .resizer-handle.se { bottom: -7px !important; right: -7px !important; cursor: nwse-resize !important; }
 
     /* Transparent Mode */
     .rendered-text-content.transparent-mode,
@@ -746,7 +746,6 @@
             </div>
 
             <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" crossorigin="anonymous" style="display:none; position:relative; z-index:1; width:100%; height:100%; object-fit:contain;"></video>
-            <img id="video-fallback-poster" alt="Video Preview Frame" style="display:none; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:2; pointer-events:none; background:#050408;" />
 
             <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
             <div class="video-overlay-layer" id="video-overlay-layer">
@@ -980,9 +979,9 @@
         <div class="form-row" style="margin-top: 3px;">
           <div class="form-label">
             <span>ទំហំអក្សររួម (Font Size)</span>
-            <span class="form-label-val" id="text-size-val">26px</span>
+            <span class="form-label-val" id="text-size-val">16px</span>
           </div>
-          <input type="range" min="14" max="60" step="2" value="26" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
+          <input type="range" min="10" max="40" step="1" value="16" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
         </div>
 
         <!-- Text Position Sliders (2 Columns: X and Y) -->
@@ -992,17 +991,17 @@
             <div class="form-row">
               <div class="form-label">
                 <span>ឆ្វេង-ស្ដាំ (X)</span>
-                <span class="form-label-val" id="text-x-val">15px</span>
+                <span class="form-label-val" id="text-x-val">10px</span>
               </div>
-              <input type="range" min="0" max="350" step="5" value="15" class="cyber-slider" id="text-x-slider"
+              <input type="range" min="0" max="300" step="2" value="10" class="cyber-slider" id="text-x-slider"
                 oninput="document.getElementById('text-x-val').innerText = this.value + 'px'; updateTextPosition();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>លើ-ក្រោម (Y)</span>
-                <span class="form-label-val" id="text-y-val">30px</span>
+                <span class="form-label-val" id="text-y-val">15px</span>
               </div>
-              <input type="range" min="0" max="600" step="5" value="30" class="cyber-slider" id="text-y-slider"
+              <input type="range" min="0" max="500" step="2" value="15" class="cyber-slider" id="text-y-slider"
                 oninput="document.getElementById('text-y-val').innerText = this.value + 'px'; updateTextPosition();">
             </div>
           </div>
@@ -1035,9 +1034,9 @@
           <div class="form-row" style="margin-top: 3px;">
             <label class="form-label">ទិសដៅរត់</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3px;">
-              <button type="button" class="btn-ctrl active" id="btn-marquee-dir-up" onclick="setMarqueeDir('up')">⬆️ ឡើង</button>
+              <button type="button" class="btn-ctrl" id="btn-marquee-dir-up" onclick="setMarqueeDir('up')">⬆️ ឡើង</button>
               <button type="button" class="btn-ctrl" id="btn-marquee-dir-down" onclick="setMarqueeDir('down')">⬇️ ចុះ</button>
-              <button type="button" class="btn-ctrl" id="btn-marquee-dir-left" onclick="setMarqueeDir('left')">⬅️ ឆ្វេង</button>
+              <button type="button" class="btn-ctrl active" id="btn-marquee-dir-left" onclick="setMarqueeDir('left')">⬅️ ឆ្វេង</button>
               <button type="button" class="btn-ctrl" id="btn-marquee-dir-right" onclick="setMarqueeDir('right')">➡️ ស្ដាំ</button>
             </div>
           </div>
@@ -1132,17 +1131,17 @@
             <div class="form-row">
               <div class="form-label">
                 <span>ទទឹង (W)</span>
-                <span class="form-label-val" id="blur-w-val">140px</span>
+                <span class="form-label-val" id="blur-w-val">75px</span>
               </div>
-              <input type="range" min="20" max="258" step="2" value="140" class="cyber-slider" id="blur-w-slider"
+              <input type="range" min="20" max="180" step="2" value="75" class="cyber-slider" id="blur-w-slider"
                 oninput="handleBlurSliderInput();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>កម្ពស់ (H)</span>
-                <span class="form-label-val" id="blur-h-val">45px</span>
+                <span class="form-label-val" id="blur-h-val">28px</span>
               </div>
-              <input type="range" min="10" max="140" step="2" value="45" class="cyber-slider" id="blur-h-slider"
+              <input type="range" min="10" max="100" step="2" value="28" class="cyber-slider" id="blur-h-slider"
                 oninput="handleBlurSliderInput();">
             </div>
           </div>
@@ -1155,17 +1154,17 @@
             <div class="form-row">
               <div class="form-label">
                 <span>ឆ្វេង-ស្ដាំ (X)</span>
-                <span class="form-label-val" id="blur-x-val">15px</span>
+                <span class="form-label-val" id="blur-x-val">10px</span>
               </div>
-              <input type="range" min="0" max="238" step="2" value="15" class="cyber-slider" id="blur-x-slider"
+              <input type="range" min="0" max="180" step="2" value="10" class="cyber-slider" id="blur-x-slider"
                 oninput="handleBlurSliderInput();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>លើ-ក្រោម (Y)</span>
-                <span class="form-label-val" id="blur-y-val">15px</span>
+                <span class="form-label-val" id="blur-y-val">10px</span>
               </div>
-              <input type="range" min="0" max="320" step="2" value="15" class="cyber-slider" id="blur-y-slider"
+              <input type="range" min="0" max="300" step="2" value="10" class="cyber-slider" id="blur-y-slider"
                 oninput="handleBlurSliderInput();">
             </div>
           </div>
@@ -1592,6 +1591,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=8.4.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.6.0"></script>
 </body>
 </html>

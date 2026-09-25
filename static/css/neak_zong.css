@@ -498,10 +498,10 @@ header.app-header {
 
 /* 1. Blur Box (Horizontal Rectangle for corner Watermark/Logo) */
 #blur-overlay-box {
-  width: 140px;
-  height: 45px;
-  top: 15px;
-  left: 15px;
+  width: 75px;
+  height: 28px;
+  top: 10px;
+  left: 10px;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -560,90 +560,103 @@ header.app-header {
 /* ── 3. DUAL-TONE HEADER MARQUEE ANIMATION ───────────────── */
 #text-overlay-element.marquee-active {
   position: absolute !important;
-  pointer-events: none !important;
-  will-change: top, left, transform !important;
+  width: max-content !important;
   white-space: nowrap !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  will-change: transform, left, top !important;
+  display: block !important;
   z-index: 25 !important;
 }
 
 #text-overlay-element.marquee-active.dir-up {
   left: 50% !important;
-  animation-name: scrollUp !important;
+  right: auto !important;
+  bottom: auto !important;
+  animation: marqueeScrollUp var(--marquee-duration, 8s) linear infinite !important;
 }
 
 #text-overlay-element.marquee-active.dir-down {
   left: 50% !important;
-  animation-name: scrollDown !important;
+  right: auto !important;
+  bottom: auto !important;
+  animation: marqueeScrollDown var(--marquee-duration, 8s) linear infinite !important;
 }
 
 #text-overlay-element.marquee-active.dir-left {
   top: 50% !important;
-  animation-name: scrollLeft !important;
+  right: auto !important;
+  bottom: auto !important;
+  animation: marqueeScrollLeft var(--marquee-duration, 8s) linear infinite !important;
 }
 
 #text-overlay-element.marquee-active.dir-right {
   top: 50% !important;
-  animation-name: scrollRight !important;
+  right: auto !important;
+  bottom: auto !important;
+  animation: marqueeScrollRight var(--marquee-duration, 8s) linear infinite !important;
 }
 
-@keyframes scrollUp {
+@keyframes marqueeScrollUp {
   0% {
     top: 100%;
-    transform: translate(-50%, 0%);
+    transform: translate3d(-50%, 0, 0);
   }
   100% {
     top: 0%;
-    transform: translate(-50%, -100%);
+    transform: translate3d(-50%, -100%, 0);
   }
 }
 
-@keyframes scrollDown {
+@keyframes marqueeScrollDown {
   0% {
     top: 0%;
-    transform: translate(-50%, -100%);
+    transform: translate3d(-50%, -100%, 0);
   }
   100% {
     top: 100%;
-    transform: translate(-50%, 0%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
-@keyframes scrollLeft {
+@keyframes marqueeScrollLeft {
   0% {
     left: 100%;
-    transform: translateY(-50%);
+    transform: translate3d(0, -50%, 0);
   }
   100% {
-    left: -100%;
-    transform: translateY(-50%);
+    left: 0%;
+    transform: translate3d(-100%, -50%, 0);
   }
 }
 
-@keyframes scrollRight {
+@keyframes marqueeScrollRight {
   0% {
-    left: -100%;
-    transform: translateY(-50%);
+    left: 0%;
+    transform: translate3d(-100%, -50%, 0);
   }
   100% {
     left: 100%;
-    transform: translateY(-50%);
+    transform: translate3d(0, -50%, 0);
   }
 }
 
 /* Resizing Handles for Blur Box */
 .resizer-handle {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: var(--neon-cyan-bright);
-  border: 1px solid #000;
+  border: 2px solid #ffffff;
   border-radius: 50%;
+  box-shadow: 0 0 6px rgba(34, 211, 238, 0.9);
   z-index: 20;
 }
-.resizer-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
-.resizer-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
-.resizer-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
-.resizer-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+.resizer-handle.se { bottom: -7px; right: -7px; cursor: se-resize; }
+.resizer-handle.sw { bottom: -7px; left: -7px; cursor: sw-resize; }
+.resizer-handle.ne { top: -7px; right: -7px; cursor: ne-resize; }
+.resizer-handle.nw { top: -7px; left: -7px; cursor: nw-resize; }
 
 /* Video Controls Bar below Canvas */
 .video-toolbar {

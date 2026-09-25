@@ -25,10 +25,10 @@ const state = {
   // Blur Mask (Horizontal Rectangle for Watermark/Logo)
   blurMask: {
     enabled: false,
-    x: 15,
-    y: 15,
-    w: 140,
-    h: 45,
+    x: 10,
+    y: 10,
+    w: 75,
+    h: 28,
     intensity: 25,
     tintOpacity: 0.40
   },
@@ -36,7 +36,7 @@ const state = {
   // Logo Overlay (controlled by drag + sliders)
   logoOverlay: {
     enabled: false,
-    x: 15,
+    x: 10,
     y: 15,
     scale: 0.25,
     opacity: 0.9,
@@ -47,9 +47,9 @@ const state = {
   textOverlay: {
     enabled: false,
     font: "'Moul', serif",
-    size: 26,
-    x: 15,
-    y: 30,
+    size: 16,
+    x: 10,
+    y: 15,
     transparentMode: false
   },
   textPart1: {
@@ -73,10 +73,10 @@ const state = {
   marquee: {
     enabled: false,
     text: 'រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ',
-    direction: 'up',
+    direction: 'left',
     speedSec: 8,
     color: '#f59e0b',
-    fontSize: 22,
+    fontSize: 16,
     font: "'Kantumruy Pro', sans-serif",
     effect: 'none',    // 'none' | 'shadow' | 'glow' | 'outline'
     glowColor: '#c084fc'
@@ -420,10 +420,6 @@ function handleVideoUpload(input) {
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  // Clean up any previously created fallback poster
-  const prevFallback = document.getElementById('video-fallback-poster');
-  if (prevFallback) prevFallback.style.display = 'none';
-
   // 1. Instant local ObjectURL creation and mount to HTML5 <video> in under 1 second!
   if (state.localVideoUrl) {
     try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
@@ -435,7 +431,6 @@ function handleVideoUpload(input) {
   videoElement.style.display = 'block';
   videoElement.crossOrigin = 'anonymous';
   videoElement.src = videoUrl;
-  videoElement.muted = true;
   videoElement.playsInline = true;
   videoElement.controls = true;
   videoElement.setAttribute('playsinline', '');
@@ -447,70 +442,40 @@ function handleVideoUpload(input) {
 
   // Handle format unsupported or decode error (common with H.265/HEVC on mobile webview)
   videoElement.onerror = (e) => {
-    console.warn('HTML5 <video> playback error / unsupported codec (e.g. H.265/HEVC):', videoElement.error);
+    console.warn('HTML5 <video> error:', videoElement.error);
     state.hasVideoDecodeError = true;
-    showToast('⚠️ ទម្រង់វីដេអូទូរសព្ទ (H.265/HEVC) Webview មិនគាំទ្រចាក់ផ្ទាល់ - កំពុងទាញយក Frame Preview ពី Server...');
-
-    // If server thumbnail has already loaded, apply fallback immediately
+    showToast('⚠️ ទម្រង់វីដេអូទូរសព្ទ Webview - កំពុងទាញយក Frame Preview ពី Server...');
     if (state.thumbnailUrl) {
       applyThumbnailFallback(state.thumbnailUrl);
     }
   };
 
   videoElement.onloadedmetadata = () => {
-    if (!state.hasVideoDecodeError) {
-      try {
-        videoElement.currentTime = 0.05;
-      } catch (err) {}
-      // Auto-adapt viewport to video aspect ratio (e.g. 16:9 landscape vs 9:16 vertical)
-      const isLandscape = (videoElement.videoWidth || 9) > (videoElement.videoHeight || 16);
-      const vp = document.getElementById('video-viewport');
-      if (vp) {
-        vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
-      }
-      updateBlurBoxLimits();
-      // Keep blur box strictly OFF on upload unless already enabled by user
-      if (state.blurMask.enabled) {
-        updateBlurBoxFromSliders();
-      }
-      updateVideoTime();
+    try {
+      videoElement.currentTime = 0.05;
+    } catch (err) {}
+    // Auto-adapt viewport to video aspect ratio (e.g. 16:9 landscape vs 9:16 vertical)
+    const isLandscape = (videoElement.videoWidth || 9) > (videoElement.videoHeight || 16);
+    const vp = document.getElementById('video-viewport');
+    if (vp) {
+      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
     }
+    updateBlurBoxLimits();
+    // Keep blur box strictly OFF on upload unless already enabled by user
+    if (state.blurMask.enabled) {
+      updateBlurBoxFromSliders();
+    }
+    updateVideoTime();
   };
 
-  videoElement.onloadeddata = () => {
-    // Instant client-side frame extraction via canvas (<0.05s) to guarantee no black screen!
-    if (videoElement.videoWidth > 0 && !state.hasVideoDecodeError) {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.min(480, videoElement.videoWidth);
-        canvas.height = Math.round(canvas.width * (videoElement.videoHeight / videoElement.videoWidth));
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        if (dataUrl && dataUrl.length > 500) {
-          applyThumbnailFallback(dataUrl, false);
-        }
-      } catch (err) {}
-    }
-  };
-
-  videoElement.oncanplay = () => {
-    // Safe autoplay attempt
-    videoElement.play().catch(() => {});
-  };
+  videoElement.ontimeupdate = updateVideoTime;
 
   videoElement.onplay = () => {
-    const fb = document.getElementById('video-fallback-poster');
-    if (fb) fb.style.display = 'none';
     const btn = document.getElementById('btn-play-toggle');
     if (btn) btn.innerText = '⏸ ផ្អាក';
   };
 
   videoElement.onplaying = () => {
-    const fb = document.getElementById('video-fallback-poster');
-    if (fb && !state.hasVideoDecodeError) {
-      fb.style.display = 'none';
-    }
     const btn = document.getElementById('btn-play-toggle');
     if (btn) btn.innerText = '⏸ ផ្អាក';
   };
@@ -518,19 +483,16 @@ function handleVideoUpload(input) {
   videoElement.onpause = () => {
     const btn = document.getElementById('btn-play-toggle');
     if (btn) btn.innerText = '▶️ ចាក់';
-    if (state.hasVideoDecodeError) {
-      const fb = document.getElementById('video-fallback-poster');
-      if (fb && state.thumbnailUrl) fb.style.display = 'block';
-    }
+  };
+
+  videoElement.onended = () => {
+    const btn = document.getElementById('btn-play-toggle');
+    if (btn) btn.innerText = '▶️ ចាក់';
+    updateVideoTime();
   };
 
   // Trigger immediate video load
   videoElement.load();
-  try {
-    const p = videoElement.play();
-    if (p !== undefined) p.catch(() => {});
-  } catch (err) {}
-
   showToast('✓ វីដេអូបានបើកក្នុង Player Preview ត្រូវទម្រង់ ១០០%!');
 
   // 2. Upload to Cloud Server asynchronously in background with real-time progress
@@ -569,11 +531,7 @@ function uploadVideoToCloud(file) {
           state.videoFilename = data.filename;
           if (data.thumbnail_url) {
             state.thumbnailUrl = data.thumbnail_url;
-            previewVideo.poster = data.thumbnail_url;
-            // Guarantee video preview is NEVER a black box on mobile: show thumbnail frame
-            if (state.hasVideoDecodeError || previewVideo.paused) {
-              applyThumbnailFallback(data.thumbnail_url, true);
-            }
+            applyThumbnailFallback(data.thumbnail_url);
           }
           if (progressBar) progressBar.style.width = '100%';
           if (percentText) percentText.innerText = '100%';
@@ -596,36 +554,11 @@ function uploadVideoToCloud(file) {
   xhr.send(formData);
 }
 
-
 function applyThumbnailFallback(thumbUrl) {
   if (!thumbUrl) return;
-  let fallback = document.getElementById('video-fallback-poster');
-  if (!fallback) {
-    fallback = document.createElement('img');
-    fallback.id = 'video-fallback-poster';
-    fallback.alt = 'Video Preview Poster';
-    fallback.style.position = 'absolute';
-    fallback.style.inset = '0';
-    fallback.style.width = '100%';
-    fallback.style.height = '100%';
-    fallback.style.objectFit = 'contain';
-    fallback.style.zIndex = '2';
-    fallback.style.pointerEvents = 'none';
-    fallback.style.background = '#050408';
-
-    const vp = document.getElementById('video-viewport');
-    if (vp) {
-      const overlayLayer = document.getElementById('video-overlay-layer');
-      if (overlayLayer) {
-        vp.insertBefore(fallback, overlayLayer);
-      } else {
-        vp.appendChild(fallback);
-      }
-    }
+  if (previewVideo) {
+    previewVideo.poster = thumbUrl;
   }
-  fallback.src = thumbUrl;
-  fallback.style.display = 'block';
-
   // Adapt viewport aspect ratio to server thumbnail image
   const img = new Image();
   img.onload = () => {
@@ -640,8 +573,6 @@ function applyThumbnailFallback(thumbUrl) {
     }
   };
   img.src = thumbUrl;
-
-  showToast('✓ បានបង្ហាញ Frame វីដេអូពី Server ជំនួសផ្ទាំងខ្មៅ!');
 }
 
 async function handleSrtUpload(input) {
@@ -668,11 +599,11 @@ function updateVideoTime() {
 // ── ROBUST VIDEO PLAYBACK HANDLERS FOR MOBILE WEBVIEW ─────────────
 function toggleVideoPlayback() {
   if (!previewVideo) return;
-  const fb = document.getElementById('video-fallback-poster');
   const btn = document.getElementById('btn-play-toggle');
 
   if (previewVideo.paused || previewVideo.ended) {
-    if (fb) fb.style.display = 'none';
+    // Unmute on explicit user gesture
+    previewVideo.muted = false;
     const playPromise = previewVideo.play();
     if (playPromise !== undefined) {
       playPromise.then(() => {
@@ -681,12 +612,16 @@ function toggleVideoPlayback() {
         console.warn('Playback on blob URL note:', err);
         // Fallback to streaming uploaded file from cloud server if local blob fails
         if (state.videoFilename) {
+          showToast('⚡ កំពុងបើកចាក់វីដេអូពី Server...');
           previewVideo.src = `/uploads/${state.videoFilename}`;
           previewVideo.crossOrigin = 'anonymous';
           previewVideo.load();
           previewVideo.play().then(() => {
             if (btn) btn.innerText = '⏸ ផ្អាក';
-          }).catch(e => console.warn('Server URL playback error:', e));
+          }).catch(e => {
+            console.warn('Server URL playback error:', e);
+            showToast('⚠️ Webview មិនគាំទ្រចាក់ទម្រង់ Codec វីដេអូនេះ');
+          });
         }
       });
     }
@@ -912,14 +847,14 @@ function updateDualTonePreview() {
     p1Span.innerText = state.textPart1.text;
     p1Span.style.color = state.textPart1.color;
     p1Span.style.fontFamily = state.textPart1.font;
-    p1Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
+    p1Span.style.fontSize = (state.textOverlay.size || 16) + 'px';
     _applyEffectToSpan(p1Span, state.textPart1.effect, state.textPart1.color, state.textPart1.outlineColor);
   }
   if (p2Span) {
     p2Span.innerText = ' ' + state.textPart2.text;
     p2Span.style.color = state.textPart2.color;
     p2Span.style.fontFamily = state.textPart2.font;
-    p2Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
+    p2Span.style.fontSize = (state.textOverlay.size || 16) + 'px';
     _applyEffectToSpan(p2Span, state.textPart2.effect, state.textPart2.color, state.textPart2.outlineColor);
   }
 }
@@ -1020,8 +955,8 @@ function clampBoxWithinVideo(x, y, w, h) {
   const rect = getVideoRenderRect();
   const minW = 20;
   const minH = 10;
-  const maxW = rect.width;
-  const maxH = rect.height;
+  const maxW = Math.max(minW, rect.width - 2);
+  const maxH = Math.max(minH, rect.height - 2);
 
   // Clamp dimensions
   w = Math.max(minW, Math.min(maxW, Math.round(w)));
@@ -1078,16 +1013,16 @@ function updateBlurBoxLimits() {
   const hSlider = document.getElementById('blur-h-slider');
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
-  const curW = state.blurMask.w || 140;
-  const curH = state.blurMask.h || 45;
+  const curW = state.blurMask.w || 75;
+  const curH = state.blurMask.h || 28;
 
   if (wSlider) {
     wSlider.min = 20;
-    wSlider.max = Math.max(40, rect.width);
+    wSlider.max = Math.max(40, rect.width - 4);
   }
   if (hSlider) {
     hSlider.min = 10;
-    hSlider.max = Math.max(20, rect.height);
+    hSlider.max = Math.max(20, rect.height - 4);
   }
   if (xSlider) {
     xSlider.min = rect.left;
@@ -1116,10 +1051,10 @@ function initPassiveSliderTouch() {
 }
 
 function updateBlurBoxFromSliders() {
-  let w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
-  let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
-  let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
-  let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+  let w = parseInt(document.getElementById('blur-w-slider')?.value || 75);
+  let h = parseInt(document.getElementById('blur-h-slider')?.value || 28);
+  let x = parseInt(document.getElementById('blur-x-slider')?.value || 10);
+  let y = parseInt(document.getElementById('blur-y-slider')?.value || 10);
 
   const clamped = clampBoxWithinVideo(x, y, w, h);
   x = clamped.x;
@@ -1230,8 +1165,8 @@ function updateBlurTint(val) {
 
 function setBlurCorner(corner) {
   const rect = getVideoRenderRect();
-  const w = Math.min(state.blurMask.w || 140, rect.width - 10);
-  const h = Math.min(state.blurMask.h || 45, rect.height - 10);
+  const w = Math.min(state.blurMask.w || 75, rect.width - 10);
+  const h = Math.min(state.blurMask.h || 28, rect.height - 10);
   let x = rect.left + 8;
   let y = rect.top + 8;
 
@@ -1414,15 +1349,15 @@ function setMarqueeDir(dir) {
 function updateMarqueeAnimation() {
   if (!textElement) return;
 
-  const dir = state.marquee.direction || 'up';
+  const dir = state.marquee.direction || 'left';
   const speedSec = parseFloat(state.marquee.speedSec) || 8.0;
 
   if (!state.marquee.enabled) {
     textElement.classList.remove('marquee-active', 'dir-up', 'dir-down', 'dir-left', 'dir-right');
-    textElement.style.animation = 'none';
+    textElement.style.removeProperty('animation');
     textElement.style.removeProperty('--marquee-duration');
-    textElement.style.left = `${state.textOverlay.x || 15}px`;
-    textElement.style.top = `${state.textOverlay.y || 30}px`;
+    textElement.style.left = `${state.textOverlay.x || 10}px`;
+    textElement.style.top = `${state.textOverlay.y || 15}px`;
     textElement.style.transform = '';
     textElement.style.display = state.textOverlay.enabled ? 'block' : 'none';
     return;
@@ -1448,9 +1383,9 @@ function updateMarqueeAnimation() {
   // Set duration via CSS variable
   textElement.style.setProperty('--marquee-duration', `${speedSec}s`);
 
-  let animName = 'marqueeScrollUp';
-  if (dir === 'down') animName = 'marqueeScrollDown';
-  else if (dir === 'left') animName = 'marqueeScrollLeft';
+  let animName = 'marqueeScrollLeft';
+  if (dir === 'up') animName = 'marqueeScrollUp';
+  else if (dir === 'down') animName = 'marqueeScrollDown';
   else if (dir === 'right') animName = 'marqueeScrollRight';
 
   // Force reflow to immediately restart animation seamlessly
@@ -1533,7 +1468,7 @@ function makeDraggable(element) {
   let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
 
   function onDragStart(clientX, clientY, target) {
-    if (target && target.classList && target.classList.contains('resizer-handle')) return false;
+    if (target && target.closest && target.closest('.resizer-handle')) return false;
     isDragging = true;
     startX = clientX;
     startY = clientY;
@@ -2126,21 +2061,37 @@ window.addEventListener('DOMContentLoaded', () => {
   if (blurBox) {
     blurBox.style.display = 'none';
     blurBox.classList.remove('active-visible');
-    blurBox.style.width = '140px';
-    blurBox.style.height = '45px';
-    blurBox.style.left = '15px';
-    blurBox.style.top = '15px';
+    blurBox.style.width = '75px';
+    blurBox.style.height = '28px';
+    blurBox.style.left = '10px';
+    blurBox.style.top = '10px';
   }
   const initWSlider = document.getElementById('blur-w-slider');
   const initHSlider = document.getElementById('blur-h-slider');
-  if (initWSlider) initWSlider.value = 140;
-  if (initHSlider) initHSlider.value = 45;
+  if (initWSlider) initWSlider.value = 75;
+  if (initHSlider) initHSlider.value = 28;
   const initWVal = document.getElementById('blur-w-val');
   const initHVal = document.getElementById('blur-h-val');
-  if (initWVal) initWVal.innerText = '140px';
-  if (initHVal) initHVal.innerText = '45px';
+  if (initWVal) initWVal.innerText = '75px';
+  if (initHVal) initHVal.innerText = '28px';
+
+  const initXSlider = document.getElementById('blur-x-slider');
+  const initYSlider = document.getElementById('blur-y-slider');
+  if (initXSlider) initXSlider.value = 10;
+  if (initYSlider) initYSlider.value = 10;
+  const initXVal = document.getElementById('blur-x-val');
+  const initYVal = document.getElementById('blur-y-val');
+  if (initXVal) initXVal.innerText = '10px';
+  if (initYVal) initYVal.innerText = '10px';
+
   const blurToggle = document.getElementById('toggle-blur');
   if (blurToggle) blurToggle.checked = false;
+
+  // Initialize text size slider
+  const textSizeSlider = document.getElementById('text-size-slider');
+  if (textSizeSlider) textSizeSlider.value = 16;
+  const textSizeVal = document.getElementById('text-size-val');
+  if (textSizeVal) textSizeVal.innerText = '16px';
 
   updateBlurBoxLimits();
   window.addEventListener('resize', () => {
