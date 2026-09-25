@@ -19,7 +19,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.8.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.9.0">
 
   <!-- ⚡ CRITICAL MOBILE STUDIO 3-TIER RESTRUCTURE (NO WHOLE-PAGE SCROLL / 100dvh LOCK) -->
   <style>
@@ -888,6 +888,30 @@
           <span>📝 ដាក់អក្សរ ២ ពណ៌ (Dual-Tone Text Overlay)</span>
         </div>
 
+        <!-- 🏷️ Quick Marquee Name Presets (Chips / Buttons) -->
+        <div class="preset-name-chips-bar" style="margin: 3px 0 5px 0; background: rgba(255,255,255,0.03); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 4px 6px;">
+          <div style="font-size: 0.65rem; color: var(--neon-gold); font-weight: 800; margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between;">
+            <span>⚡ ជ្រើសរើសឈ្មោះអក្សររត់រហ័ស (Quick Presets)</span>
+            <span style="font-size: 0.58rem; color: var(--text-muted);">ចុចប្ដូរភ្លាមៗ</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" class="btn-preset-chip" onclick="applyMarqueePreset('𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴')" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.5); color: #f59e0b; border-radius: 6px; padding: 4px 2px; font-size: 0.60rem; font-weight: 700; cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" title="𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴">
+              🎬 KH Drama 10M
+            </button>
+            <button type="button" class="btn-preset-chip" onclick="applyMarqueePreset('នាគហ្សង', 'បកប្រែ')" style="background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.5); color: #22d3ee; border-radius: 6px; padding: 4px 2px; font-size: 0.60rem; font-weight: 700; cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" title="នាគហ្សង បកប្រែ">
+              🐉 នាគហ្សង បកប្រែ
+            </button>
+            <button type="button" class="btn-preset-chip" onclick="applyMarqueePreset('ស្ដេចហ្សង', 'បកប្រែ')" style="background: rgba(192, 132, 252, 0.15); border: 1px solid rgba(192, 132, 252, 0.5); color: #c084fc; border-radius: 6px; padding: 4px 2px; font-size: 0.60rem; font-weight: 700; cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" title="ស្ដេចហ្សង បកប្រែ">
+              👑 ស្ដេចហ្សង បកប្រែ
+            </button>
+          </div>
+          <!-- Custom Input box for typing anything freely -->
+          <div style="display: flex; gap: 4px; margin-top: 4px;">
+            <input type="text" id="marquee-custom-input" class="cyber-input" placeholder="✏️ វាយបញ្ចូលឈ្មោះផ្ទាល់ខ្លួន..." style="height: 24px; font-size: 0.64rem; padding: 2px 6px;" oninput="applyCustomMarqueeText(this.value)">
+            <button type="button" class="btn-ctrl" onclick="applyCustomMarqueeText(document.getElementById('marquee-custom-input').value)" style="height: 24px; padding: 0 8px; font-size: 0.62rem; white-space: nowrap;">✓ ប្រើ</button>
+          </div>
+        </div>
+
         <!-- Quick Color Presets Bar (White, Black, Gold, Cyan, Red) -->
         <div class="color-preset-bar">
           <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">ពណ៌រហ័ស:</span>
@@ -1591,6 +1615,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=8.8.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.9.0"></script>
 </body>
 </html>

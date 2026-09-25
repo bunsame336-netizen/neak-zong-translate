@@ -497,10 +497,17 @@ function handleVideoUpload(input) {
 
   // Handle format unsupported or decode error (common with H.265/HEVC on mobile webview)
   videoElement.onerror = (e) => {
-    console.warn('HTML5 <video> error:', videoElement.error);
+    console.warn('HTML5 <video> format not supported natively by Webview. Switching to H.264 Fast-Stream...');
     state.hasVideoDecodeError = true;
-    showToast('⚠️ កំពុងទាញយក Frame Preview ពី Server...');
-    if (state.thumbnailUrl) {
+    showToast('⚡ Webview Codec មិនស្គាល់ - កំពុងបម្លែងជា H.264 Fast-Stream ជូន...');
+    const streamUrl = state.previewUrl || (state.videoFilename ? `/api/preview/${state.videoFilename}` : null);
+    if (streamUrl) {
+      videoElement.removeAttribute('crossorigin');
+      videoElement.removeAttribute('poster');
+      videoElement.src = streamUrl;
+      videoElement.load();
+      videoElement.play().catch(err => console.log('Preview fallback play note:', err));
+    } else if (state.thumbnailUrl) {
       applyThumbnailFallback(state.thumbnailUrl);
     }
   };
@@ -598,12 +605,29 @@ function uploadVideoToCloud(file) {
         const data = JSON.parse(xhr.responseText);
         if (data.status === 'ok') {
           state.videoFilename = data.filename;
+          if (data.preview_url) {
+            state.previewUrl = data.preview_url;
+          }
           if (data.thumbnail_url) {
             state.thumbnailUrl = data.thumbnail_url;
-            if (state.hasVideoDecodeError) {
-              applyThumbnailFallback(data.thumbnail_url);
-            }
           }
+
+          // If native video failed to play or had error on mobile, seamlessly switch to H.264 preview stream!
+          if (state.hasVideoDecodeError || (previewVideo && previewVideo.error)) {
+            const streamUrl = data.preview_url || `/api/preview/${data.filename}`;
+            previewVideo.removeAttribute('crossorigin');
+            previewVideo.removeAttribute('poster');
+            previewVideo.src = streamUrl;
+            previewVideo.load();
+            previewVideo.play().then(() => {
+              const btn = document.getElementById('btn-play-toggle');
+              if (btn) btn.innerText = '⏸ ផ្អាក';
+              showToast('✓ វីដេអូ H.264 Fast-Stream ចាក់ដំណើរការរលូន ១០០%!');
+            }).catch(e => console.log('Preview play note:', e));
+          } else if (state.hasVideoDecodeError && data.thumbnail_url) {
+            applyThumbnailFallback(data.thumbnail_url);
+          }
+
           if (progressBar) progressBar.style.width = '100%';
           if (percentText) percentText.innerText = '100%';
           if (statusText) statusText.innerText = '✓ វីដេអូភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)';
@@ -683,17 +707,18 @@ function toggleVideoPlayback() {
         previewVideo.muted = true;
         previewVideo.play().then(() => {
           if (btn) btn.innerText = '⏸ ផ្អាក';
-        }).catch(err2 => {
-          console.warn('Playback on blob failed, checking server fallback:', err2);
-          if (state.videoFilename) {
-            showToast('⚡ កំពុងបើកចាក់វីដេអូពី Server...');
+          console.warn('Playback on blob failed, checking H.264 preview fallback:', err2);
+          const streamUrl = state.previewUrl || (state.videoFilename ? `/api/preview/${state.videoFilename}` : null);
+          if (streamUrl) {
+            showToast('⚡ កំពុងបើកចាក់វីដេអូ H.264 Fast-Stream...');
             previewVideo.removeAttribute('crossorigin');
-            previewVideo.src = `/uploads/${state.videoFilename}`;
+            previewVideo.removeAttribute('poster');
+            previewVideo.src = streamUrl;
             previewVideo.load();
             previewVideo.play().then(() => {
               if (btn) btn.innerText = '⏸ ផ្អាក';
             }).catch(e => {
-              console.warn('Server URL playback error:', e);
+              console.warn('H.264 preview playback note:', e);
               showToast('⚠️ Webview មិនគាំទ្រចាក់ទម្រង់ Codec វីដេអូនេះ');
             });
           }
@@ -828,6 +853,59 @@ function toggleTextOverlay(enabled) {
   state.textOverlay.enabled = enabled;
   textElement.classList.toggle('active-visible', enabled);
   showToast(enabled ? '✓ បានបើកអក្សរ Dual-Tone' : 'បានបិទអក្សរ');
+}
+
+// ── QUICK MARQUEE NAME PRESETS ──────────────────────────────
+function applyMarqueePreset(text1, text2 = '') {
+  const p1Input = document.getElementById('text-part1-input');
+  const p2Input = document.getElementById('text-part2-input');
+  const customInput = document.getElementById('marquee-custom-input');
+
+  if (p1Input) p1Input.value = text1;
+  if (p2Input) p2Input.value = text2;
+  if (customInput) customInput.value = text2 ? `${text1} ${text2}` : text1;
+
+  state.textPart1.text = text1;
+  state.textPart2.text = text2;
+
+  // Auto-activate text overlay & running marquee
+  state.textOverlay.enabled = true;
+  state.marquee.enabled = true;
+  const toggleText = document.getElementById('toggle-text');
+  if (toggleText) toggleText.checked = true;
+  const toggleMarquee = document.getElementById('toggle-marquee');
+  if (toggleMarquee) toggleMarquee.checked = true;
+
+  updateDualTonePreview();
+  updateMarqueeAnimation();
+  showToast(`✓ ឈ្មោះអក្សររត់៖ ${text1} ${text2}`.trim());
+}
+
+function applyCustomMarqueeText(val) {
+  const trimmed = (val || '').trim();
+  if (!trimmed) return;
+
+  const parts = trimmed.split(/\s+(.*)/s);
+  const p1 = parts[0] || '';
+  const p2 = parts[1] || '';
+
+  const p1Input = document.getElementById('text-part1-input');
+  const p2Input = document.getElementById('text-part2-input');
+  if (p1Input) p1Input.value = p1;
+  if (p2Input) p2Input.value = p2;
+
+  state.textPart1.text = p1;
+  state.textPart2.text = p2;
+
+  state.textOverlay.enabled = true;
+  state.marquee.enabled = true;
+  const toggleText = document.getElementById('toggle-text');
+  if (toggleText) toggleText.checked = true;
+  const toggleMarquee = document.getElementById('toggle-marquee');
+  if (toggleMarquee) toggleMarquee.checked = true;
+
+  updateDualTonePreview();
+  updateMarqueeAnimation();
 }
 
 function setQuickTextColor(colorHex) {
@@ -1344,15 +1422,22 @@ function updateSponsorContent() {
     bannerBar.style.padding = `${Math.round(4 * scale)}px ${Math.round(8 * scale)}px`;
   }
   if (sponsorElement) {
+    const rect = getVideoRenderRect();
+    const vp = document.getElementById('video-viewport');
+    const vpH = vp ? vp.clientHeight : 320;
+
     sponsorElement.style.width = 'max-content';
-    sponsorElement.style.maxWidth = `${Math.min(94, Math.max(50, widthPct))}%`;
-    sponsorElement.style.left = '50%';
+    const maxAllowedWidth = Math.min(rect.width - 12, Math.round(rect.width * (widthPct / 100.0)));
+    sponsorElement.style.maxWidth = `${Math.max(50, maxAllowedWidth)}px`;
+    sponsorElement.style.left = `${Math.round(rect.left + rect.width / 2)}px`;
     sponsorElement.style.transform = 'translateX(-50%)';
+
     if (state.sponsor.position === 'top') {
-      sponsorElement.style.top = '12px';
+      sponsorElement.style.top = `${Math.round(rect.top + 8)}px`;
       sponsorElement.style.bottom = 'auto';
     } else {
-      sponsorElement.style.bottom = '12px';
+      const bottomInset = Math.max(8, Math.round((vpH - (rect.top + rect.height)) + 8));
+      sponsorElement.style.bottom = `${bottomInset}px`;
       sponsorElement.style.top = 'auto';
     }
   }
@@ -1374,8 +1459,17 @@ function setSponsorPosition(pos) {
     if (yVal) yVal.innerText = '88%';
   }
   if (sponsorElement) {
-    sponsorElement.style.bottom = 'auto';
-    sponsorElement.style.top = `${state.sponsor.yPercent}%`;
+    const rect = getVideoRenderRect();
+    const vp = document.getElementById('video-viewport');
+    const vpH = vp ? vp.clientHeight : 320;
+    if (pos === 'top') {
+      sponsorElement.style.top = `${Math.round(rect.top + 8)}px`;
+      sponsorElement.style.bottom = 'auto';
+    } else {
+      const bottomInset = Math.max(8, Math.round((vpH - (rect.top + rect.height)) + 8));
+      sponsorElement.style.bottom = `${bottomInset}px`;
+      sponsorElement.style.top = 'auto';
+    }
   }
 }
 

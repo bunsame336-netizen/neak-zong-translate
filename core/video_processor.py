@@ -565,52 +565,43 @@ def _build_filter_graph(
         current_pad = out
 
 
-    # 7. Sponsor Banner Overlay (Professional Compact Badge - Bottom Center, No Black Box)
+    # 7. Sponsor Banner Overlay (Professional Compact Pill Badge - Bottom Center)
     sponsor_opts = opts.get('sponsor')
     if sponsor_opts and sponsor_opts.get('enabled'):
-        s_title = (sponsor_opts.get('brand') or sponsor_opts.get('top_line') or sponsor_opts.get('top_text') or sponsor_opts.get('title') or '').strip()
-        s_phone = (sponsor_opts.get('contact') or sponsor_opts.get('bottom_line') or sponsor_opts.get('phone') or '').strip()
-        s_ad = (sponsor_opts.get('tagline') or sponsor_opts.get('badge') or sponsor_opts.get('ad_text') or '').strip()
+        s_title = (sponsor_opts.get('top_line') or sponsor_opts.get('brand') or sponsor_opts.get('top_text') or sponsor_opts.get('title') or '').strip()
+        s_phone = (sponsor_opts.get('bottom_line') or sponsor_opts.get('contact') or sponsor_opts.get('phone') or '').strip()
 
-        # Sanitize any legacy strings
-        s_title = s_title.replace('នាគហ្សង បកប្រែ', '').replace('«នាគហ្សង» ឧបត្ថម្ភធំ', '').replace('@neakzong', '').strip()
-        s_phone = s_phone.replace('នាគហ្សង បកប្រែ', '').replace('@neakzong', '').strip()
-        s_ad = s_ad.replace('នាគហ្សង បកប្រែ', '').replace('@neakzong', '').strip()
-
-        if not s_title and not s_phone and not s_ad:
-            s_title = '👑 ឧបត្ថម្ភធំ'
-            s_phone = '📞 0889111400 | Telegram'
-            s_ad = '✨ ទទួលផ្សាយពាណិជ្ជកម្ម'
-        elif not s_phone:
-            s_phone = '📞 0889111400 | Telegram'
+        if not s_title and not s_phone:
+            s_title = '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor'
+            s_phone = '📱 012 345 678 | Telegram'
 
         s_scale = max(0.6, min(1.8, float(sponsor_opts.get('scale', 1.0))))
-        s_font_path = _resolve_font_path(sponsor_opts.get('font', 'kantumruy'))
-        if not s_font_path or 'outfit' in str(s_font_path).lower() or 'calibri' in str(s_font_path).lower() or 'arial' in str(s_font_path).lower():
-            s_font_path = _resolve_font_path('kantumruy')
-        s_font_arg = f"fontfile='{s_font_path}':"
+        s_font_size = max(11, int(15 * s_scale))
+        s_font_path = _resolve_font_path(sponsor_opts.get('font', 'kantumruy')) or _resolve_font_path('kantumruy')
+        s_font_arg = f"fontfile='{s_font_path}':" if s_font_path else ""
 
-        # Build lines array (Compact 3 lines: Title, Phone, Tagline)
+        # Build lines array (Top Title + Bottom Contact)
         lines = []
         if s_title:
             lines.append({'text': s_title, 'color': sponsor_opts.get('top_color', '0xF59E0B'), 'size': s_font_size})
         if s_phone:
-            lines.append({'text': s_phone, 'color': sponsor_opts.get('mid_color', '0x22D3EE'), 'size': max(10, int(s_font_size * 0.92))})
-        if s_ad:
-            lines.append({'text': s_ad, 'color': sponsor_opts.get('bottom_color', '0xFFFFFF'), 'size': max(9, int(s_font_size * 0.85))})
+            lines.append({'text': s_phone, 'color': sponsor_opts.get('bottom_color', '0x22D3EE'), 'size': max(10, int(s_font_size * 0.90))})
 
-        line_gap = max(2, int(2.5 * s_scale))
+        line_gap = max(2, int(3 * s_scale))
         total_h = sum(l['size'] for l in lines) + (len(lines) - 1) * line_gap
 
-        # Position at Bottom Center (No Black Box, Transparent & Clean)
-        s_y_percent = sponsor_opts.get('y_percent')
-        if s_y_percent is not None:
-            base_y = f"trunc(h*{float(s_y_percent)/100.0:.3f})"
+        # Position at Bottom Center or Top Center
+        is_top = (sponsor_opts.get('position') == 'top') or (sponsor_opts.get('y_percent', 88) < 30)
+        if is_top:
+            base_y = "16"
         else:
-            base_y = f"h-{total_h + 16}"
+            s_y_percent = sponsor_opts.get('y_percent')
+            if s_y_percent is not None and s_y_percent > 30:
+                base_y = f"trunc(h*{float(s_y_percent)/100.0:.3f})"
+            else:
+                base_y = f"h-{total_h + 24}"
 
         out = next_pad()
-        # Compact lines with shadow & border, NO BLACK BOX (no drawbox, no box=1)
         sub_filters = []
         curr_y_offset = 0
         for l in lines:
@@ -618,7 +609,8 @@ def _build_filter_graph(
             y_calc = f"{base_y}+{curr_y_offset}"
             sub_filters.append(
                 f"drawtext={s_font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
-                f"borderw=2:bordercolor=black@0.9:shadowcolor=black@0.9:shadowx=2:shadowy=2:"
+                f"box=1:boxcolor=0x0C0A18@0.85:boxborderw=4:"
+                f"borderw=1:bordercolor=black@0.9:shadowcolor=black@0.9:shadowx=2:shadowy=2:"
                 f"x=(w-text_w)/2:y={y_calc}"
             )
             curr_y_offset += l['size'] + line_gap
