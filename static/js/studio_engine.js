@@ -410,7 +410,7 @@ async function revokeAdminKey(key) {
 // ══════════════════════════════════════════════════════════
 // ⚡ 2. MEDIA UPLOAD & HANDLING
 // ══════════════════════════════════════════════════════════
-async function handleVideoUpload(input) {
+function handleVideoUpload(input) {
   if (!input.files || input.files.length === 0) return;
   const file = input.files[0];
   state.videoFile = file;
@@ -424,7 +424,7 @@ async function handleVideoUpload(input) {
   const prevFallback = document.getElementById('video-fallback-poster');
   if (prevFallback) prevFallback.style.display = 'none';
 
-  // 1. Create proper Object URL and load into HTML5 <video> element
+  // 1. Instant local ObjectURL creation and mount to HTML5 <video> in under 1 second!
   if (state.localVideoUrl) {
     try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
   }
@@ -469,6 +469,23 @@ async function handleVideoUpload(input) {
     }
   };
 
+  videoElement.onloadeddata = () => {
+    // Instant client-side frame extraction via canvas (<0.05s) to guarantee no black screen!
+    if (videoElement.videoWidth > 0 && !state.hasVideoDecodeError) {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.min(480, videoElement.videoWidth);
+        canvas.height = Math.round(canvas.width * (videoElement.videoHeight / videoElement.videoWidth));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        if (dataUrl && dataUrl.length > 500) {
+          applyThumbnailFallback(dataUrl, false);
+        }
+      } catch (err) {}
+    }
+  };
+
   videoElement.oncanplay = () => {
     // Safe autoplay attempt
     videoElement.play().catch(() => {});
@@ -488,30 +505,78 @@ async function handleVideoUpload(input) {
     }
   };
 
+  // Trigger immediate video load
   videoElement.load();
+  try {
+    const p = videoElement.play();
+    if (p !== undefined) p.catch(() => {});
+  } catch (err) {}
+
   showToast('✓ វីដេអូបានបើកក្នុង Player Preview ត្រូវទម្រង់ ១០០%!');
 
-  // 2. Upload to Cloud Server in background and get first frame/thumbnail
+  // 2. Upload to Cloud Server asynchronously in background with real-time progress
+  uploadVideoToCloud(file);
+}
+
+function uploadVideoToCloud(file) {
   const formData = new FormData();
   formData.append('file', file);
-  
-  try {
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.status === 'ok') {
-      state.videoFilename = data.filename;
-      if (data.thumbnail_url) {
-        state.thumbnailUrl = data.thumbnail_url;
-        videoElement.poster = data.thumbnail_url;
-        // Guarantee video preview is NEVER a black box on mobile: show thumbnail frame immediately
-        applyThumbnailFallback(data.thumbnail_url);
-      }
-      showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)');
+
+  const statusText = document.getElementById('render-progress-status');
+  const progressBar = document.getElementById('render-progress-bar');
+  const percentText = document.getElementById('render-progress-percent');
+
+  if (statusText) statusText.innerText = '⚡ កំពុង Upload វីដេអូទៅកាន់ Cloud... (0%)';
+  if (progressBar) progressBar.style.width = '0%';
+  if (percentText) percentText.innerText = '0%';
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/upload', true);
+
+  xhr.upload.onprogress = (e) => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      if (progressBar) progressBar.style.width = `${pct}%`;
+      if (percentText) percentText.innerText = `${pct}%`;
+      if (statusText) statusText.innerText = `⚡ កំពុង Upload វីដេអូទៅកាន់ Cloud... (${pct}%)`;
     }
-  } catch (err) {
-    console.warn('Local preview active, cloud sync note:', err);
-  }
+  };
+
+  xhr.onload = () => {
+    if (xhr.status === 200) {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (data.status === 'ok') {
+          state.videoFilename = data.filename;
+          if (data.thumbnail_url) {
+            state.thumbnailUrl = data.thumbnail_url;
+            previewVideo.poster = data.thumbnail_url;
+            // Guarantee video preview is NEVER a black box on mobile: show thumbnail frame
+            if (state.hasVideoDecodeError || previewVideo.paused) {
+              applyThumbnailFallback(data.thumbnail_url, true);
+            }
+          }
+          if (progressBar) progressBar.style.width = '100%';
+          if (percentText) percentText.innerText = '100%';
+          if (statusText) statusText.innerText = '✓ វីដេអូភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)';
+          showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)');
+        }
+      } catch (err) {
+        console.warn('Upload parse error:', err);
+      }
+    } else {
+      if (statusText) statusText.innerText = '⚠️ Upload មិនបានសម្រេច សូមព្យាយាមម្ដងទៀត';
+    }
+  };
+
+  xhr.onerror = () => {
+    console.warn('Upload network error');
+    if (statusText) statusText.innerText = '⚠️ បញ្ហាបណ្ដាញ Cloud Upload';
+  };
+
+  xhr.send(formData);
 }
+
 
 function applyThumbnailFallback(thumbUrl) {
   if (!thumbUrl) return;
@@ -821,36 +886,158 @@ function _applyEffectToSpan(span, effect, color, outlineColor) {
 }
 
 
-// ── BLUR BOX SLIDERS (CLAMPS STRICTLY WITHIN VIDEO VIEWPORT) ──────
+// ── VIDEO VIEWPORT GEOMETRY & BOUNDING CLAMPS ───────────────────────
+function getVideoRenderRect() {
+  const vp = document.getElementById('video-viewport');
+  const fallback = { left: 0, top: 0, width: 280, height: 320 };
+  if (!vp) return fallback;
+
+  const vpW = vp.clientWidth || 280;
+  const vpH = vp.clientHeight || 320;
+  const vid = previewVideo;
+
+  // 1. If HTML5 Video is loaded with valid dimensions
+  if (vid && vid.videoWidth > 0 && vid.videoHeight > 0) {
+    const vidRatio = vid.videoWidth / vid.videoHeight;
+    const vpRatio = vpW / vpH;
+    let renderW = vpW;
+    let renderH = vpH;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (vidRatio > vpRatio) {
+      // Letterboxed top and bottom
+      renderW = vpW;
+      renderH = vpW / vidRatio;
+      offsetY = (vpH - renderH) / 2;
+    } else {
+      // Pillarboxed left and right
+      renderH = vpH;
+      renderW = vpH * vidRatio;
+      offsetX = (vpW - renderW) / 2;
+    }
+    return {
+      left: Math.max(0, Math.round(offsetX)),
+      top: Math.max(0, Math.round(offsetY)),
+      width: Math.max(30, Math.round(renderW)),
+      height: Math.max(20, Math.round(renderH))
+    };
+  }
+
+  // 2. If fallback poster image is active
+  const poster = document.getElementById('video-fallback-poster');
+  if (poster && poster.naturalWidth > 0 && poster.naturalHeight > 0) {
+    const pRatio = poster.naturalWidth / poster.naturalHeight;
+    const vpRatio = vpW / vpH;
+    let renderW = vpW;
+    let renderH = vpH;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (pRatio > vpRatio) {
+      renderW = vpW;
+      renderH = vpW / pRatio;
+      offsetY = (vpH - renderH) / 2;
+    } else {
+      renderH = vpH;
+      renderW = vpH * pRatio;
+      offsetX = (vpW - renderW) / 2;
+    }
+    return {
+      left: Math.max(0, Math.round(offsetX)),
+      top: Math.max(0, Math.round(offsetY)),
+      width: Math.max(30, Math.round(renderW)),
+      height: Math.max(20, Math.round(renderH))
+    };
+  }
+
+  return { left: 0, top: 0, width: vpW, height: vpH };
+}
+
+function clampBoxWithinVideo(x, y, w, h) {
+  const rect = getVideoRenderRect();
+  const minW = 20;
+  const minH = 10;
+  const maxW = rect.width;
+  const maxH = rect.height;
+
+  // Clamp dimensions
+  w = Math.max(minW, Math.min(maxW, Math.round(w)));
+  h = Math.max(minH, Math.min(maxH, Math.round(h)));
+
+  // Clamp coordinates strictly within the visible video rect
+  const minX = rect.left;
+  const maxX = Math.max(minX, rect.left + rect.width - w);
+  const minY = rect.top;
+  const maxY = Math.max(minY, rect.top + rect.height - h);
+
+  x = Math.max(minX, Math.min(maxX, Math.round(x)));
+  y = Math.max(minY, Math.min(maxY, Math.round(y)));
+
+  return { x, y, w, h };
+}
+
+// ── SMOOTH THROTTLED SLIDER SYNCHRONIZATION (JANK-FREE 60FPS) ──────
+let blurSyncRaf = null;
+let lastBlurSyncTime = 0;
+
+function throttledSyncBlurSliders(x, y, w, h, force = false) {
+  state.blurMask.x = Math.round(x);
+  state.blurMask.y = Math.round(y);
+  if (w !== undefined) state.blurMask.w = Math.round(w);
+  if (h !== undefined) state.blurMask.h = Math.round(h);
+
+  const now = performance.now();
+  if (force || (now - lastBlurSyncTime > 35)) {
+    lastBlurSyncTime = now;
+    if (blurSyncRaf) cancelAnimationFrame(blurSyncRaf);
+    blurSyncRaf = requestAnimationFrame(() => {
+      _syncSlider('blur-x-slider', state.blurMask.x);
+      _syncSlider('blur-y-slider', state.blurMask.y);
+      if (w !== undefined) _syncSlider('blur-w-slider', state.blurMask.w);
+      if (h !== undefined) _syncSlider('blur-h-slider', state.blurMask.h);
+
+      const xVal = document.getElementById('blur-x-val');
+      const yVal = document.getElementById('blur-y-val');
+      const wVal = document.getElementById('blur-w-val');
+      const hVal = document.getElementById('blur-h-val');
+      if (xVal) xVal.innerText = `${state.blurMask.x}px`;
+      if (yVal) yVal.innerText = `${state.blurMask.y}px`;
+      if (wVal && w !== undefined) wVal.innerText = `${state.blurMask.w}px`;
+      if (hVal && h !== undefined) hVal.innerText = `${state.blurMask.h}px`;
+    });
+  }
+}
+
+// ── BLUR BOX SLIDERS (CLAMPS STRICTLY WITHIN VIDEO BOUNDARIES) ─────
 function updateBlurBoxLimits() {
-  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
+  const rect = getVideoRenderRect();
   const wSlider = document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blur-h-slider');
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
+  const curW = state.blurMask.w || 140;
+  const curH = state.blurMask.h || 45;
+
   if (wSlider) {
     wSlider.min = 20;
-    wSlider.max = Math.max(40, vpW);
+    wSlider.max = Math.max(40, rect.width);
   }
   if (hSlider) {
     hSlider.min = 10;
-    hSlider.max = Math.max(30, vpH);
+    hSlider.max = Math.max(20, rect.height);
   }
   if (xSlider) {
-    xSlider.min = 0;
-    xSlider.max = Math.max(0, vpW - (state.blurMask.w || 140));
+    xSlider.min = rect.left;
+    xSlider.max = Math.max(rect.left, rect.left + rect.width - curW);
   }
   if (ySlider) {
-    ySlider.min = 0;
-    ySlider.max = Math.max(0, vpH - (state.blurMask.h || 45));
+    ySlider.min = rect.top;
+    ySlider.max = Math.max(rect.top, rect.top + rect.height - curH);
   }
 }
 
 function updateBlurBoxFromSliders() {
-  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
-
   if (!state.blurMask.enabled) {
     state.blurMask.enabled = true;
     const toggle = document.getElementById('toggle-blur');
@@ -866,11 +1053,11 @@ function updateBlurBoxFromSliders() {
   let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
   let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
 
-  // Boundary clamping: Ensure blur box NEVER exceeds video frame
-  w = Math.min(w, vpW);
-  h = Math.min(h, vpH);
-  x = Math.max(0, Math.min(x, vpW - w));
-  y = Math.max(0, Math.min(y, vpH - h));
+  const clamped = clampBoxWithinVideo(x, y, w, h);
+  x = clamped.x;
+  y = clamped.y;
+  w = clamped.w;
+  h = clamped.h;
 
   state.blurMask.x = x;
   state.blurMask.y = y;
@@ -989,22 +1176,34 @@ function updateBlurTint(val) {
 }
 
 function setBlurCorner(corner) {
-  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
-  const w = state.blurMask.w || 140;
-  const h = state.blurMask.h || 45;
-  let x = 15, y = 15;
-  if (corner === 'top-left') { x = 10; y = 10; }
-  else if (corner === 'top-right') { x = Math.max(0, vpW - w - 10); y = 10; }
-  else if (corner === 'bottom-left') { x = 10; y = Math.max(0, vpH - h - 10); }
-  else if (corner === 'bottom-right') { x = Math.max(0, vpW - w - 10); y = Math.max(0, vpH - h - 10); }
+  const rect = getVideoRenderRect();
+  const w = Math.min(state.blurMask.w || 140, rect.width - 10);
+  const h = Math.min(state.blurMask.h || 45, rect.height - 10);
+  let x = rect.left + 8;
+  let y = rect.top + 8;
 
+  if (corner === 'top-left') {
+    x = rect.left + 8;
+    y = rect.top + 8;
+  } else if (corner === 'top-right') {
+    x = rect.left + rect.width - w - 8;
+    y = rect.top + 8;
+  } else if (corner === 'bottom-left') {
+    x = rect.left + 8;
+    y = rect.top + rect.height - h - 8;
+  } else if (corner === 'bottom-right') {
+    x = rect.left + rect.width - w - 8;
+    y = rect.top + rect.height - h - 8;
+  }
+
+  const clamped = clampBoxWithinVideo(x, y, w, h);
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
-  if (xSlider) xSlider.value = x;
-  if (ySlider) ySlider.value = y;
+  if (xSlider) xSlider.value = clamped.x;
+  if (ySlider) ySlider.value = clamped.y;
   updateBlurBoxFromSliders();
 }
+
 
 // ── SPONSOR CONTROLS (WIDTH, SCALE & DUAL-STYLE SUPPORT) ────
 function toggleSponsorOverlay(enabled) {
@@ -1261,67 +1460,143 @@ function updateVideoCssFilters() {
 }
 
 // ══════════════════════════════════════════════════════════
-// ⚡ 7. TOUCH & DRAG SYSTEM (Optimized for Mobile Viewport)
+// ⚡ 7. TOUCH & DRAG SYSTEM (Optimized for Mobile Viewport & Touch)
 // ══════════════════════════════════════════════════════════
 function makeDraggable(element) {
+  if (!element) return;
   let isDragging = false;
   let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
 
-  element.addEventListener('pointerdown', (e) => {
-    if (e.target.classList.contains('resizer-handle')) return;
+  function onDragStart(clientX, clientY, target) {
+    if (target && target.classList && target.classList.contains('resizer-handle')) return false;
     isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
+    startX = clientX;
+    startY = clientY;
     initialLeft = element.offsetLeft;
     initialTop = element.offsetTop;
+    element.classList.add('is-dragging');
+    return true;
+  }
 
-    try {
-      element.setPointerCapture(e.pointerId);
-    } catch (err) {}
-    e.preventDefault();
+  function onDragMove(clientX, clientY) {
+    if (!isDragging) return;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+
+    if (element === blurBox) {
+      const rect = getVideoRenderRect();
+      const minX = rect.left;
+      const maxX = Math.max(minX, rect.left + rect.width - element.offsetWidth);
+      const minY = rect.top;
+      const maxY = Math.max(minY, rect.top + rect.height - element.offsetHeight);
+
+      const newLeft = Math.max(minX, Math.min(maxX, Math.round(initialLeft + dx)));
+      const newTop = Math.max(minY, Math.min(maxY, Math.round(initialTop + dy)));
+
+      element.style.left = `${newLeft}px`;
+      element.style.top = `${newTop}px`;
+
+      throttledSyncBlurSliders(newLeft, newTop, element.offsetWidth, element.offsetHeight, false);
+    } else {
+      const parent = element.parentElement || document.getElementById('video-viewport');
+      const pW = parent ? parent.clientWidth : 280;
+      const pH = parent ? parent.clientHeight : 320;
+      const maxLeft = Math.max(0, pW - element.offsetWidth);
+      const maxTop = Math.max(0, pH - element.offsetHeight);
+
+      const newLeft = Math.max(0, Math.min(maxLeft, Math.round(initialLeft + dx)));
+      const newTop = Math.max(0, Math.min(maxTop, Math.round(initialTop + dy)));
+
+      element.style.left = `${newLeft}px`;
+      element.style.top = `${newTop}px`;
+
+      if (element === logoElement) {
+        state.logoOverlay.x = newLeft;
+        state.logoOverlay.y = newTop;
+        _syncSlider('logo-x-slider', newLeft);
+        _syncSlider('logo-y-slider', newTop);
+        const lxVal = document.getElementById('logo-x-val');
+        const lyVal = document.getElementById('logo-y-val');
+        if (lxVal) lxVal.innerText = `${newLeft}px`;
+        if (lyVal) lyVal.innerText = `${newTop}px`;
+      } else if (element === textElement) {
+        _syncSlider('text-x-slider', newLeft);
+        _syncSlider('text-y-slider', newTop);
+        const txVal = document.getElementById('text-x-val');
+        const tyVal = document.getElementById('text-y-val');
+        if (txVal) txVal.innerText = `${newLeft}px`;
+        if (tyVal) tyVal.innerText = `${newTop}px`;
+      }
+    }
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    element.classList.remove('is-dragging');
+    if (element === blurBox) {
+      throttledSyncBlurSliders(element.offsetLeft, element.offsetTop, element.offsetWidth, element.offsetHeight, true);
+    }
+  }
+
+  // 1. Native Mobile Touch Handlers
+  element.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      if (onDragStart(touch.clientX, touch.clientY, e.target)) {
+        e.stopPropagation();
+      }
+    }
+  }, { passive: false });
+
+  element.addEventListener('touchmove', (e) => {
+    if (isDragging && e.touches.length === 1) {
+      e.preventDefault(); // Stop mobile screen scrolling during drag!
+      e.stopPropagation();
+      const touch = e.touches[0];
+      onDragMove(touch.clientX, touch.clientY);
+    }
+  }, { passive: false });
+
+  element.addEventListener('touchend', (e) => {
+    if (isDragging) {
+      e.stopPropagation();
+      onDragEnd();
+    }
+  }, { passive: false });
+
+  element.addEventListener('touchcancel', () => {
+    onDragEnd();
+  }, { passive: true });
+
+  // 2. Desktop Mouse / Pointer Handlers
+  element.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') return;
+    if (onDragStart(e.clientX, e.clientY, e.target)) {
+      try { element.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+      e.stopPropagation();
+    }
   });
 
   element.addEventListener('pointermove', (e) => {
-    if (!isDragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    const parent = element.parentElement;
-    const maxLeft = Math.max(0, parent.clientWidth - element.offsetWidth);
-    const maxTop = Math.max(0, parent.clientHeight - element.offsetHeight);
-
-    const newLeft = Math.max(0, Math.min(maxLeft, initialLeft + dx));
-    const newTop = Math.max(0, Math.min(maxTop, initialTop + dy));
-
-    element.style.left = `${newLeft}px`;
-    element.style.top = `${newTop}px`;
-
-    // Sync back to state & sliders
-    if (element === blurBox) {
-      state.blurMask.x = newLeft;
-      state.blurMask.y = newTop;
-      _syncSlider('blur-x-slider', newLeft);
-      _syncSlider('blur-y-slider', newTop);
-      document.getElementById('blur-x-val').innerText = Math.round(newLeft) + 'px';
-      document.getElementById('blur-y-val').innerText = Math.round(newTop) + 'px';
-    } else if (element === logoElement) {
-      state.logoOverlay.x = newLeft;
-      state.logoOverlay.y = newTop;
-      _syncSlider('logo-x-slider', newLeft);
-      _syncSlider('logo-y-slider', newTop);
-      document.getElementById('logo-x-val').innerText = Math.round(newLeft) + 'px';
-      document.getElementById('logo-y-val').innerText = Math.round(newTop) + 'px';
+    if (e.pointerType === 'touch') return;
+    if (isDragging) {
+      e.preventDefault();
+      onDragMove(e.clientX, e.clientY);
     }
   });
 
   const onPointerEnd = (e) => {
-    if (!isDragging) return;
-    isDragging = false;
-    try {
-      if (element.hasPointerCapture(e.pointerId)) {
-        element.releasePointerCapture(e.pointerId);
-      }
-    } catch (err) {}
+    if (e.pointerType === 'touch') return;
+    if (isDragging) {
+      try {
+        if (element.hasPointerCapture(e.pointerId)) {
+          element.releasePointerCapture(e.pointerId);
+        }
+      } catch (err) {}
+      onDragEnd();
+    }
   };
 
   element.addEventListener('pointerup', onPointerEnd);
@@ -1334,70 +1609,158 @@ function _syncSlider(sliderId, value) {
 }
 
 function makeResizable(element) {
-  const handle = element.querySelector('.resizer-handle.se');
-  if (!handle) return;
+  if (!element) return;
+  const handles = element.querySelectorAll('.resizer-handle');
+  if (!handles || handles.length === 0) return;
 
-  let isResizing = false;
-  let startX = 0, startY = 0, startW = 0, startH = 0;
+  handles.forEach(handle => {
+    let isResizing = false;
+    let startX = 0, startY = 0;
+    let startLeft = 0, startTop = 0;
+    let startW = 0, startH = 0;
+    const corner = handle.classList.contains('se') ? 'se'
+                 : handle.classList.contains('sw') ? 'sw'
+                 : handle.classList.contains('ne') ? 'ne' : 'nw';
 
-  handle.addEventListener('pointerdown', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    isResizing = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startW = element.offsetWidth;
-    startH = element.offsetHeight;
-
-    try {
-      handle.setPointerCapture(e.pointerId);
-    } catch (err) {}
-  });
-
-  handle.addEventListener('pointermove', (e) => {
-    if (!isResizing) return;
-    const dw = e.clientX - startX;
-    const dh = e.clientY - startY;
-    const parent = element.parentElement;
-    const maxW = parent ? Math.max(30, parent.clientWidth - element.offsetLeft) : 280;
-    const maxH = parent ? Math.max(15, parent.clientHeight - element.offsetTop) : 280;
-    const newW = Math.max(30, Math.min(maxW, startW + dw));
-    const newH = Math.max(15, Math.min(maxH, startH + dh));
-    element.style.width = `${newW}px`;
-    element.style.height = `${newH}px`;
-
-    // Sync back to blur sliders
-    if (element === blurBox) {
-      state.blurMask.w = newW;
-      state.blurMask.h = newH;
-      _syncSlider('blur-w-slider', newW);
-      _syncSlider('blur-h-slider', newH);
-      document.getElementById('blur-w-val').innerText = Math.round(newW) + 'px';
-      document.getElementById('blur-h-val').innerText = Math.round(newH) + 'px';
+    function onResizeStart(clientX, clientY) {
+      isResizing = true;
+      startX = clientX;
+      startY = clientY;
+      startLeft = element.offsetLeft;
+      startTop = element.offsetTop;
+      startW = element.offsetWidth;
+      startH = element.offsetHeight;
+      element.classList.add('is-dragging');
     }
-  });
 
-  const onResizeEnd = (e) => {
-    if (!isResizing) return;
-    isResizing = false;
-    try {
-      if (handle.hasPointerCapture(e.pointerId)) {
-        handle.releasePointerCapture(e.pointerId);
+    function onResizeMove(clientX, clientY) {
+      if (!isResizing) return;
+      const dx = clientX - startX;
+      const dy = clientY - startY;
+      const rect = getVideoRenderRect();
+      const minW = 24;
+      const minH = 12;
+
+      let newLeft = startLeft;
+      let newTop = startTop;
+      let newW = startW;
+      let newH = startH;
+
+      if (corner === 'se') {
+        const maxW = rect.left + rect.width - startLeft;
+        const maxH = rect.top + rect.height - startTop;
+        newW = Math.max(minW, Math.min(maxW, startW + dx));
+        newH = Math.max(minH, Math.min(maxH, startH + dy));
+      } else if (corner === 'sw') {
+        const rightEdge = startLeft + startW;
+        newLeft = Math.max(rect.left, Math.min(rightEdge - minW, startLeft + dx));
+        newW = rightEdge - newLeft;
+        const maxH = rect.top + rect.height - startTop;
+        newH = Math.max(minH, Math.min(maxH, startH + dy));
+      } else if (corner === 'ne') {
+        const bottomEdge = startTop + startH;
+        const maxW = rect.left + rect.width - startLeft;
+        newW = Math.max(minW, Math.min(maxW, startW + dx));
+        newTop = Math.max(rect.top, Math.min(bottomEdge - minH, startTop + dy));
+        newH = bottomEdge - newTop;
+      } else if (corner === 'nw') {
+        const rightEdge = startLeft + startW;
+        const bottomEdge = startTop + startH;
+        newLeft = Math.max(rect.left, Math.min(rightEdge - minW, startLeft + dx));
+        newW = rightEdge - newLeft;
+        newTop = Math.max(rect.top, Math.min(bottomEdge - minH, startTop + dy));
+        newH = bottomEdge - newTop;
       }
-    } catch (err) {}
-  };
 
-  handle.addEventListener('pointerup', onResizeEnd);
-  handle.addEventListener('pointercancel', onResizeEnd);
+      element.style.left = `${Math.round(newLeft)}px`;
+      element.style.top = `${Math.round(newTop)}px`;
+      element.style.width = `${Math.round(newW)}px`;
+      element.style.height = `${Math.round(newH)}px`;
+
+      if (element === blurBox) {
+        throttledSyncBlurSliders(Math.round(newLeft), Math.round(newTop), Math.round(newW), Math.round(newH), false);
+      }
+    }
+
+    function onResizeEnd() {
+      if (!isResizing) return;
+      isResizing = false;
+      element.classList.remove('is-dragging');
+      if (element === blurBox) {
+        throttledSyncBlurSliders(element.offsetLeft, element.offsetTop, element.offsetWidth, element.offsetHeight, true);
+      }
+    }
+
+    // Touch events for mobile screens
+    handle.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        onResizeStart(touch.clientX, touch.clientY);
+      }
+    }, { passive: false });
+
+    handle.addEventListener('touchmove', (e) => {
+      if (isResizing && e.touches.length === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        onResizeMove(touch.clientX, touch.clientY);
+      }
+    }, { passive: false });
+
+    handle.addEventListener('touchend', (e) => {
+      if (isResizing) {
+        e.preventDefault();
+        e.stopPropagation();
+        onResizeEnd();
+      }
+    }, { passive: false });
+
+    handle.addEventListener('touchcancel', () => {
+      onResizeEnd();
+    }, { passive: true });
+
+    // Pointer events for desktop
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') return;
+      e.stopPropagation();
+      e.preventDefault();
+      onResizeStart(e.clientX, e.clientY);
+      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+
+    handle.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch') return;
+      if (isResizing) {
+        e.preventDefault();
+        onResizeMove(e.clientX, e.clientY);
+      }
+    });
+
+    const onHandlePointerEnd = (e) => {
+      if (e.pointerType === 'touch') return;
+      if (isResizing) {
+        try {
+          if (handle.hasPointerCapture(e.pointerId)) {
+            handle.releasePointerCapture(e.pointerId);
+          }
+        } catch (err) {}
+        onResizeEnd();
+      }
+    };
+
+    handle.addEventListener('pointerup', onHandlePointerEnd);
+    handle.addEventListener('pointercancel', onHandlePointerEnd);
+  });
 }
 
 // ══════════════════════════════════════════════════════════
 // ⚡ 8. BUILD OPTIONS PAYLOAD (shared by auto-process & render)
 // ══════════════════════════════════════════════════════════
 function _buildRenderOptions() {
-  const vp = document.getElementById('video-viewport');
-  const vpW = (vp && vp.clientWidth) || 280;
-  const vpH = (vp && vp.clientHeight) || 320;
+  const rect = getVideoRenderRect();
   const bx = blurBox ? blurBox.offsetLeft : (state.blurMask.x || 15);
   const by = blurBox ? blurBox.offsetTop : (state.blurMask.y || 15);
   const bw = blurBox ? blurBox.offsetWidth : (state.blurMask.w || 140);
@@ -1414,12 +1777,12 @@ function _buildRenderOptions() {
       y: by,
       w: bw,
       h: bh,
-      x_pct: Math.max(0, Math.min(1.0, bx / vpW)),
-      y_pct: Math.max(0, Math.min(1.0, by / vpH)),
-      w_pct: Math.max(0.01, Math.min(1.0, bw / vpW)),
-      h_pct: Math.max(0.01, Math.min(1.0, bh / vpH)),
-      vp_w: vpW,
-      vp_h: vpH,
+      x_pct: Math.max(0, Math.min(1.0, (bx - rect.left) / rect.width)),
+      y_pct: Math.max(0, Math.min(1.0, (by - rect.top) / rect.height)),
+      w_pct: Math.max(0.01, Math.min(1.0, bw / rect.width)),
+      h_pct: Math.max(0.01, Math.min(1.0, bh / rect.height)),
+      vp_w: rect.width,
+      vp_h: rect.height,
       intensity: state.blurMask.intensity || 25,
       tint_opacity: state.blurMask.tintOpacity !== undefined ? state.blurMask.tintOpacity : 0.40,
       tint_mode: state.blurMask.tintMode || 'dark'

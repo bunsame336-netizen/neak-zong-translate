@@ -543,16 +543,52 @@
       transform: scale(0.92) !important;
     }
 
-    /* Pure Blur Box without text */
+    /* Pure Blur Box without text (Optimized for Mobile Touch) */
     #blur-overlay-box {
       border: 1.5px dashed var(--neon-cyan-bright) !important;
       backdrop-filter: blur(16px) !important;
       -webkit-backdrop-filter: blur(16px) !important;
       background: rgba(0, 0, 0, 0.4) !important;
+      touch-action: none !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      will-change: left, top, width, height;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.35) !important;
+    }
+    #blur-overlay-box.is-dragging {
+      border-color: #ffffff !important;
+      box-shadow: 0 0 16px rgba(34, 211, 238, 0.8) !important;
     }
     .blur-watermark-label {
       display: none !important;
     }
+    /* Touch-optimized Resizer Handles for Mobile Screens */
+    .resizer-handle {
+      position: absolute !important;
+      width: 20px !important;
+      height: 20px !important;
+      background: var(--neon-cyan-bright) !important;
+      border: 2px solid #ffffff !important;
+      border-radius: 50% !important;
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.9) !important;
+      z-index: 30 !important;
+      touch-action: none !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    /* Invisible expanded hit-target (40px x 40px) for finger touch */
+    .resizer-handle::before {
+      content: '' !important;
+      position: absolute !important;
+      inset: -10px !important;
+      background: transparent !important;
+    }
+    .resizer-handle.nw { top: -10px !important; left: -10px !important; cursor: nwse-resize !important; }
+    .resizer-handle.ne { top: -10px !important; right: -10px !important; cursor: nesw-resize !important; }
+    .resizer-handle.sw { bottom: -10px !important; left: -10px !important; cursor: nesw-resize !important; }
+    .resizer-handle.se { bottom: -10px !important; right: -10px !important; cursor: nwse-resize !important; }
 
     /* Transparent Mode */
     .rendered-text-content.transparent-mode,
@@ -1478,6 +1514,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=8.2.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.3.0"></script>
 </body>
 </html>
