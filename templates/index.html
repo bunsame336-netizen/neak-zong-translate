@@ -21,99 +21,91 @@
   <!-- Custom Mobile Split Cyberpunk CSS -->
   <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.0.0">
 
-  <!-- ⚡ CRITICAL MOBILE OVERRIDE: 2-COLUMN SIDE-BY-SIDE MOBILE GRID (NO PAGE SCROLL) -->
+  <!-- ⚡ CRITICAL MOBILE UX: 100% VERTICAL MOBILE STACK (TOP PREVIEW -> 1-CLICK ACTION -> BOTTOM CONTROLS) -->
   <style>
     html, body {
       margin: 0 !important;
       padding: 0 !important;
-      width: 100vw !important;
-      max-width: 100% !important;
-      height: 100dvh !important;
-      max-height: 100dvh !important;
-      min-height: 100dvh !important;
-      overflow: hidden !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
+      width: 100% !important;
+      min-height: 100vh !important;
+      background: #07080d !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      position: relative !important;
     }
+
     header.app-header {
-      height: 44px !important;
-      min-height: 44px !important;
-      max-height: 44px !important;
-      flex: 0 0 44px !important;
-      padding: 2px 8px !important;
-      z-index: 100 !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 1000 !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      background: rgba(10, 8, 22, 0.95) !important;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.25) !important;
+      padding: 4px 12px !important;
       box-sizing: border-box !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
     }
     .brand-title {
-      font-size: 0.85rem !important;
+      font-size: 0.95rem !important;
     }
     .brand-dragon-badge {
-      width: 28px !important;
-      height: 28px !important;
+      width: 32px !important;
+      height: 32px !important;
     }
 
-    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID (MATCH USER SCREENSHOT EXACTLY) ════ */
+    /* ════ 100% VERTICAL MOBILE STACK CONTAINER ════ */
     .studio-main-container {
-      display: grid !important;
-      grid-template-columns: 46% 54% !important;
-      width: 100vw !important;
-      max-width: 100% !important;
-      height: calc(100dvh - 44px) !important;
-      max-height: calc(100dvh - 44px) !important;
-      margin: 0 !important;
-      padding: 3px 4px 6px 4px !important;
-      overflow: hidden !important;
-      box-sizing: border-box !important;
-      gap: 5px !important;
-    }
-
-    /* ── LEFT COLUMN (46%): VIDEO PREVIEW + PLAYBACK + 1-CLICK ACTION ── */
-    .studio-stage-col {
-      width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-items: stretch !important;
-      padding: 0 3px 0 0 !important;
-      border: none !important;
-      border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
-      background: transparent !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
+      width: 100% !important;
+      max-width: 520px !important;
+      margin: 0 auto !important;
+      padding: 10px 12px 60px 12px !important;
+      gap: 12px !important;
       box-sizing: border-box !important;
-      gap: 4px !important;
-      scrollbar-width: none !important;
     }
-    .studio-stage-col::-webkit-scrollbar {
-      display: none !important;
+
+    /* ── 1. TOP STAGE: 9:16 LIVE PREVIEW + CONTROLS ── */
+    .studio-stage-col {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      border: none !important;
+      padding: 0 !important;
+      gap: 10px !important;
+      background: transparent !important;
+      overflow: visible !important;
     }
 
     .video-stage-card {
       background: #000000 !important;
       border: 1.5px solid var(--border-cyber) !important;
-      border-radius: 8px !important;
+      border-radius: 12px !important;
       overflow: hidden !important;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8) !important;
       position: relative !important;
       display: flex !important;
       flex-direction: column !important;
-      flex-shrink: 0 !important;
       width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      max-height: none !important;
+      max-width: 280px !important;
+      margin: 0 auto !important;
     }
 
     .video-stage-viewport {
       position: relative !important;
       aspect-ratio: 9 / 16 !important;
       width: 100% !important;
-      max-height: 48vh !important;
+      height: 36vh !important;
+      max-height: 360px !important;
+      min-height: 240px !important;
       background: #050408 !important;
       display: flex !important;
       align-items: center !important;
@@ -123,69 +115,81 @@
     }
 
     .video-toolbar {
-      height: 24px !important;
-      min-height: 24px !important;
-      padding: 1px 4px !important;
-      flex-shrink: 0 !important;
+      height: 32px !important;
+      min-height: 32px !important;
+      padding: 2px 8px !important;
+      background: #0d0a1a !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
-      background: #080612 !important;
     }
     .video-toolbar .playback-controls {
       display: flex !important;
       align-items: center !important;
-      gap: 3px !important;
+      gap: 6px !important;
     }
     .video-toolbar .btn-ctrl {
-      font-size: 0.62rem !important;
-      padding: 2px 5px !important;
-      height: 20px !important;
+      font-size: 0.72rem !important;
+      font-weight: 700 !important;
+      padding: 3px 8px !important;
+      height: 24px !important;
+      border-radius: 5px !important;
+      background: rgba(168, 85, 247, 0.25) !important;
+      border: 1px solid rgba(168, 85, 247, 0.4) !important;
+      color: #ffffff !important;
     }
     .video-toolbar .time-display {
-      font-size: 0.58rem !important;
+      font-size: 0.68rem !important;
+      color: #94a3b8 !important;
+      font-variant-numeric: tabular-nums !important;
     }
 
+    /* ── 2. MIDDLE: 1-CLICK AUTO PROCESS BANNER ── */
     .auto-process-banner {
       width: 100% !important;
-      margin: 2px 0 0 0 !important;
+      max-width: 480px !important;
+      margin: 2px auto 0 auto !important;
       padding: 0 !important;
-      flex-shrink: 0 !important;
-      border-radius: 6px !important;
     }
     .btn-auto-process {
-      padding: 6px 4px !important;
-      font-size: 0.68rem !important;
-      font-weight: 800 !important;
       width: 100% !important;
-      min-height: 32px !important;
-      height: auto !important;
+      min-height: 50px !important;
+      padding: 10px 16px !important;
+      font-size: 0.95rem !important;
+      font-weight: 800 !important;
+      border-radius: 12px !important;
+      background: linear-gradient(135deg, #7928ca 0%, #ff0080 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      box-shadow: 0 4px 18px rgba(255, 0, 128, 0.35) !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
       justify-content: center !important;
-      letter-spacing: 0px !important;
-      border-radius: 6px !important;
-      text-align: center !important;
-      white-space: normal !important;
-      line-height: 1.25 !important;
+      gap: 8px !important;
+      letter-spacing: 0.3px !important;
+      transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .btn-auto-process:active {
+      transform: scale(0.97) !important;
     }
 
-    /* ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── */
+    /* ── 3. BOTTOM: CONTROLS, TABS & SLIDERS (FULL WIDTH) ── */
     .studio-controls-col {
       width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
+      max-width: 480px !important;
+      margin: 0 auto !important;
+      height: auto !important;
+      max-height: none !important;
       display: flex !important;
       flex-direction: column !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 0 2px 40px 2px !important;
-      background: transparent !important;
-      box-sizing: border-box !important;
-      gap: 4px !important;
-      scrollbar-width: thin !important;
+      gap: 10px !important;
+      padding-bottom: 30px !important;
+      overflow: visible !important;
     }
 
-    /* Tabs Bar at top of Controls */
+    /* Horizontal Scrollable Tabs Bar */
     .studio-tabs-nav {
       display: flex !important;
       flex-direction: row !important;
@@ -197,13 +201,12 @@
       width: 100% !important;
       background: rgba(14, 10, 26, 0.95) !important;
       border: 1px solid rgba(168, 85, 247, 0.3) !important;
-      border-radius: 6px !important;
-      padding: 2px !important;
-      gap: 3px !important;
+      border-radius: 10px !important;
+      padding: 4px !important;
+      gap: 6px !important;
       flex-shrink: 0 !important;
-      height: 32px !important;
-      min-height: 32px !important;
-      max-height: 32px !important;
+      height: 42px !important;
+      min-height: 42px !important;
       scrollbar-width: none !important;
     }
     .studio-tabs-nav::-webkit-scrollbar {
@@ -212,100 +215,141 @@
 
     .tab-nav-btn {
       flex: 0 0 auto !important;
-      padding: 0 7px !important;
-      font-size: 0.68rem !important;
+      padding: 0 12px !important;
+      font-size: 0.78rem !important;
       font-weight: 700 !important;
-      border-radius: 4px !important;
+      border-radius: 6px !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 2px !important;
+      gap: 4px !important;
       white-space: nowrap !important;
       cursor: pointer !important;
-      height: 26px !important;
-      min-height: 26px !important;
+      height: 32px !important;
+      min-height: 32px !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #cbd5e1 !important;
+      transition: all 0.2s !important;
+    }
+    .tab-nav-btn.active {
+      background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+      color: #ffffff !important;
+      border-color: #c084fc !important;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5) !important;
     }
     .tab-nav-btn[data-tab="marquee"] {
       border-color: rgba(245, 158, 11, 0.5) !important;
       background: rgba(245, 158, 11, 0.15) !important;
       color: #fbbf24 !important;
+    }
+    .tab-nav-btn[data-tab="marquee"].active {
+      background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+      color: #000000 !important;
       font-weight: 800 !important;
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5) !important;
     }
 
-    /* Active Tab Panel */
+    /* Active Tab Panel - Spacious and thumb-friendly */
     .tab-panel-card {
       width: 100% !important;
-      padding: 5px 6px !important;
+      padding: 12px 14px !important;
       background: rgba(15, 11, 26, 0.96) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      border-radius: 6px !important;
+      border: 1px solid rgba(168, 85, 247, 0.25) !important;
+      border-radius: 12px !important;
       box-sizing: border-box !important;
-      gap: 4px !important;
+      gap: 10px !important;
       display: none !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
     }
     .tab-panel-card.active {
       display: flex !important;
       flex-direction: column !important;
     }
     .panel-section-title {
-      font-size: 0.7rem !important;
-      padding: 1px 0 !important;
+      font-size: 0.85rem !important;
+      font-weight: 700 !important;
+      color: #ffffff !important;
+      padding: 2px 0 !important;
       margin: 0 !important;
     }
     .form-row {
       margin: 0 !important;
-      gap: 1px !important;
+      gap: 4px !important;
+      display: flex !important;
+      flex-direction: column !important;
     }
     .form-label {
-      font-size: 0.62rem !important;
-      margin-bottom: 1px !important;
+      font-size: 0.72rem !important;
+      margin-bottom: 2px !important;
+      color: #94a3b8 !important;
+      font-weight: 600 !important;
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
     }
     .form-label-val {
-      font-size: 0.6rem !important;
+      font-size: 0.72rem !important;
+      color: var(--neon-cyan-bright) !important;
+      font-weight: 700 !important;
     }
     .cyber-input {
-      font-size: 0.68rem !important;
-      padding: 2px 4px !important;
-      height: 28px !important;
+      font-size: 0.8rem !important;
+      padding: 6px 10px !important;
+      height: 36px !important;
+      background: rgba(0, 0, 0, 0.5) !important;
+      border: 1px solid rgba(168, 85, 247, 0.3) !important;
+      border-radius: 6px !important;
+      color: #ffffff !important;
+      box-sizing: border-box !important;
     }
     .slider-group-box {
-      padding: 4px 6px !important;
-      gap: 2px !important;
-      border-radius: 5px !important;
+      padding: 8px 10px !important;
+      gap: 6px !important;
+      border-radius: 8px !important;
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      display: flex !important;
+      flex-direction: column !important;
     }
     .slider-group-title {
-      font-size: 0.62rem !important;
+      font-size: 0.72rem !important;
+      font-weight: 700 !important;
       margin-bottom: 2px !important;
+      color: #cbd5e1 !important;
     }
 
     /* Touch-friendly Sliders */
     .cyber-slider {
       width: 100% !important;
-      height: 6px !important;
-      margin: 2px 0 !important;
+      height: 8px !important;
+      margin: 6px 0 !important;
       touch-action: pan-x !important;
       -webkit-appearance: none !important;
       appearance: none !important;
       cursor: pointer !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+      border-radius: 4px !important;
     }
     .cyber-slider::-webkit-slider-thumb {
       -webkit-appearance: none !important;
       appearance: none !important;
-      width: 20px !important;
-      height: 20px !important;
+      width: 24px !important;
+      height: 24px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
-      border: 2px solid #ffffff !important;
-      box-shadow: 0 0 6px rgba(168, 85, 247, 0.8) !important;
+      border: 2.5px solid #ffffff !important;
+      box-shadow: 0 0 8px rgba(168, 85, 247, 0.9) !important;
       cursor: pointer !important;
     }
     .cyber-slider::-moz-range-thumb {
-      width: 20px !important;
-      height: 20px !important;
+      width: 24px !important;
+      height: 24px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
-      border: 2px solid #ffffff !important;
-      box-shadow: 0 0 6px rgba(168, 85, 247, 0.8) !important;
+      border: 2.5px solid #ffffff !important;
+      box-shadow: 0 0 8px rgba(168, 85, 247, 0.9) !important;
       cursor: pointer !important;
     }
 
@@ -313,15 +357,16 @@
     .color-preset-bar {
       display: flex !important;
       align-items: center !important;
-      gap: 4px !important;
-      padding: 3px 0 !important;
+      gap: 6px !important;
+      padding: 4px 0 !important;
+      flex-wrap: wrap !important;
     }
     .btn-color-quick {
       border: none !important;
-      padding: 2px 7px !important;
-      font-size: 0.62rem !important;
+      padding: 4px 10px !important;
+      font-size: 0.72rem !important;
       font-weight: 700 !important;
-      border-radius: 4px !important;
+      border-radius: 6px !important;
       cursor: pointer !important;
       transition: transform 0.15s !important;
       display: inline-flex !important;
@@ -334,10 +379,8 @@
 
     /* Pure Blur Box without text */
     #blur-overlay-box {
-      border: 1.5px dashed var(--neon-cyan-bright) !important;
-      /* backdrop-filter removed for Android */
-      /* -webkit-backdrop-filter removed */
-      background: rgba(0, 0, 0, 0.4) !important;
+      border: 2px dashed var(--neon-cyan-bright) !important;
+      background: rgba(0, 0, 0, 0.45) !important;
     }
     .blur-watermark-label {
       display: none !important;
@@ -397,18 +440,18 @@
         <span>🔑 Admin</span>
       </button>
 
-      <a href="/static/NeakZong_Translate_v1.0.apk" download="NeakZong_Translate_v1.0.apk" class="btn-top-apk" title="ទាញយក APK សម្រាប់ទូរស័ព្ទ Android">
-        <span>📥 ទាញយក APK</span>
+      <a href="/static/NeakZong_v10.apk" download="NeakZong_v10.apk" class="btn-top-apk" title="ទាញយក Signed APK សម្រាប់ទូរស័ព្ទ Android">
+        <span>📥 ទាញយក APK (v10 Signed)</span>
       </a>
     </div>
   </header>
 
   <!-- ══════════════════════════════════════════════════════════
-       ⚡ 2. MOBILE SPLIT SCREEN (50% LEFT / 50% RIGHT)
+       ⚡ 2. 100% VERTICAL MOBILE STACK (TOP PREVIEW -> 1-CLICK -> BOTTOM CONTROLS)
   ══════════════════════════════════════════════════════════ -->
   <main class="studio-main-container">
 
-    <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
+    <!-- ── 1. TOP SECTION: 9:16 LIVE PREVIEW STAGE ────────── -->
     <div class="studio-stage-col">
       <!-- VIDEO STAGE & CANVAS PREVIEW (Sticky 9:16) -->
       <div class="video-stage-card">
@@ -503,13 +546,10 @@
       </div>
     </div>
 
-    <!-- ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── -->
+    <!-- ── 3. BOTTOM SECTION: CONTROLS, TABS & SLIDERS (FULL WIDTH) ── -->
     <div class="studio-controls-col">
-      <!-- Tabs Bar at Top of Controls Column (Logo, Blur, Text, Sponsor, Marquee) -->
+      <!-- Tabs Bar at Top of Controls Column (Blur, Text, Sponsor, Marquee, Voice, Logo, Media, Export) -->
       <nav class="studio-tabs-nav">
-        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
-          🖼️ Logo
-        </button>
         <button type="button" class="tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
           🌫️ ព្រាល Blur
         </button>
@@ -524,6 +564,9 @@
         </button>
         <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
           🎙️ សំឡេង
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
+          🖼️ Logo
         </button>
         <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
           📂 Media
