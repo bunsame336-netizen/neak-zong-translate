@@ -464,9 +464,10 @@ header.app-header {
   height: 45px;
   top: 15px;
   left: 15px;
-  background: rgba(0, 240, 255, 0.15);
+  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 240, 255, 0.15); box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.25);
+  /* -webkit-backdrop-filter removed */
   border: 1.5px dashed var(--neon-cyan-bright);
-  box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.25);
   border-radius: 4px;
   z-index: 12;
 }

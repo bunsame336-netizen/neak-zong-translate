@@ -103,7 +103,7 @@ const state = {
 };
 
 // ── DOM References ────────────────────────────────────────
-const previewVideo = document.getElementById('previewVideo') || document.getElementById('preview-video');
+const previewVideo = document.getElementById('preview-video');
 const videoViewport = document.getElementById('video-viewport');
 const videoOverlayLayer = document.getElementById('video-overlay-layer');
 
@@ -123,6 +123,11 @@ function switchStudioTab(tabId) {
   document.querySelectorAll('.tab-nav-btn').forEach(btn => {
     const isTarget = btn.getAttribute('data-tab') === tabId;
     btn.classList.toggle('active', isTarget);
+    if (isTarget) {
+      try {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch (e) {}
+    }
   });
   document.querySelectorAll('.tab-panel-card').forEach(panel => {
     panel.classList.remove('active');
@@ -398,39 +403,32 @@ function handleVideoUpload(input) {
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || previewVideo;
-  if (!video) return;
+  previewVideo.style.display = 'block';
+  previewVideo.muted = false; // play with sound!
+  previewVideo.playsInline = true;
+  previewVideo.setAttribute('playsinline', '');
+  previewVideo.setAttribute('webkit-playsinline', '');
 
-  video.style.display = 'block';
-  video.muted = false;
-  video.playsInline = true;
-  video.setAttribute('playsinline', '');
-  video.setAttribute('webkit-playsinline', '');
+  // 1. Instant local playback in 0.1s
+  const localUrl = URL.createObjectURL(file);
+  previewVideo.src = localUrl;
+  previewVideo.onloadeddata = () => {
+    previewVideo.play().catch(err => {
+      // If browser blocks unmuted autoplay without prior gesture, fallback to muted
+      previewVideo.muted = true;
+      previewVideo.play().catch(() => {});
+    });
+  };
+  previewVideo.load();
 
-  // 1. Instant local direct playback (0.1s) with onloadeddata
-  try {
-    const localUrl = URL.createObjectURL(file);
-    video.src = localUrl;
-    video.onloadeddata = () => {
-      video.play().catch(err => {
-        // Fallback to muted if browser autoplay blocks audio
-        video.muted = true;
-        video.play().catch(() => {});
-      });
-    };
-    video.load();
-  } catch (err) {
-    console.warn('Local preview blob init:', err);
-  }
-
-  video.onloadedmetadata = () => {
+  previewVideo.onloadedmetadata = () => {
     try {
-      video.currentTime = 0.05;
+      previewVideo.currentTime = 0.05;
     } catch (err) {}
     updateVideoTime();
   };
 
-  // 2. Background upload to Cloud Server for instant 1-Click + stream fallback
+  // 2. Background sync to Cloud Server for 1-Click + fallback
   const formData = new FormData();
   formData.append('file', file);
   fetch('/api/upload', { method: 'POST', body: formData })
@@ -438,21 +436,20 @@ function handleVideoUpload(input) {
     .then(data => {
       if (data.status === 'ok') {
         state.videoFilename = data.filename;
-        // If Android WebView MediaPlayer fails to decode blob (shows 00:00 or broken), switch to server stream:
-        if (video.error || (video.currentTime === 0 && video.paused)) {
+        if (previewVideo.error || (previewVideo.currentTime === 0 && previewVideo.paused)) {
           const streamUrl = data.file_url || data.preview_url;
           if (streamUrl) {
-            video.src = streamUrl;
-            if (data.thumbnail_url) video.poster = data.thumbnail_url;
-            video.load();
-            video.play().catch(() => {});
+            previewVideo.src = streamUrl;
+            if (data.thumbnail_url) previewVideo.poster = data.thumbnail_url;
+            previewVideo.load();
+            previewVideo.play().catch(() => {});
           }
         }
       }
     })
-    .catch(err => console.warn('Background sync note:', err));
+    .catch(() => {});
 
-  showToast('✓ វីដេអូបានបើកចាក់ភ្លាមៗ (0.1s)!');
+  showToast('✓ វីដេអូបានបើកចាក់ភ្លាមៗ!');
 }
 
 async function handleSrtUpload(input) {
