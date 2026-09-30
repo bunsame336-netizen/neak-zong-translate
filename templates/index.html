@@ -19,9 +19,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.9.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.0.0">
 
-  <!-- ⚡ CRITICAL MOBILE STUDIO 3-TIER RESTRUCTURE (NO WHOLE-PAGE SCROLL / 100dvh LOCK) -->
+  <!-- ⚡ CRITICAL MOBILE OVERRIDE: 2-COLUMN SIDE-BY-SIDE MOBILE GRID (NO PAGE SCROLL) -->
   <style>
     html, body {
       margin: 0 !important;
@@ -37,60 +37,60 @@
       left: 0 !important;
       right: 0 !important;
       bottom: 0 !important;
-      touch-action: manipulation;
     }
     header.app-header {
-      height: 42px !important;
-      min-height: 42px !important;
-      max-height: 42px !important;
-      flex: 0 0 42px !important;
+      height: 44px !important;
+      min-height: 44px !important;
+      max-height: 44px !important;
+      flex: 0 0 44px !important;
       padding: 2px 8px !important;
       z-index: 100 !important;
       box-sizing: border-box !important;
     }
     .brand-title {
-      font-size: 0.82rem !important;
+      font-size: 0.85rem !important;
     }
     .brand-dragon-badge {
-      width: 26px !important;
-      height: 26px !important;
+      width: 28px !important;
+      height: 28px !important;
     }
 
-    /* ════ 3-TIER MOBILE STUDIO CONTAINER (FITS 100dvh PERFECTLY) ════ */
+    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID (MATCH USER SCREENSHOT EXACTLY) ════ */
     .studio-main-container {
-      display: flex !important;
-      flex-direction: column !important;
+      display: grid !important;
+      grid-template-columns: 46% 54% !important;
       width: 100vw !important;
       max-width: 100% !important;
-      height: calc(100dvh - 42px) !important;
-      max-height: calc(100dvh - 42px) !important;
+      height: calc(100dvh - 44px) !important;
+      max-height: calc(100dvh - 44px) !important;
       margin: 0 !important;
-      padding: 3px 5px 4px 5px !important;
+      padding: 3px 4px 6px 4px !important;
       overflow: hidden !important;
-     /* ════ 1. TOP SPLIT ROW: 70% LEFT (VIDEO) / 30% RIGHT (BUTTONS) ════ */
-    .studio-top-split-row {
-      display: grid !important;
-      grid-template-columns: 70% calc(30% - 4px) !important;
-      gap: 4px !important;
-      width: 100% !important;
-      min-width: 100% !important;
-      max-width: 100% !important;
-      flex: 0 0 auto !important;
       box-sizing: border-box !important;
-      align-items: stretch !important;
-      overflow: hidden !important;
+      gap: 5px !important;
     }
 
-    /* 1.1 TOP-LEFT (70% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
-    .top-video-col {
+    /* ── LEFT COLUMN (46%): VIDEO PREVIEW + PLAYBACK + 1-CLICK ACTION ── */
+    .studio-stage-col {
       width: 100% !important;
-      min-width: 100% !important;
-      max-width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      gap: 3px !important;
-      overflow: hidden !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+      padding: 0 3px 0 0 !important;
+      border: none !important;
+      border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
+      background: transparent !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
       box-sizing: border-box !important;
+      gap: 4px !important;
+      scrollbar-width: none !important;
+    }
+    .studio-stage-col::-webkit-scrollbar {
+      display: none !important;
     }
 
     .video-stage-card {
@@ -99,36 +99,38 @@
       border-radius: 8px !important;
       overflow: hidden !important;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9) !important;
+      position: relative !important;
       display: flex !important;
       flex-direction: column !important;
+      flex-shrink: 0 !important;
       width: 100% !important;
-      box-sizing: border-box !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: none !important;
     }
 
     .video-stage-viewport {
       position: relative !important;
       aspect-ratio: 9 / 16 !important;
       width: 100% !important;
-      max-height: calc(44dvh - 58px) !important;
+      max-height: 48vh !important;
       background: #050408 !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       overflow: hidden !important;
       margin: 0 auto !important;
-      box-sizing: border-box !important;
     }
 
     .video-toolbar {
-      height: 22px !important;
-      min-height: 22px !important;
+      height: 24px !important;
+      min-height: 24px !important;
       padding: 1px 4px !important;
       flex-shrink: 0 !important;
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
       background: #080612 !important;
-      box-sizing: border-box !important;
     }
     .video-toolbar .playback-controls {
       display: flex !important;
@@ -136,388 +138,174 @@
       gap: 3px !important;
     }
     .video-toolbar .btn-ctrl {
-      font-size: 0.60rem !important;
-      padding: 1px 4px !important;
-      height: 18px !important;
+      font-size: 0.62rem !important;
+      padding: 2px 5px !important;
+      height: 20px !important;
     }
     .video-toolbar .time-display {
-      font-size: 0.55rem !important;
+      font-size: 0.58rem !important;
     }
 
     .auto-process-banner {
       width: 100% !important;
-      margin: 0 !important;
+      margin: 2px 0 0 0 !important;
       padding: 0 !important;
       flex-shrink: 0 !important;
+      border-radius: 6px !important;
     }
     .btn-auto-process {
-      padding: 5px 3px !important;
-      font-size: 0.64rem !important;
+      padding: 6px 4px !important;
+      font-size: 0.68rem !important;
       font-weight: 800 !important;
       width: 100% !important;
       min-height: 32px !important;
       height: auto !important;
-      display: flex !important;
-      align-items: center !important;
       justify-content: center !important;
       letter-spacing: 0px !important;
       border-radius: 6px !important;
-      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important;
-      color: #ffffff !important;
-      border: 1px solid rgba(255, 255, 255, 0.3) !important;
-      box-shadow: 0 2px 10px rgba(168, 85, 247, 0.5) !important;
-      cursor: pointer !important;
       text-align: center !important;
       white-space: normal !important;
-      line-height: 1.15 !important;
-    }
-    .btn-auto-process:active {
-      transform: scale(0.97) !important;
+      line-height: 1.25 !important;
     }
 
-    /* 1.2 TOP-RIGHT (30% LOCKED): 2-COLUMN FULL HEIGHT ACTION MENU */
-    .top-action-menu-col {
-      width: 100% !important;
-      min-width: 100% !important;
-      max-width: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: stretch !important;
-      height: 100% !important;
-      box-sizing: border-box !important;
-      overflow: hidden !important;
-      gap: 0px !important;
-    }
-
-    .action-menu-grid {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      grid-template-rows: repeat(5, 1fr) !important;
-      gap: 3px !important;
+    /* ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── */
+    .studio-controls-col {
       width: 100% !important;
       height: 100% !important;
-      box-sizing: border-box !important;
-    }
-    .action-menu-btn {
+      max-height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 1px !important;
-      height: 100% !important;
-      min-height: 34px !important;
-      padding: 2px 2px !important;
-      font-size: 0.53rem !important;
-      font-weight: 700 !important;
-      color: var(--text-main) !important;
-      background: rgba(18, 14, 32, 0.92) !important;
-      border: 1px solid rgba(168, 85, 247, 0.25) !important;
-      border-radius: 6px !important;
-      cursor: pointer !important;
-      transition: background 0.15s ease, border-color 0.15s ease !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      box-sizing: border-box !important;
-    }
-    .action-menu-btn .btn-ico {
-      font-size: 0.80rem !important;
-      flex-shrink: 0 !important;
-      line-height: 1 !important;
-    }
-    .action-menu-btn .btn-lbl {
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      font-size: 0.53rem !important;
-      line-height: 1 !important;
-      letter-spacing: -0.2px !important;
-    }
-    .action-menu-btn:hover {
-      background: rgba(30, 22, 54, 0.95) !important;
-      border-color: rgba(168, 85, 247, 0.5) !important;
-    }
-    .action-menu-btn.active {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), rgba(6, 182, 212, 0.3)) !important;
-      border-color: var(--neon-cyan-bright) !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-      box-shadow: 0 0 8px rgba(34, 211, 238, 0.4) !important;
-    }
-
-
-    .voice-pill-btn.active {
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.35), rgba(168, 85, 247, 0.35)) !important;
-      border-color: #ec4899 !important;
-      color: #ffffff !important;
-      font-weight: 800 !important;
-    }
-
-    /* Voice Model Selector (Sreymom / Piseth) */
-    .top-voice-selector-box {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 3px !important;
-      background: rgba(12, 9, 24, 0.92) !important;
-      border: 1px solid rgba(245, 158, 11, 0.3) !important;
-      border-radius: 7px !important;
-      padding: 4px 5px !important;
-      box-sizing: border-box !important;
-    }
-    .top-voice-header {
-      font-size: 0.55rem !important;
-      color: var(--neon-gold) !important;
-      font-weight: 700 !important;
-      letter-spacing: 0.2px !important;
-      white-space: nowrap !important;
-    }
-    .top-voice-pill-group {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 3px !important;
-    }
-    .voice-pill-btn {
-      height: 26px !important;
-      padding: 0 2px !important;
-      font-size: 0.58rem !important;
-      font-weight: 700 !important;
-      border-radius: 5px !important;
-      background: rgba(255, 255, 255, 0.05) !important;
-      border: 1px solid rgba(255, 255, 255, 0.15) !important;
-      color: var(--text-sub) !important;
-      cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      white-space: nowrap !important;
-    }
-    .voice-pill-btn.active {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(217, 119, 6, 0.45)) !important;
-      border-color: var(--neon-gold) !important;
-      color: #fbbf24 !important;
-      font-weight: 800 !important;
-      box-shadow: 0 0 6px rgba(245, 158, 11, 0.4) !important;
-    }
-
-    /* Extra secondary pills */
-    .top-extra-pills-row {
-      display: flex !important;
-      gap: 4px !important;
-      width: 100% !important;
-      box-sizing: border-box !important;
-    }
-    .extra-pill-btn {
-      flex: 1 !important;
-      height: 26px !important;
-      font-size: 0.58rem !important;
-      font-weight: 600 !important;
-      color: var(--text-muted) !important;
-      background: rgba(255, 255, 255, 0.04) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      border-radius: 5px !important;
-      cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      white-space: nowrap !important;
-    }
-    .extra-pill-btn.active {
-      border-color: var(--neon-purple-bright) !important;
-      color: var(--neon-purple-bright) !important;
-      background: rgba(168, 85, 247, 0.2) !important;
-      font-weight: 700 !important;
-    }
-
-    /* ════ 2. MIDDLE STATUS AREA (PROGRESS BAR & STATUS) ════ */
-    .studio-middle-status-row {
-      width: 100% !important;
-      flex: 0 0 auto !important;
-      background: rgba(12, 8, 26, 0.95) !important;
-      border: 1px solid rgba(168, 85, 247, 0.35) !important;
-      border-radius: 6px !important;
-      padding: 3px 6px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 2px !important;
-      box-sizing: border-box !important;
-    }
-    .middle-status-bar {
-      display: flex !important;
-      justify-content: space-between !important;
-      align-items: center !important;
-      width: 100% !important;
-    }
-    .status-indicator-left {
-      display: flex !important;
-      align-items: center !important;
-      gap: 4px !important;
-      overflow: hidden !important;
-    }
-    .status-live-text {
-      font-size: 0.63rem !important;
-      font-weight: 800 !important;
-      color: var(--neon-purple-bright) !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-    }
-    .status-indicator-right {
-      font-size: 0.58rem !important;
-      font-weight: 800 !important;
-      color: var(--neon-cyan-bright) !important;
-    }
-    .pulse-live-dot {
-      width: 6px !important;
-      height: 6px !important;
-      border-radius: 50% !important;
-      background: var(--neon-cyan-bright) !important;
-      box-shadow: 0 0 6px var(--neon-cyan-bright) !important;
-      animation: pulseDot 1.5s infinite !important;
-      flex-shrink: 0 !important;
-    }
-    .render-progress-track {
-      width: 100% !important;
-      height: 5px !important;
-      background: rgba(255, 255, 255, 0.1) !important;
-      border-radius: 4px !important;
-      overflow: hidden !important;
-    }
-    .render-progress-bar {
-      width: 0% !important;
-      height: 100% !important;
-      background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan)) !important;
-      box-shadow: 0 0 8px var(--neon-purple-bright) !important;
-      transition: width 0.3s ease !important;
-    }
-    #btn-download-result {
-      display: none;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 4px !important;
-      padding: 3px 6px !important;
-      margin-top: 2px !important;
-      background: linear-gradient(135deg, #10b981, #059669) !important;
-      color: #ffffff !important;
-      font-size: 0.66rem !important;
-      font-weight: 800 !important;
-      border-radius: 5px !important;
-      text-decoration: none !important;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
-    }
-
-    /* ════ 3. BOTTOM FULL-WIDTH DYNAMIC SLIDER/CONTROL AREA ════ */
-    .studio-bottom-panel-area {
-      width: 100% !important;
-      flex: 1 1 0 !important;
-      min-height: 0 !important;
-      overflow-y: scroll !important;
-      scrollbar-gutter: stable !important;
+      overflow-y: auto !important;
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch !important;
+      padding: 0 2px 40px 2px !important;
+      background: transparent !important;
       box-sizing: border-box !important;
-      padding-bottom: 6px !important;
+      gap: 4px !important;
       scrollbar-width: thin !important;
     }
-    .studio-bottom-panel-area::-webkit-scrollbar {
-      width: 4px !important;
+
+    /* Tabs Bar at top of Controls */
+    .studio-tabs-nav {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      overflow-y: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      white-space: nowrap !important;
+      width: 100% !important;
+      background: rgba(14, 10, 26, 0.95) !important;
+      border: 1px solid rgba(168, 85, 247, 0.3) !important;
+      border-radius: 6px !important;
+      padding: 2px !important;
+      gap: 3px !important;
+      flex-shrink: 0 !important;
+      height: 32px !important;
+      min-height: 32px !important;
+      max-height: 32px !important;
+      scrollbar-width: none !important;
     }
-    .studio-bottom-panel-area::-webkit-scrollbar-thumb {
-      background: rgba(168, 85, 247, 0.4) !important;
-      border-radius: 4px !important;
+    .studio-tabs-nav::-webkit-scrollbar {
+      display: none !important;
     }
 
-    /* Active Tab Panel Cards (100% Full Width!) */
+    .tab-nav-btn {
+      flex: 0 0 auto !important;
+      padding: 0 7px !important;
+      font-size: 0.68rem !important;
+      font-weight: 700 !important;
+      border-radius: 4px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 2px !important;
+      white-space: nowrap !important;
+      cursor: pointer !important;
+      height: 26px !important;
+      min-height: 26px !important;
+    }
+    .tab-nav-btn[data-tab="marquee"] {
+      border-color: rgba(245, 158, 11, 0.5) !important;
+      background: rgba(245, 158, 11, 0.15) !important;
+      color: #fbbf24 !important;
+      font-weight: 800 !important;
+    }
+
+    /* Active Tab Panel */
     .tab-panel-card {
       width: 100% !important;
-      padding: 5px 7px !important;
-      background: rgba(14, 10, 26, 0.96) !important;
-      border: 1px solid rgba(168, 85, 247, 0.25) !important;
-      border-radius: 8px !important;
+      padding: 5px 6px !important;
+      background: rgba(15, 11, 26, 0.96) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 6px !important;
       box-sizing: border-box !important;
       gap: 4px !important;
       display: none !important;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
     }
     .tab-panel-card.active {
       display: flex !important;
       flex-direction: column !important;
-      animation: fadeInPanel 0.18s ease-in-out !important;
     }
-    @keyframes fadeInPanel {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     .panel-section-title {
-      font-size: 0.70rem !important;
-      font-weight: 800 !important;
+      font-size: 0.7rem !important;
       padding: 1px 0 !important;
       margin: 0 !important;
-      color: var(--neon-cyan-bright) !important;
     }
     .form-row {
       margin: 0 !important;
       gap: 1px !important;
     }
     .form-label {
-      font-size: 0.60rem !important;
+      font-size: 0.62rem !important;
       margin-bottom: 1px !important;
-      display: flex !important;
-      justify-content: space-between !important;
     }
     .form-label-val {
-      font-size: 0.58rem !important;
-      font-weight: 700 !important;
-      color: var(--neon-cyan-bright) !important;
+      font-size: 0.6rem !important;
     }
     .cyber-input {
-      font-size: 0.65rem !important;
+      font-size: 0.68rem !important;
       padding: 2px 4px !important;
-      height: 26px !important;
+      height: 28px !important;
     }
     .slider-group-box {
       padding: 4px 6px !important;
       gap: 2px !important;
       border-radius: 5px !important;
-      background: rgba(18, 13, 34, 0.75) !important;
-      border: 1px solid rgba(168, 85, 247, 0.15) !important;
     }
     .slider-group-title {
-      font-size: 0.60rem !important;
-      font-weight: 700 !important;
-      color: var(--neon-gold) !important;
+      font-size: 0.62rem !important;
       margin-bottom: 2px !important;
     }
 
-    /* Touch-friendly Sliders (Full-Width, High Precision) */
+    /* Touch-friendly Sliders */
     .cyber-slider {
       width: 100% !important;
-      height: 7px !important;
-      margin: 3px 0 !important;
+      height: 6px !important;
+      margin: 2px 0 !important;
       touch-action: pan-x !important;
       -webkit-appearance: none !important;
       appearance: none !important;
       cursor: pointer !important;
-      background: rgba(255, 255, 255, 0.12) !important;
-      border-radius: 4px !important;
     }
     .cyber-slider::-webkit-slider-thumb {
       -webkit-appearance: none !important;
       appearance: none !important;
-      width: 22px !important;
-      height: 22px !important;
+      width: 20px !important;
+      height: 20px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
       border: 2px solid #ffffff !important;
-      box-shadow: 0 0 8px rgba(168, 85, 247, 0.9) !important;
+      box-shadow: 0 0 6px rgba(168, 85, 247, 0.8) !important;
       cursor: pointer !important;
     }
     .cyber-slider::-moz-range-thumb {
-      width: 22px !important;
-      height: 22px !important;
+      width: 20px !important;
+      height: 20px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
       border: 2px solid #ffffff !important;
-      box-shadow: 0 0 8px rgba(168, 85, 247, 0.9) !important;
+      box-shadow: 0 0 6px rgba(168, 85, 247, 0.8) !important;
       cursor: pointer !important;
     }
 
@@ -526,15 +314,16 @@
       display: flex !important;
       align-items: center !important;
       gap: 4px !important;
-      padding: 2px 0 !important;
+      padding: 3px 0 !important;
     }
     .btn-color-quick {
       border: none !important;
-      padding: 2px 6px !important;
-      font-size: 0.60rem !important;
+      padding: 2px 7px !important;
+      font-size: 0.62rem !important;
       font-weight: 700 !important;
       border-radius: 4px !important;
       cursor: pointer !important;
+      transition: transform 0.15s !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -543,52 +332,16 @@
       transform: scale(0.92) !important;
     }
 
-    /* Pure Blur Box without text (Optimized for Mobile Touch) */
+    /* Pure Blur Box without text */
     #blur-overlay-box {
       border: 1.5px dashed var(--neon-cyan-bright) !important;
       backdrop-filter: blur(16px) !important;
       -webkit-backdrop-filter: blur(16px) !important;
       background: rgba(0, 0, 0, 0.4) !important;
-      touch-action: none !important;
-      user-select: none !important;
-      -webkit-user-select: none !important;
-      will-change: left, top, width, height;
-      box-shadow: 0 0 10px rgba(34, 211, 238, 0.35) !important;
-    }
-    #blur-overlay-box.is-dragging {
-      border-color: #ffffff !important;
-      box-shadow: 0 0 16px rgba(34, 211, 238, 0.8) !important;
     }
     .blur-watermark-label {
       display: none !important;
     }
-    /* Touch-optimized Resizer Handles for Mobile Screens */
-    .resizer-handle {
-      position: absolute !important;
-      width: 14px !important;
-      height: 14px !important;
-      background: var(--neon-cyan-bright) !important;
-      border: 2px solid #ffffff !important;
-      border-radius: 50% !important;
-      box-shadow: 0 0 6px rgba(34, 211, 238, 0.9) !important;
-      z-index: 30 !important;
-      touch-action: none !important;
-      cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    }
-    /* Invisible hit-target (30px x 30px) that does not engulf the small blur box */
-    .resizer-handle::before {
-      content: '' !important;
-      position: absolute !important;
-      inset: -8px !important;
-      background: transparent !important;
-    }
-    .resizer-handle.nw { top: -7px !important; left: -7px !important; cursor: nwse-resize !important; }
-    .resizer-handle.ne { top: -7px !important; right: -7px !important; cursor: nesw-resize !important; }
-    .resizer-handle.sw { bottom: -7px !important; left: -7px !important; cursor: nesw-resize !important; }
-    .resizer-handle.se { bottom: -7px !important; right: -7px !important; cursor: nwse-resize !important; }
 
     /* Transparent Mode */
     .rendered-text-content.transparent-mode,
@@ -602,84 +355,6 @@
     #text-overlay-element.transparent-mode span {
       text-shadow: none !important;
       -webkit-text-stroke: 0px !important;
-    }
-
-    /* 🎬 HARDWARE-ACCELERATED 60FPS DUAL-TONE MARQUEE ANIMATIONS */
-    #text-overlay-element.marquee-active {
-      position: absolute !important;
-      width: max-content !important;
-      white-space: nowrap !important;
-      pointer-events: none !important;
-      user-select: none !important;
-      -webkit-user-select: none !important;
-      will-change: transform, left, top !important;
-      display: block !important;
-      z-index: 25 !important;
-    }
-    #text-overlay-element.marquee-active.dir-up {
-      left: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      animation: marqueeScrollUp var(--marquee-duration, 8s) linear infinite !important;
-    }
-    #text-overlay-element.marquee-active.dir-down {
-      left: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      animation: marqueeScrollDown var(--marquee-duration, 8s) linear infinite !important;
-    }
-    #text-overlay-element.marquee-active.dir-left {
-      top: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      animation: marqueeScrollLeft var(--marquee-duration, 8s) linear infinite !important;
-    }
-    #text-overlay-element.marquee-active.dir-right {
-      top: 50% !important;
-      right: auto !important;
-      bottom: auto !important;
-      animation: marqueeScrollRight var(--marquee-duration, 8s) linear infinite !important;
-    }
-
-    @keyframes marqueeScrollUp {
-      0% {
-        top: 100%;
-        transform: translate3d(-50%, 0, 0);
-      }
-      100% {
-        top: 0%;
-        transform: translate3d(-50%, -100%, 0);
-      }
-    }
-    @keyframes marqueeScrollDown {
-      0% {
-        top: 0%;
-        transform: translate3d(-50%, -100%, 0);
-      }
-      100% {
-        top: 100%;
-        transform: translate3d(-50%, 0, 0);
-      }
-    }
-    @keyframes marqueeScrollLeft {
-      0% {
-        left: 100%;
-        transform: translate3d(0, -50%, 0);
-      }
-      100% {
-        left: 0%;
-        transform: translate3d(-100%, -50%, 0);
-      }
-    }
-    @keyframes marqueeScrollRight {
-      0% {
-        left: 0%;
-        transform: translate3d(-100%, -50%, 0);
-      }
-      100% {
-        left: 100%;
-        transform: translate3d(0, -50%, 0);
-      }
     }
   </style>
 </head>
@@ -721,6 +396,10 @@
       <button type="button" class="header-admin-btn" onclick="openAdminModal()" title="ផ្ទាំង Admin បង្កើត Key">
         <span>🔑 Admin</span>
       </button>
+
+      <a href="/static/NeakZong_Translate_v1.0.apk" download="NeakZong_Translate_v1.0.apk" class="btn-top-apk" title="ទាញយក APK សម្រាប់ទូរស័ព្ទ Android">
+        <span>📥 ទាញយក APK</span>
+      </a>
     </div>
   </header>
 
@@ -729,187 +408,135 @@
   ══════════════════════════════════════════════════════════ -->
   <main class="studio-main-container">
 
-    <!-- ══════════════════════════════════════════════════════════
-         ⚡ 1. TOP SPLIT ROW: LEFT VIDEO (68%) / RIGHT ACTION MENU (32%)
-    ══════════════════════════════════════════════════════════ -->
-    <section class="studio-top-split-row">
-
-      <!-- 1.1 ផ្នែកខាងលើឆ្វេង (Top-Left Video Area) -->
-      <div class="top-video-col">
-        <div class="video-stage-card">
-          <div class="video-stage-viewport" id="video-viewport">
-            <!-- Tap-to-Upload Empty State Placeholder -->
-            <div class="video-upload-placeholder" id="video-placeholder" onclick="document.getElementById('video-file-input').click()">
-              <div class="placeholder-icon">🎬</div>
-              <div class="placeholder-title">ចុចរើសវីដេអូចិន (MP4)</div>
-              <div class="placeholder-sub">Live Preview 9:16 បញ្ឈរធំច្បាស់</div>
-            </div>
-
-            <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" crossorigin="anonymous" style="display:none; position:relative; z-index:1; width:100%; height:100%; object-fit:contain;"></video>
-
-            <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
-            <div class="video-overlay-layer" id="video-overlay-layer">
-              <!-- 1. Blur Mask Box (Pure Blur, zero text) -->
-              <div class="interactive-overlay" id="blur-overlay-box">
-                <div class="resizer-handle nw"></div>
-                <div class="resizer-handle ne"></div>
-                <div class="resizer-handle sw"></div>
-                <div class="resizer-handle se"></div>
-              </div>
-
-              <!-- 2. Logo Overlay -->
-              <div class="interactive-overlay" id="logo-overlay-element">
-                <svg id="logo-overlay-img" viewBox="0 0 100 100" fill="none">
-                  <circle cx="50" cy="50" r="45" fill="rgba(168,85,247,0.3)" stroke="#c084fc" stroke-width="4"/>
-                  <path d="M50 20 L60 40 L80 45 L65 60 L70 80 L50 70 L30 80 L35 60 L20 45 L40 40 Z" fill="#22d3ee"/>
-                </svg>
-              </div>
-
-              <!-- 3. Dual-Tone Title Overlay (Direct Header Marquee Supported) -->
-              <div class="interactive-overlay" id="text-overlay-element" title="អូសរំកិលអក្សរលើវីដេអូ ឬបើកជាអក្សររត់ Marquee">
-                <div class="rendered-text-content" id="rendered-text-val">
-                  <span id="text-part1-preview" class="text-preview-part1">នាគហ្សង</span>
-                  <span id="text-part2-preview" class="text-preview-part2"> បកប្រែ</span>
-                </div>
-              </div>
-
-              <!-- 5. Custom Sponsor Banner Overlay (2 Lines) -->
-              <div class="interactive-overlay" id="sponsor-overlay-element">
-                <div class="sponsor-banner-bar" id="sponsor-banner-bar">
-                  <div class="sponsor-top-tag" id="sponsor-top-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
-                  <div class="sponsor-bottom-tag" id="sponsor-bottom-tag">📱 012 345 678 | Telegram</div>
-                </div>
-              </div>
-
-            </div>
+    <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
+    <div class="studio-stage-col">
+      <!-- VIDEO STAGE & CANVAS PREVIEW (Sticky 9:16) -->
+      <div class="video-stage-card">
+        <div class="video-stage-viewport" id="video-viewport">
+          <!-- Tap-to-Upload Empty State Placeholder -->
+          <div class="video-upload-placeholder" id="video-placeholder" style="position: relative; cursor: pointer;">
+            <input type="file" id="video-file-input-overlay" accept="video/*" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; z-index: 50; cursor: pointer;" onchange="handleVideoUpload(this)">
+            <div class="placeholder-icon">🎬</div>
+            <div class="placeholder-title">ចុចរើសវីដេអូចិន (MP4)</div>
+            <div class="placeholder-sub">Live Preview 9:16 បញ្ឈរធំច្បាស់</div>
           </div>
 
-          <!-- Playback Bar below Video -->
-          <div class="video-toolbar">
-            <div class="playback-controls">
-              <button type="button" class="btn-ctrl" id="btn-play-toggle" onclick="toggleVideoPlayback()">
-                ▶️ ចាក់
-              </button>
-              <button type="button" class="btn-ctrl" onclick="resetVideoPlayback()">
-                ⏮ ដើម
-              </button>
+          <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
+
+          <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
+          <div class="video-overlay-layer" id="video-overlay-layer">
+
+            <!-- 1. Blur Mask Box (Pure Blur, zero text) -->
+            <div class="interactive-overlay" id="blur-overlay-box">
+              <div class="resizer-handle nw"></div>
+              <div class="resizer-handle ne"></div>
+              <div class="resizer-handle sw"></div>
+              <div class="resizer-handle se"></div>
             </div>
-            <div class="time-display" id="video-time-display">00:00 / 00:00</div>
+
+            <!-- 2. Logo Overlay -->
+            <div class="interactive-overlay" id="logo-overlay-element">
+              <svg id="logo-overlay-img" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="45" fill="rgba(168,85,247,0.3)" stroke="#c084fc" stroke-width="4"/>
+                <path d="M50 20 L60 40 L80 45 L65 60 L70 80 L50 70 L30 80 L35 60 L20 45 L40 40 Z" fill="#22d3ee"/>
+              </svg>
+            </div>
+
+            <!-- 3. Static Text Overlay (Dual-Tone) -->
+            <div class="interactive-overlay" id="text-overlay-element" title="អូសរំកិលអក្សរលើវីដេអូ">
+              <div class="rendered-text-content" id="rendered-text-val">
+                <span id="text-part1-preview" class="text-preview-part1">នាគហ្សង</span>
+                <span id="text-part2-preview" class="text-preview-part2"> បកប្រែ</span>
+              </div>
+            </div>
+
+            <!-- 4. Animated Vertical Scrolling Marquee -->
+            <div class="interactive-overlay" id="marquee-overlay-element">
+              <div class="marquee-scrolling-track" id="marquee-track">
+                សូមចុច Subscribe &amp; Follow «នាគហ្សង បកប្រែ AI»
+              </div>
+            </div>
+
+            <!-- 5. Custom Sponsor Banner Overlay (2 Lines) -->
+            <div class="interactive-overlay" id="sponsor-overlay-element">
+              <div class="sponsor-banner-bar" id="sponsor-banner-bar">
+                <div class="sponsor-top-tag" id="sponsor-top-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
+                <div class="sponsor-bottom-tag" id="sponsor-bottom-tag">📱 012 345 678 | Telegram</div>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- ⚡ 1-CLICK AUTO PROCESS BUTTON DIRECTLY UNDER VIDEO -->
-        <div class="auto-process-banner">
-          <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
-            🪄 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
-          </button>
+        <!-- Playback Bar below Video -->
+        <div class="video-toolbar">
+          <div class="playback-controls">
+            <button type="button" class="btn-ctrl" onclick="previewVideo.paused ? previewVideo.play() : previewVideo.pause()">
+              ⏯ ចាក់
+            </button>
+            <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
+              ⏮ ដើម
+            </button>
+          </div>
+          <div class="time-display" id="video-time-display">00:00 / 00:00</div>
         </div>
       </div>
 
-      <!-- 1.2 ផ្នែកខាងលើស្ដាំ (Top-Right Action Menu Area: 2 Columns Full Height) -->
-      <div class="top-action-menu-col">
-        <div class="action-menu-grid">
-          <!-- Row 1: Clone & Text -->
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
-            <span class="btn-ico">🎙️</span>
-            <span class="btn-lbl">Clone</span>
-          </button>
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
-            <span class="btn-ico">📝</span>
-            <span class="btn-lbl">Text</span>
-          </button>
+      <!-- ⚡ 1-CLICK AUTO PROCESS BANNER -->
+      <div class="auto-process-banner">
+        <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
+          🪄 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
+        </button>
+      </div>
 
-          <!-- Row 2: Blur & Sponsor -->
-          <button type="button" class="action-menu-btn tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
-            <span class="btn-ico">🌫️</span>
-            <span class="btn-lbl">Blur</span>
-          </button>
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
-            <span class="btn-ico">🤝</span>
-            <span class="btn-lbl">Sponsor</span>
-          </button>
-
-          <!-- Row 3: Logo & Media -->
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
-            <span class="btn-ico">🖼️</span>
-            <span class="btn-lbl">Logo</span>
-          </button>
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="media" id="tab-nav-media" onclick="switchStudioTab('media')">
-            <span class="btn-ico">📂</span>
-            <span class="btn-lbl">Media</span>
-          </button>
-
-          <!-- Row 4: Voice Selector (ស្រីមុំ / ពិសិដ្ឋ) -->
-          <button type="button" class="action-menu-btn voice-pill-btn active" id="btn-voice-female" onclick="selectQuickVoice('female')">
-            <span class="btn-ico">👩</span>
-            <span class="btn-lbl">ស្រីមុំ</span>
-          </button>
-          <button type="button" class="action-menu-btn voice-pill-btn" id="btn-voice-male" onclick="selectQuickVoice('male')">
-            <span class="btn-ico">👨</span>
-            <span class="btn-lbl">ពិសិដ្ឋ</span>
-          </button>
-
-          <!-- Row 5: Tools & Settings (Span 2 Columns Full Width) -->
-          <button type="button" class="action-menu-btn tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')" style="grid-column: span 2; width: 100%;">
-            <span class="btn-ico">✂️</span>
-            <span class="btn-lbl">Tools &amp; កាត់ត</span>
-          </button>
+      <!-- ⚡ RENDER PROGRESS BAR -->
+      <div id="render-progress-wrap">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+          <span id="render-progress-status" style="color: var(--neon-purple-bright); font-weight: 700;">កំពុងដំណើរការ...</span>
         </div>
-      </div>
-    </section>
-
-    <!-- ══════════════════════════════════════════════════════════
-         ⚡ 2. ផ្នែកកណ្ដាល (Middle Status Area: Progress Bar & Status)
-    ══════════════════════════════════════════════════════════ -->
-    <section class="studio-middle-status-row" id="render-progress-wrap">
-      <div class="middle-status-bar">
-        <div class="status-indicator-left">
-          <span class="pulse-live-dot"></span>
-          <span id="render-progress-status" class="status-live-text">⚡ ស្ថានភាព៖ រង់ចាំដំណើរការបកប្រែ...</span>
+        <div class="render-progress-track">
+          <div class="render-progress-bar" id="render-progress-bar"></div>
         </div>
-        <div class="status-indicator-right" id="render-progress-percent">0%</div>
+        <a id="btn-download-result" href="#" download>
+          📥 ទាញយក MP4 HD (Save to Phone)
+        </a>
       </div>
-      <div class="render-progress-track">
-        <div class="render-progress-bar" id="render-progress-bar" style="width: 0%;"></div>
-      </div>
-      <a id="btn-download-result" href="#" download style="display:none;">
-        📥 ទាញយក MP4 HD រួចរាល់ (Save to Phone)
-      </a>
-    </section>
+    </div>
 
-    <!-- ══════════════════════════════════════════════════════════
-         ⚡ 3. ផ្នែកខាងក្រោមទាំងមូល (Bottom Dynamic Slider/Control Area)
-    ══════════════════════════════════════════════════════════ -->
-    <section class="studio-bottom-panel-area" id="studio-dynamic-controls-area">
+    <!-- ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── -->
+    <div class="studio-controls-col">
+      <!-- Tabs Bar at Top of Controls Column (Logo, Blur, Text, Sponsor, Marquee) -->
+      <nav class="studio-tabs-nav">
+        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
+          🖼️ Logo
+        </button>
+        <button type="button" class="tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
+          🌫️ ព្រាល Blur
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
+          📝 Text
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
+          🤝 Sponsor
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
+          🎬 Marquee
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
+          🎙️ សំឡេង
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
+          📂 Media
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
+          ✂️ Export
+        </button>
+      </nav>
 
       <!-- ── TAB 1: TEXT OVERLAY (DUAL-TONE) ─────────────────── -->
       <div class="tab-panel-card" id="tab-panel-text">
         <div class="panel-section-title">
           <span>📝 ដាក់អក្សរ ២ ពណ៌ (Dual-Tone Text Overlay)</span>
-        </div>
-
-        <!-- 🏷️ Quick Marquee Name Presets (Chips / Buttons) -->
-        <div class="preset-name-chips-bar" style="margin: 3px 0 5px 0; background: rgba(255,255,255,0.03); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 4px 6px;">
-          <div style="font-size: 0.65rem; color: var(--neon-gold); font-weight: 800; margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between;">
-            <span>⚡ ជ្រើសរើសឈ្មោះអក្សររត់រហ័ស (Quick Presets)</span>
-            <span style="font-size: 0.58rem; color: var(--text-muted);">ចុចប្ដូរភ្លាមៗ</span>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-            <button type="button" class="btn-preset-chip" onclick="applyMarqueePreset('𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴')" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.5); color: #f59e0b; border-radius: 6px; padding: 4px 2px; font-size: 0.60rem; font-weight: 700; cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" title="𝑲𝑯 𝑫𝒓𝒂𝒎𝒂 𝑽𝒊𝒅𝒆𝒐10𝑴">
-              🎬 KH Drama 10M
-            </button>
-            <button type="button" class="btn-preset-chip" onclick="applyMarqueePreset('នាគហ្សង', 'បកប្រែ')" style="background: rgba(34, 211, 238, 0.15); border: 1px solid rgba(34, 211, 238, 0.5); color: #22d3ee; border-radius: 6px; padding: 4px 2px; font-size: 0.60rem; font-weight: 700; cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" title="នាគហ្សង បកប្រែ">
-              🐉 នាគហ្សង បកប្រែ
-            </button>
-            <button type="button" class="btn-preset-chip" onclick="applyMarqueePreset('ស្ដេចហ្សង', 'បកប្រែ')" style="background: rgba(192, 132, 252, 0.15); border: 1px solid rgba(192, 132, 252, 0.5); color: #c084fc; border-radius: 6px; padding: 4px 2px; font-size: 0.60rem; font-weight: 700; cursor: pointer; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;" title="ស្ដេចហ្សង បកប្រែ">
-              👑 ស្ដេចហ្សង បកប្រែ
-            </button>
-          </div>
-          <!-- Custom Input box for typing anything freely -->
-          <div style="display: flex; gap: 4px; margin-top: 4px;">
-            <input type="text" id="marquee-custom-input" class="cyber-input" placeholder="✏️ វាយបញ្ចូលឈ្មោះផ្ទាល់ខ្លួន..." style="height: 24px; font-size: 0.64rem; padding: 2px 6px;" oninput="applyCustomMarqueeText(this.value)">
-            <button type="button" class="btn-ctrl" onclick="applyCustomMarqueeText(document.getElementById('marquee-custom-input').value)" style="height: 24px; padding: 0 8px; font-size: 0.62rem; white-space: nowrap;">✓ ប្រើ</button>
-          </div>
         </div>
 
         <!-- Quick Color Presets Bar (White, Black, Gold, Cyan, Red) -->
@@ -963,13 +590,6 @@
                 <option value="outline">ស៊ុម</option>
               </select>
             </div>
-            <select id="text-part1-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem; margin-top: 2px;" onchange="updateDualTonePreview()">
-              <option value="'Moul', serif" selected>Moul (មូល)</option>
-              <option value="'Kantumruy Pro', sans-serif">Kantumruy Pro</option>
-              <option value="'Battambang', sans-serif">Battambang</option>
-              <option value="'Koulen', serif">Koulen (កូលែន)</option>
-              <option value="'Bokor', serif">Bokor</option>
-            </select>
           </div>
 
           <!-- Part 2 -->
@@ -989,23 +609,29 @@
                 <option value="outline">ស៊ុម</option>
               </select>
             </div>
-            <select id="text-part2-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem; margin-top: 2px;" onchange="updateDualTonePreview()">
-              <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
-              <option value="'Moul', serif">Moul (មូល)</option>
-              <option value="'Battambang', sans-serif">Battambang</option>
-              <option value="'Koulen', serif">Koulen (កូលែន)</option>
-              <option value="'Siemreap', sans-serif">Siemreap</option>
-            </select>
           </div>
         </div>
 
-        <!-- Shared Size Slider -->
-        <div class="form-row" style="margin-top: 3px;">
-          <div class="form-label">
-            <span>ទំហំអក្សររួម (Font Size)</span>
-            <span class="form-label-val" id="text-size-val">16px</span>
+        <!-- Shared Font & Size (2 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
+          <div>
+            <label class="form-label">ពុម្ពអក្សរ (Font)</label>
+            <select id="text-font-select" class="cyber-input" style="padding: 0 4px; height: 26px;" onchange="updateDualTonePreview()">
+              <option value="'Moul', serif">Moul (មូល)</option>
+              <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
+              <option value="'Battambang', sans-serif">Battambang</option>
+              <option value="'Siemreap', sans-serif">Siemreap</option>
+              <option value="'Bokor', serif">Bokor</option>
+              <option value="'Koulen', serif">Koulen</option>
+            </select>
           </div>
-          <input type="range" min="10" max="40" step="1" value="16" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
+          <div>
+            <div class="form-label">
+              <span>ទំហំ</span>
+              <span class="form-label-val" id="text-size-val">26px</span>
+            </div>
+            <input type="range" min="14" max="60" step="2" value="26" class="cyber-slider" id="text-size-slider" oninput="document.getElementById('text-size-val').innerText = this.value + 'px'; state.textOverlay.size = parseInt(this.value); updateDualTonePreview();">
+          </div>
         </div>
 
         <!-- Text Position Sliders (2 Columns: X and Y) -->
@@ -1015,53 +641,18 @@
             <div class="form-row">
               <div class="form-label">
                 <span>ឆ្វេង-ស្ដាំ (X)</span>
-                <span class="form-label-val" id="text-x-val">10px</span>
+                <span class="form-label-val" id="text-x-val">15px</span>
               </div>
-              <input type="range" min="0" max="300" step="2" value="10" class="cyber-slider" id="text-x-slider"
+              <input type="range" min="0" max="350" step="5" value="15" class="cyber-slider" id="text-x-slider"
                 oninput="document.getElementById('text-x-val').innerText = this.value + 'px'; updateTextPosition();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>លើ-ក្រោម (Y)</span>
-                <span class="form-label-val" id="text-y-val">15px</span>
+                <span class="form-label-val" id="text-y-val">30px</span>
               </div>
-              <input type="range" min="0" max="500" step="2" value="15" class="cyber-slider" id="text-y-slider"
+              <input type="range" min="0" max="600" step="5" value="30" class="cyber-slider" id="text-y-slider"
                 oninput="document.getElementById('text-y-val').innerText = this.value + 'px'; updateTextPosition();">
-            </div>
-          </div>
-        </div>
-
-        <!-- 🎬 DIRECT DUAL-TONE HEADER MARQUEE ANIMATION SECTION -->
-        <div class="slider-group-box" style="margin-top: 5px; border-color: rgba(245, 158, 11, 0.45); background: rgba(18, 14, 30, 0.95);">
-          <div class="slider-group-title" style="color: var(--neon-gold); display: flex; justify-content: space-between; align-items: center;">
-            <span>🎬 ធ្វើឱ្យចំណងជើង Dual-Tone រត់ (Header Marquee)</span>
-            <label class="cyber-switch" style="transform: scale(0.85); margin: 0;">
-              <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeAnimation(this.checked)">
-              <span class="switch-slider"></span>
-            </label>
-          </div>
-
-          <div style="font-size: 0.60rem; color: #94a3b8; margin: 3px 0 6px 0; line-height: 1.3;">
-            ✨ អក្សរចំណងជើង Dual-Tone («ពាក្យ ១ + ពាក្យ ២») ខាងលើនេះ នឹងរត់កាត់អេក្រង់វីដេអូដោយផ្ទាល់តែម្ដង គ្មានអក្សរជាន់គ្នាឡើយ។
-          </div>
-
-          <!-- Natural Speed Slider: Right = Fast, Left = Slow -->
-          <div class="form-row" style="margin-top: 3px;">
-            <div class="form-label">
-              <span>⚡ ល្បឿនរត់ (ឆ្វេង=យឺត 🐢 | ស្ដាំ=លឿន 🚀)</span>
-              <span class="form-label-val" id="marquee-speed-natural-val">5x (មធ្យម)</span>
-            </div>
-            <input type="range" min="1" max="10" step="1" value="5" class="cyber-slider" id="marquee-speed-natural-slider" oninput="setMarqueeSpeedNatural(this.value)">
-          </div>
-
-          <!-- Directions -->
-          <div class="form-row" style="margin-top: 3px;">
-            <label class="form-label">ទិសដៅរត់</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3px;">
-              <button type="button" class="btn-ctrl" id="btn-marquee-dir-up" onclick="setMarqueeDir('up')">⬆️ ឡើង</button>
-              <button type="button" class="btn-ctrl" id="btn-marquee-dir-down" onclick="setMarqueeDir('down')">⬇️ ចុះ</button>
-              <button type="button" class="btn-ctrl active" id="btn-marquee-dir-left" onclick="setMarqueeDir('left')">⬅️ ឆ្វេង</button>
-              <button type="button" class="btn-ctrl" id="btn-marquee-dir-right" onclick="setMarqueeDir('right')">➡️ ស្ដាំ</button>
             </div>
           </div>
         </div>
@@ -1148,48 +739,48 @@
           <button type="button" class="btn-ctrl" id="btn-blur-strong" style="justify-content: center; height: 24px; font-size: 0.62rem;" onclick="setBlurPreset('strong')">ខ្លាំង (45)</button>
         </div>
 
-        <!-- Blur Size (Bounded Strictly to Video Frame) -->
+        <!-- Blur Size (2 Columns: Width & Height) -->
         <div class="slider-group-box" style="margin-top: 2px;">
-          <div class="slider-group-title">📏 ទំហំ Blur Box (កម្រិតព្រំដែនស៊ុមវីដេអូ)</div>
+          <div class="slider-group-title">📏 ទំហំ Blur Box (Width x Height)</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
             <div class="form-row">
               <div class="form-label">
                 <span>ទទឹង (W)</span>
-                <span class="form-label-val" id="blur-w-val">75px</span>
+                <span class="form-label-val" id="blur-w-val">140px</span>
               </div>
-              <input type="range" min="20" max="180" step="2" value="75" class="cyber-slider" id="blur-w-slider"
-                oninput="handleBlurSliderInput();">
+              <input type="range" min="20" max="380" step="2" value="140" class="cyber-slider" id="blur-w-slider"
+                oninput="document.getElementById('blur-w-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>កម្ពស់ (H)</span>
-                <span class="form-label-val" id="blur-h-val">28px</span>
+                <span class="form-label-val" id="blur-h-val">45px</span>
               </div>
-              <input type="range" min="10" max="100" step="2" value="28" class="cyber-slider" id="blur-h-slider"
-                oninput="handleBlurSliderInput();">
+              <input type="range" min="10" max="180" step="2" value="45" class="cyber-slider" id="blur-h-slider"
+                oninput="document.getElementById('blur-h-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
           </div>
         </div>
 
-        <!-- Blur Position (X & Y Clamped) -->
+        <!-- Blur Position (2 Columns: X & Y) -->
         <div class="slider-group-box" style="margin-top: 2px;">
           <div class="slider-group-title">📐 ទីតាំង Blur Box (X, Y)</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
             <div class="form-row">
               <div class="form-label">
                 <span>ឆ្វេង-ស្ដាំ (X)</span>
-                <span class="form-label-val" id="blur-x-val">10px</span>
+                <span class="form-label-val" id="blur-x-val">15px</span>
               </div>
-              <input type="range" min="0" max="180" step="2" value="10" class="cyber-slider" id="blur-x-slider"
-                oninput="handleBlurSliderInput();">
+              <input type="range" min="0" max="450" step="2" value="15" class="cyber-slider" id="blur-x-slider"
+                oninput="document.getElementById('blur-x-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
             <div class="form-row">
               <div class="form-label">
                 <span>លើ-ក្រោម (Y)</span>
-                <span class="form-label-val" id="blur-y-val">10px</span>
+                <span class="form-label-val" id="blur-y-val">15px</span>
               </div>
-              <input type="range" min="0" max="300" step="2" value="10" class="cyber-slider" id="blur-y-slider"
-                oninput="handleBlurSliderInput();">
+              <input type="range" min="0" max="750" step="2" value="15" class="cyber-slider" id="blur-y-slider"
+                oninput="document.getElementById('blur-y-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
           </div>
           <!-- Quick Corners -->
@@ -1201,22 +792,9 @@
           </div>
         </div>
 
-        <!-- Blur Tint Style & Intensity -->
+        <!-- Blur Intensity & Black Tint (2 Columns) -->
         <div class="slider-group-box" style="margin-top: 2px;">
-          <div class="slider-group-title">🎨 ពណ៌ផ្ទៃ &amp; កម្រិតព្រាល (Tint &amp; Blur)</div>
-          <!-- Tint Modes -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; margin-bottom: 4px;">
-            <button type="button" class="btn-ctrl" id="btn-tint-pure" style="justify-content: center; font-size: 0.58rem; height: 24px;" onclick="setBlurTintPreset('pure')">
-              🌫️ ព្រាលសុទ្ធ
-            </button>
-            <button type="button" class="btn-ctrl active" id="btn-tint-dark" style="justify-content: center; font-size: 0.58rem; height: 24px;" onclick="setBlurTintPreset('dark')">
-              ⬛ ខ្មៅងងឹត
-            </button>
-            <button type="button" class="btn-ctrl" id="btn-tint-white" style="justify-content: center; font-size: 0.58rem; height: 24px;" onclick="setBlurTintPreset('white')">
-              ⬜ សថ្លា
-            </button>
-          </div>
-
+          <div class="slider-group-title">🌫️ កម្រិតព្រាល &amp; ផ្ទៃខ្មៅងងឹត</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
             <div class="form-row">
               <div class="form-label">
@@ -1228,7 +806,7 @@
             </div>
             <div class="form-row">
               <div class="form-label">
-                <span>កម្រិតពណ៌ផ្ទៃ</span>
+                <span>ផ្ទៃខ្មៅងងឹត</span>
                 <span class="form-label-val" id="blur-tint-val">40%</span>
               </div>
               <input type="range" min="0" max="100" step="2" value="40" class="cyber-slider" id="blur-tint-slider"
@@ -1238,16 +816,16 @@
         </div>
       </div>
 
-      <!-- ── TAB: CUSTOM SPONSOR (DUAL-STYLE & RESIZABLE) ──────────────── -->
+      <!-- ── TAB: CUSTOM SPONSOR (2 LINES ONLY) ──────────────── -->
       <div class="tab-panel-card" id="tab-panel-sponsor">
         <div class="panel-section-title">
-          <span>🤝 ផ្ទាំងផ្សាយ Sponsor (២ បន្ទាត់ &amp; Dual Style)</span>
+          <span>🤝 ផ្ទាំងផ្សាយ Sponsor (២ បន្ទាត់)</span>
         </div>
 
-        <div class="toggle-switch-wrap" style="padding: 3px 5px;">
+        <div class="toggle-switch-wrap">
           <div>
             <div class="toggle-switch-label">បើកបង្ហាញ Sponsor Banner</div>
-            <div style="font-size: 0.65rem; color: var(--text-muted);">សារ៉េទំហំទទឹង និងអក្សរ ២ ពណ៌ដាច់ដោយឡែក</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">បង្ហាញព័ត៌មាន Sponsor ២ បន្ទាត់ខ្លី gọn លើវីដេអូ</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-sponsor" onchange="toggleSponsorOverlay(this.checked)">
@@ -1255,110 +833,142 @@
           </label>
         </div>
 
-        <!-- Dual Style: Top Line & Bottom Line -->
-        <div class="slider-group-box" style="margin-top: 3px;">
-          <div class="slider-group-title">✏️ អត្ថបទ និង Style ដាច់ដោយឡែក (Dual-Style)</div>
+        <div class="form-row">
+          <label class="form-label">ជួរលើ (Top Line) — អត្ថបទ Sponsor</label>
+          <input type="text" id="sponsor-top-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" oninput="updateSponsorContent()">
+        </div>
 
-          <!-- Top Line -->
-          <div style="background: rgba(255,255,255,0.03); padding: 4px; border-radius: 6px; margin-bottom: 4px; border: 1px solid rgba(255,255,255,0.08);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <span style="font-size: 0.60rem; font-weight: 800; color: #f59e0b;">ជួរលើ (Top Line):</span>
+        <div class="form-row">
+          <label class="form-label">ជួរក្រោម (Bottom Line) — លេខទាក់ទង ឬ Telegram</label>
+          <input type="text" id="sponsor-bottom-input" class="cyber-input" value="📱 012 345 678 | Telegram" placeholder="លេខទូរសព្ទ / Telegram..." oninput="updateSponsorContent()">
+        </div>
+
+        <!-- Sponsor Slider Box -->
+        <div class="slider-group-box">
+          <div class="slider-group-title">📐 សារ៉េទំហំ និងទីតាំង Sponsor Banner</div>
+          
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទំហំអក្សរ Sponsor (Font Size)</span>
+              <span class="form-label-val" id="sponsor-size-val">17px</span>
             </div>
-            <input type="text" id="sponsor-top-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="ជួរលើ..." oninput="updateSponsorContent()">
-            <div style="display: grid; grid-template-columns: 32px 1fr 1fr; gap: 3px; margin-top: 3px;">
-              <input type="color" id="sponsor-top-color" value="#f59e0b" class="cyber-input" style="height: 24px; padding: 1px;" oninput="updateSponsorContent()">
-              <select id="sponsor-top-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
-                <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
-                <option value="'Moul', serif">Moul (មូល)</option>
-                <option value="'Koulen', serif">Koulen</option>
-                <option value="'Battambang', sans-serif">Battambang</option>
-              </select>
-              <select id="sponsor-top-effect" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
-                <option value="glow" selected>Glow</option>
-                <option value="shadow">ស្រមោល</option>
-                <option value="none">គ្មាន</option>
-              </select>
-            </div>
+            <input type="range" min="12" max="28" step="1" value="17" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
           </div>
 
-          <!-- Bottom Line -->
-          <div style="background: rgba(255,255,255,0.03); padding: 4px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <span style="font-size: 0.60rem; font-weight: 800; color: #22d3ee;">ជួរក្រោម (Bottom Line):</span>
+          <div class="form-row">
+            <div class="form-label">
+              <span>ទីតាំង Y លើ-ក្រោម (Position Y)</span>
+              <span class="form-label-val" id="sponsor-y-val">88%</span>
             </div>
-            <input type="text" id="sponsor-bottom-input" class="cyber-input" value="📱 012 345 678 | Telegram" placeholder="ជួរក្រោម..." oninput="updateSponsorContent()">
-            <div style="display: grid; grid-template-columns: 32px 1fr 1fr; gap: 3px; margin-top: 3px;">
-              <input type="color" id="sponsor-bottom-color" value="#22d3ee" class="cyber-input" style="height: 24px; padding: 1px;" oninput="updateSponsorContent()">
-              <select id="sponsor-bottom-font" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
-                <option value="'Kantumruy Pro', sans-serif" selected>Kantumruy Pro</option>
-                <option value="'Moul', serif">Moul</option>
-                <option value="'Battambang', sans-serif">Battambang</option>
-                <option value="'Inter', sans-serif">Inter</option>
-              </select>
-              <select id="sponsor-bottom-effect" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="updateSponsorContent()">
-                <option value="none" selected>គ្មាន</option>
-                <option value="shadow">ស្រមោល</option>
-                <option value="glow">Glow</option>
-              </select>
+            <input type="range" min="5" max="92" step="1" value="88" class="cyber-slider" id="sponsor-y-slider" oninput="document.getElementById('sponsor-y-val').innerText = this.value + '%'; updateSponsorContent();">
+          </div>
+
+          <div class="form-row" style="margin-top: 4px;">
+            <label class="form-label">ទីតាំងលឿន (Preset Positions)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.75rem; height: 36px;" onclick="setSponsorPosition('bottom')">
+                ⬇️ ខាងក្រោម (Bottom)
+              </button>
+              <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.75rem; height: 36px;" onclick="setSponsorPosition('top')">
+                ⬆️ ខាងលើ (Top)
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Sponsor Size, Width & Scale Sliders -->
-        <div class="slider-group-box" style="margin-top: 3px;">
-          <div class="slider-group-title">📐 សារ៉េទំហំទទឹង (Width) &amp; ទំហំរួម (Scale)</div>
-          
-          <!-- Width & Scale (2 Columns) -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-            <div class="form-row">
-              <div class="form-label">
-                <span>ទទឹង Banner (Width)</span>
-                <span class="form-label-val" id="sponsor-width-val">88%</span>
-              </div>
-              <input type="range" min="40" max="100" step="2" value="88" class="cyber-slider" id="sponsor-width-slider" oninput="updateSponsorContent();">
-            </div>
-            <div class="form-row">
-              <div class="form-label">
-                <span>ទំហំរួម (Scale)</span>
-                <span class="form-label-val" id="sponsor-scale-val">1.0x</span>
-              </div>
-              <input type="range" min="60" max="130" step="5" value="100" class="cyber-slider" id="sponsor-scale-slider" oninput="updateSponsorContent();">
-            </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+          <div>
+            <label class="form-label">ពណ៌អក្សរ Top Line</label>
+            <input type="color" id="sponsor-color-picker" value="#f59e0b" class="cyber-input" style="height: 38px; padding: 2px;" oninput="updateSponsorContent()">
           </div>
-
-          <!-- Position Y and Background (2 Columns) -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
-            <div class="form-row">
-              <div class="form-label">
-                <span>ទីតាំង Y លើ-ក្រោម</span>
-                <span class="form-label-val" id="sponsor-y-val">88%</span>
-              </div>
-              <input type="range" min="5" max="92" step="1" value="88" class="cyber-slider" id="sponsor-y-slider" oninput="updateSponsorContent();">
-            </div>
-            <div class="form-row">
-              <label class="form-label">ពណ៌ផ្ទៃ Background</label>
-              <select id="sponsor-bg-select" class="cyber-input" style="padding: 0 4px; height: 26px;" onchange="updateSponsorContent()">
-                <option value="rgba(8, 6, 18, 0.90)" selected>ខ្មៅងងឹត (Dark Glass)</option>
-                <option value="rgba(0, 0, 0, 0.95)">ខ្មៅសុទ្ធ (Pure Black)</option>
-                <option value="rgba(168, 85, 247, 0.35)">ស្វាយ Neon (Purple)</option>
-                <option value="transparent">ថ្លា (Transparent)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Quick Positions -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
-            <button type="button" id="sponsor-pos-bottom" class="btn-ctrl active" style="justify-content: center; font-size: 0.65rem; height: 26px;" onclick="setSponsorPosition('bottom')">
-              ⬇️ ខាងក្រោម (Bottom)
-            </button>
-            <button type="button" id="sponsor-pos-top" class="btn-ctrl" style="justify-content: center; font-size: 0.65rem; height: 26px;" onclick="setSponsorPosition('top')">
-              ⬆️ ខាងលើ (Top)
-            </button>
+          <div>
+            <label class="form-label">ពណ៌ផ្ទៃ Background</label>
+            <select id="sponsor-bg-select" class="cyber-input" style="padding: 0 6px; height: 38px;" onchange="updateSponsorContent()">
+              <option value="rgba(8, 6, 18, 0.90)" selected>ខ្មៅងងឹត (Dark Glass)</option>
+              <option value="rgba(0, 0, 0, 0.95)">ខ្មៅសុទ្ធ (Pure Black)</option>
+              <option value="rgba(168, 85, 247, 0.35)">ស្វាយ Neon (Purple Tint)</option>
+            </select>
           </div>
         </div>
       </div>
 
+      <!-- ── TAB 4: ANIMATED VERTICAL MARQUEE ─────────────────── -->
+      <div class="tab-panel-card" id="tab-panel-marquee">
+        <div class="panel-section-title">
+          <span>🎬 អក្សររត់លើវីដេអូ (Marquee Text Overlay)</span>
+        </div>
 
+        <div class="toggle-switch-wrap" style="padding: 3px 5px;">
+          <div>
+            <div class="toggle-switch-label" style="font-size: 0.68rem; font-weight: 800; color: #fbbf24;">បើកដំណើរការអក្សររត់ (Marquee)</div>
+          </div>
+          <label class="cyber-switch">
+            <input type="checkbox" id="toggle-marquee" onchange="toggleMarqueeOverlay(this.checked)">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Marquee Text Input -->
+        <div class="form-row" style="margin-top: 4px;">
+          <label class="form-label" style="font-size: 0.68rem;">✍️ អត្ថបទរត់លើវីដេអូ (Text Overlay)</label>
+          <input type="text" id="marquee-text-input" class="cyber-input" value="🎬 សូមចុច Subscribe &amp; Follow ឆានែលដើម្បីទស្សនាភាគបន្ត!" placeholder="វាយអត្ថបទរត់លើវីដេអូ..." oninput="updateMarqueeText(this.value)">
+        </div>
+
+        <!-- Direction Buttons (Up & Down) -->
+        <div class="form-row" style="margin-top: 4px;">
+          <label class="form-label" style="font-size: 0.68rem;">↕️ ទិសដៅរត់ (Direction)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('up')">
+              ⬆️ រត់ពីក្រោមឡើងលើ
+            </button>
+            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('down')">
+              ⬇️ រត់ពីលើចុះក្រោម
+            </button>
+          </div>
+        </div>
+
+        <!-- Speed & Size (2 Columns) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 3px;">
+          <div class="slider-group-box" style="margin: 0;">
+            <div class="form-label">
+              <span>ល្បឿនរត់</span>
+              <span class="form-label-val" id="marquee-speed-val">8s</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 3px;">
+              <button type="button" class="btn-ctrl" id="btn-speed-slow" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('slow')">🐢 15s</button>
+              <button type="button" class="btn-ctrl active" id="btn-speed-normal" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('normal')">🚶 8s</button>
+              <button type="button" class="btn-ctrl" id="btn-speed-fast" style="justify-content: center; font-size: 0.58rem; height: 26px; padding: 0 2px;" onclick="setMarqueeSpeed('fast')">⚡ 4s</button>
+            </div>
+            <input type="range" min="3" max="25" step="1" value="8" class="cyber-slider" id="marquee-speed-slider" oninput="setMarqueeSpeedSeconds(this.value)">
+          </div>
+
+          <div class="slider-group-box" style="margin: 0;">
+            <div class="form-label">
+              <span>ទំហំអក្សរ</span>
+              <span class="form-label-val" id="marquee-size-val">22px</span>
+            </div>
+            <input type="range" min="14" max="44" step="2" value="22" class="cyber-slider" id="marquee-size-slider"
+              oninput="document.getElementById('marquee-size-val').innerText = this.value + 'px'; state.marquee.fontSize = parseInt(this.value); applyMarqueeStyles();">
+            <div style="display: grid; grid-template-columns: 32px 1fr; gap: 4px; margin-top: 2px;">
+              <input type="color" id="marquee-color-picker" value="#f59e0b" class="cyber-input" style="height: 24px; padding: 1px;" oninput="state.marquee.color = this.value; applyMarqueeStyles();">
+              <select id="marquee-font-select" class="cyber-input" style="padding: 0 2px; height: 24px; font-size: 0.60rem;" onchange="applyMarqueeStyles()">
+                <option value="'Kantumruy Pro', sans-serif">Kantumruy</option>
+                <option value="'Moul', serif">Moul (មូល)</option>
+                <option value="'Battambang', sans-serif">Battambang</option>
+                <option value="'Siemreap', sans-serif">Siemreap</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marquee Text Effects (4 buttons in 1 row) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3px; margin-top: 3px;">
+          <button type="button" id="effect-btn-none" class="btn-ctrl active" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('none')">🚫 គ្មាន</button>
+          <button type="button" id="effect-btn-shadow" class="btn-ctrl" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('shadow')">🌑 Shadow</button>
+          <button type="button" id="effect-btn-glow" class="btn-ctrl" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('glow')">💜 Glow</button>
+          <button type="button" id="effect-btn-outline" class="btn-ctrl" style="justify-content: center; font-size: 0.60rem; height: 24px;" onclick="setMarqueeEffect('outline')">🔲 ស៊ុម</button>
+        </div>
+      </div>
 
       <!-- ── TAB 5: KHMER NEURAL VOICE (TTS) ─────────────────── -->
       <div class="tab-panel-card" id="tab-panel-voice">
@@ -1496,7 +1106,7 @@
         </button>
       </div>
 
-    </section>
+    </div>
   </main>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -1615,6 +1225,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=8.9.0"></script>
+  <script src="/static/js/studio_engine.js?v=8.0.0"></script>
 </body>
 </html>

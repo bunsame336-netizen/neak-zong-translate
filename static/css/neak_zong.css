@@ -306,97 +306,59 @@ header.app-header {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ⚡ MOBILE STUDIO LAYOUT: 3-TIER RESTRUCTURE (100dvh LOCK)
+   ⚡ MOBILE STUDIO LAYOUT: 2-COLUMN SIDE-BY-SIDE MOBILE GRID
 ══════════════════════════════════════════════════════════════ */
 .studio-main-container {
-  display: flex !important;
-  flex-direction: column !important;
+  display: grid !important;
+  grid-template-columns: 46% 54% !important;
   width: 100vw !important;
   max-width: 100% !important;
-  height: calc(100dvh - 42px) !important;
-  max-height: calc(100dvh - 42px) !important;
+  height: calc(100dvh - 44px) !important;
+  max-height: calc(100dvh - 44px) !important;
   margin: 0 !important;
-  padding: 3px 5px 4px 5px !important;
+  padding: 4px 4px 6px 4px !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
-  gap: 3px !important;
-}
-
-/* 1. TOP SPLIT ROW: LEFT VIDEO (70%) / RIGHT ACTION MENU (30%) */
-.studio-top-split-row {
-  display: grid !important;
-  grid-template-columns: 70% calc(30% - 4px) !important;
   gap: 4px !important;
+}
+
+/* LEFT COLUMN: VIDEO PREVIEW + CONTROLS + EXPORT */
+.studio-stage-col {
   width: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
-  flex: 0 0 auto !important;
-  box-sizing: border-box !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
   align-items: stretch !important;
-  overflow: hidden !important;
-}
-
-/* 1.1 TOP-LEFT (70% LOCKED): VIDEO PREVIEW + CONTROLS + 1-CLICK BUTTON */
-.top-video-col {
-  width: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 3px !important;
-  overflow: hidden !important;
+  padding: 0 3px 0 0 !important;
+  border: none !important;
+  border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
+  background: transparent !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   box-sizing: border-box !important;
+  gap: 4px !important;
+  scrollbar-width: none !important;
+}
+.studio-stage-col::-webkit-scrollbar {
+  display: none !important;
 }
 
-/* 1.2 TOP-RIGHT (30% LOCKED): 2-COLUMN FULL HEIGHT ACTION MENU */
-.top-action-menu-col {
-  width: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: stretch !important;
-  height: 100% !important;
-  gap: 0px !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-
-.action-menu-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  grid-template-rows: repeat(5, 1fr) !important;
-  gap: 3px !important;
+/* RIGHT COLUMN: CONTROLS & SLIDERS BESIDE VIDEO */
+.studio-controls-col {
   width: 100% !important;
   height: 100% !important;
-  box-sizing: border-box !important;
-}
-
-/* 2. MIDDLE STATUS AREA (PROGRESS BAR & STATUS) */
-.studio-middle-status-row {
-  width: 100% !important;
-  flex: 0 0 auto !important;
-  background: rgba(12, 8, 26, 0.95) !important;
-  border: 1px solid rgba(168, 85, 247, 0.35) !important;
-  border-radius: 6px !important;
-  padding: 3px 6px !important;
+  max-height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
-  box-sizing: border-box !important;
-}
-
-/* 3. BOTTOM FULL-WIDTH DYNAMIC SLIDER/CONTROL AREA (NO JITTER / SCROLLBAR STABLE) */
-.studio-bottom-panel-area {
-  width: 100% !important;
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
-  overflow-y: scroll !important;
-  scrollbar-gutter: stable !important;
+  overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
+  padding: 0 2px 40px 2px !important;
+  background: transparent !important;
   box-sizing: border-box !important;
-  padding-bottom: 6px !important;
+  gap: 5px !important;
   scrollbar-width: thin !important;
 }
 
@@ -415,12 +377,12 @@ header.app-header {
   max-width: 100%;
 }
 
-/* 9:16 Portrait Viewport strictly scaled to mobile screen */
+/* 9:16 Portrait Viewport strictly scaled to mobile screen (max-height: 36vh) */
 .video-stage-viewport {
   position: relative;
   aspect-ratio: 9 / 16;
-  width: 100%;
-  max-height: calc(44dvh - 58px);
+  height: 36vh;
+  max-height: 36vh;
   background: #050408;
   display: flex;
   align-items: center;
@@ -498,14 +460,13 @@ header.app-header {
 
 /* 1. Blur Box (Horizontal Rectangle for corner Watermark/Logo) */
 #blur-overlay-box {
-  width: 75px;
-  height: 28px;
-  top: 10px;
-  left: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  width: 140px;
+  height: 45px;
+  top: 15px;
+  left: 15px;
+  background: rgba(0, 240, 255, 0.15);
   border: 1.5px dashed var(--neon-cyan-bright);
+  box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.25);
   border-radius: 4px;
   z-index: 12;
 }
@@ -557,106 +518,57 @@ header.app-header {
 }
 
 /* 4. Animated Vertical Scrolling Marquee */
-/* ── 3. DUAL-TONE HEADER MARQUEE ANIMATION ───────────────── */
-#text-overlay-element.marquee-active {
+#marquee-overlay-element {
   position: absolute !important;
-  width: max-content !important;
-  white-space: nowrap !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
   pointer-events: none !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  will-change: transform, left, top !important;
+  overflow: hidden !important;
+  z-index: 15 !important;
+  display: none;
+}
+
+#marquee-overlay-element.active-visible {
   display: block !important;
-  z-index: 25 !important;
 }
 
-#text-overlay-element.marquee-active.dir-up {
-  left: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  animation: marqueeScrollUp var(--marquee-duration, 8s) linear infinite !important;
-}
-
-#text-overlay-element.marquee-active.dir-down {
-  left: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  animation: marqueeScrollDown var(--marquee-duration, 8s) linear infinite !important;
-}
-
-#text-overlay-element.marquee-active.dir-left {
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  animation: marqueeScrollLeft var(--marquee-duration, 8s) linear infinite !important;
-}
-
-#text-overlay-element.marquee-active.dir-right {
-  top: 50% !important;
-  right: auto !important;
-  bottom: auto !important;
-  animation: marqueeScrollRight var(--marquee-duration, 8s) linear infinite !important;
-}
-
-@keyframes marqueeScrollUp {
-  0% {
-    top: 100%;
-    transform: translate3d(-50%, 0, 0);
-  }
-  100% {
-    top: 0%;
-    transform: translate3d(-50%, -100%, 0);
-  }
-}
-
-@keyframes marqueeScrollDown {
-  0% {
-    top: 0%;
-    transform: translate3d(-50%, -100%, 0);
-  }
-  100% {
-    top: 100%;
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
-@keyframes marqueeScrollLeft {
-  0% {
-    left: 100%;
-    transform: translate3d(0, -50%, 0);
-  }
-  100% {
-    left: 0%;
-    transform: translate3d(-100%, -50%, 0);
-  }
-}
-
-@keyframes marqueeScrollRight {
-  0% {
-    left: 0%;
-    transform: translate3d(-100%, -50%, 0);
-  }
-  100% {
-    left: 100%;
-    transform: translate3d(0, -50%, 0);
-  }
+.marquee-scrolling-track {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  font-size: 0.88rem !important;
+  color: var(--neon-gold) !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  padding: 4px 8px !important;
+  border-top: 1px solid rgba(245, 158, 11, 0.4) !important;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.4) !important;
+  text-shadow: 0 2px 4px #000 !important;
+  will-change: top, transform, left !important;
 }
 
 /* Resizing Handles for Blur Box */
 .resizer-handle {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: var(--neon-cyan-bright);
-  border: 2px solid #ffffff;
+  border: 1px solid #000;
   border-radius: 50%;
-  box-shadow: 0 0 6px rgba(34, 211, 238, 0.9);
   z-index: 20;
 }
-.resizer-handle.se { bottom: -7px; right: -7px; cursor: se-resize; }
-.resizer-handle.sw { bottom: -7px; left: -7px; cursor: sw-resize; }
-.resizer-handle.ne { top: -7px; right: -7px; cursor: ne-resize; }
-.resizer-handle.nw { top: -7px; left: -7px; cursor: nw-resize; }
+.resizer-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+.resizer-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+.resizer-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+.resizer-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
 
 /* Video Controls Bar below Canvas */
 .video-toolbar {
@@ -1241,62 +1153,56 @@ header.app-header {
 ══════════════════════════════════════════════════════════════ */
 #sponsor-overlay-element {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 12px;
+  left: 0;
+  right: 0;
+  bottom: 8px;
   display: none;
   pointer-events: none;
   z-index: 15;
-  width: max-content;
-  max-width: 92%;
-  transition: all 0.25s ease;
+  width: 100%;
 }
 #sponsor-overlay-element.active-visible {
   display: block;
 }
 #sponsor-overlay-element.pos-top {
   bottom: auto;
-  top: 12px;
+  top: 8px;
 }
 .sponsor-banner-bar {
-  background: rgba(12, 10, 24, 0.90);
-  border: 1px solid rgba(245, 158, 11, 0.65);
-  border-radius: 24px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 4px 16px;
+  background: rgba(8, 6, 18, 0.90);
+  border-top: 1.5px solid var(--neon-gold);
+  border-bottom: 1.5px solid var(--neon-gold);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
   text-align: center;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7), 0 0 12px rgba(245, 158, 11, 0.35);
-  font-family: 'Kantumruy Pro', 'Battambang', sans-serif !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
 }
 .sponsor-top-tag,
 .sponsor-brand-tag {
   color: var(--neon-gold);
   font-weight: 800;
-  font-size: 0.80rem;
+  font-size: 0.84rem;
   letter-spacing: 0.3px;
   line-height: 1.25;
-  font-family: 'Kantumruy Pro', 'Battambang', sans-serif !important;
 }
 .sponsor-bottom-tag,
 .sponsor-contact-tag {
   color: var(--neon-cyan-bright);
   font-weight: 700;
-  font-size: 0.70rem;
+  font-size: 0.74rem;
   line-height: 1.2;
-  font-family: 'Kantumruy Pro', 'Battambang', sans-serif !important;
 }
 .sponsor-ad-tag {
   color: #e2e8f0;
   font-weight: 600;
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   line-height: 1.2;
-  font-family: 'Kantumruy Pro', 'Battambang', sans-serif !important;
 }
 
 /* ══════════════════════════════════════════════════════════════

@@ -25,10 +25,10 @@ const state = {
   // Blur Mask (Horizontal Rectangle for Watermark/Logo)
   blurMask: {
     enabled: false,
-    x: 10,
-    y: 10,
-    w: 75,
-    h: 28,
+    x: 15,
+    y: 15,
+    w: 140,
+    h: 45,
     intensity: 25,
     tintOpacity: 0.40
   },
@@ -36,7 +36,7 @@ const state = {
   // Logo Overlay (controlled by drag + sliders)
   logoOverlay: {
     enabled: false,
-    x: 10,
+    x: 15,
     y: 15,
     scale: 0.25,
     opacity: 0.9,
@@ -47,9 +47,9 @@ const state = {
   textOverlay: {
     enabled: false,
     font: "'Moul', serif",
-    size: 16,
-    x: 10,
-    y: 15,
+    size: 26,
+    x: 15,
+    y: 30,
     transparentMode: false
   },
   textPart1: {
@@ -72,11 +72,11 @@ const state = {
   // Marquee
   marquee: {
     enabled: false,
-    text: 'រក្សាសិទ្ធិដោយ នាគហ្សង បកប្រែ',
-    direction: 'left',
+    text: 'សូមចុច Subscribe & Follow «នាគហ្សង បកប្រែ AI»',
+    direction: 'up',
     speedSec: 8,
     color: '#f59e0b',
-    fontSize: 16,
+    fontSize: 22,
     font: "'Kantumruy Pro', sans-serif",
     effect: 'none',    // 'none' | 'shadow' | 'glow' | 'outline'
     glowColor: '#c084fc'
@@ -117,12 +117,17 @@ const sponsorElement = document.getElementById('sponsor-overlay-element');
 const sponsorTopTag = document.getElementById('sponsor-top-tag') || document.getElementById('sponsor-brand-tag');
 const sponsorBottomTag = document.getElementById('sponsor-bottom-tag') || document.getElementById('sponsor-contact-tag');
 
-// Tab Navigation Switching with 1-Tap Instant Activation (Auto-toggle ON)
+// Tab Navigation Switching
 function switchStudioTab(tabId) {
   state.activeTab = tabId;
   document.querySelectorAll('.tab-nav-btn').forEach(btn => {
     const isTarget = btn.getAttribute('data-tab') === tabId;
     btn.classList.toggle('active', isTarget);
+    if (isTarget) {
+      try {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch (e) {}
+    }
   });
   document.querySelectorAll('.tab-panel-card').forEach(panel => {
     panel.classList.remove('active');
@@ -131,85 +136,10 @@ function switchStudioTab(tabId) {
   if (targetPanel) {
     targetPanel.classList.add('active');
   }
-
-  // ⚡ 1-TAP INSTANT ACTIVATION ON BUTTON CLICK:
-  if (tabId === 'text') {
-    // 1. Text Overlay Auto-ON
-    state.textOverlay.enabled = true;
-    const toggleText = document.getElementById('toggle-text');
-    if (toggleText) toggleText.checked = true;
-    if (textElement) {
-      textElement.classList.add('active-visible');
-      textElement.style.display = 'block';
-    }
-
-    // 2. Auto-Marquee Running immediately! (Default: bottom-to-top / 'up')
-    state.marquee.enabled = true;
-    if (!state.marquee.direction || state.marquee.direction === 'left') {
-      state.marquee.direction = 'up';
-    }
-    const toggleMarquee = document.getElementById('toggle-marquee');
-    if (toggleMarquee) toggleMarquee.checked = true;
-    ['up', 'down', 'left', 'right'].forEach(d => {
-      const btn = document.getElementById(`btn-marquee-dir-${d}`);
-      if (btn) btn.classList.toggle('active', d === state.marquee.direction);
-    });
-
-    updateDualTonePreview();
-    updateMarqueeAnimation();
-    showToast('📝 ដាក់អក្សរ & ចាប់ផ្ដើមរត់ Marquee ស្វ័យប្រវត្តិតែម្ដង!');
-  } else if (tabId === 'blur') {
-    // Blur Mask Auto-ON
-    state.blurMask.enabled = true;
-    const toggleBlur = document.getElementById('toggle-blur');
-    if (toggleBlur) toggleBlur.checked = true;
-    if (blurBox) {
-      blurBox.classList.add('active-visible');
-      blurBox.style.display = 'block';
-    }
+  if (tabId === 'blur') {
     updateBlurBoxLimits();
-    updateBlurBoxFromSliders();
-    showToast('🌫️ ផ្ទាំងព្រិល Blur បានបើកបង្ហាញភ្លាមៗ!');
-  } else if (tabId === 'sponsor') {
-    // Sponsor Badge Auto-ON
-    state.sponsor.enabled = true;
-    const toggleSponsor = document.getElementById('toggle-sponsor');
-    if (toggleSponsor) toggleSponsor.checked = true;
-    toggleSponsorOverlay(true);
-    showToast('🤝 Sponsor Badge បានបើកបង្ហាញភ្លាមៗ!');
-  } else if (tabId === 'logo') {
-    // Logo Overlay Auto-ON
-    state.logoOverlay.enabled = true;
-    const toggleLogo = document.getElementById('toggle-logo');
-    if (toggleLogo) toggleLogo.checked = true;
-    if (logoElement) {
-      logoElement.classList.add('active-visible');
-      logoElement.style.display = 'block';
-    }
-    showToast('🖼️ Logo Overlay បានបើកបង្ហាញភ្លាមៗ!');
-  }
-
-  const bottomPanel = document.getElementById('studio-dynamic-controls-area');
-  if (bottomPanel) {
-    bottomPanel.scrollTop = 0;
   }
 }
-
-// Quick Voice Model Selection (Sreymom / Piseth)
-function selectQuickVoice(voiceId) {
-  state.voice = voiceId;
-  const selectElem = document.getElementById('voice-select');
-  if (selectElem) selectElem.value = voiceId;
-  const btnFemale = document.getElementById('btn-voice-female');
-  const btnMale = document.getElementById('btn-voice-male');
-  if (btnFemale && btnMale) {
-    btnFemale.classList.toggle('active', voiceId === 'female');
-    btnMale.classList.toggle('active', voiceId === 'male');
-  }
-  showToast(voiceId === 'female' ? '🎙️ ជ្រើសរើសសំឡេង៖ កញ្ញា ស្រីមុំ' : '🎙️ ជ្រើសរើសសំឡេង៖ លោក ពិសិដ្ឋ');
-}
-
-// Top download button removed per user request for a cleaner 2-column menu grid
 
 // Toast Notification
 function showToast(text, duration = 3000) {
@@ -465,209 +395,68 @@ async function revokeAdminKey(key) {
 // ══════════════════════════════════════════════════════════
 // ⚡ 2. MEDIA UPLOAD & HANDLING
 // ══════════════════════════════════════════════════════════
-function handleVideoUpload(input) {
+async function handleVideoUpload(input) {
   if (!input.files || input.files.length === 0) return;
   const file = input.files[0];
   state.videoFile = file;
-  state.hasVideoDecodeError = false;
-  state.thumbnailUrl = null;
 
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  // 1. Instant local ObjectURL creation and mount to HTML5 <video> in under 1 second!
-  if (state.localVideoUrl) {
-    try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
+  previewVideo.style.display = 'block';
+  previewVideo.muted = true;
+  previewVideo.playsInline = true;
+  previewVideo.setAttribute('playsinline', '');
+  previewVideo.setAttribute('webkit-playsinline', '');
+
+  let localUrl = null;
+  try {
+    localUrl = URL.createObjectURL(file);
+    previewVideo.src = localUrl;
+    previewVideo.load();
+    previewVideo.play().catch(() => {});
+  } catch (err) {
+    console.warn('Local preview blob init:', err);
   }
-  const videoUrl = URL.createObjectURL(file);
-  state.localVideoUrl = videoUrl;
 
-  const videoElement = previewVideo;
-  videoElement.style.display = 'block';
-  // IMPORTANT: Blob URLs must NOT have crossOrigin set to avoid browser CORS/decoding errors
-  videoElement.removeAttribute('crossorigin');
-  videoElement.removeAttribute('poster');
-  videoElement.src = videoUrl;
-  videoElement.playsInline = true;
-  videoElement.controls = true;
-  videoElement.setAttribute('playsinline', '');
-  videoElement.setAttribute('webkit-playsinline', '');
-  videoElement.setAttribute('controls', 'true');
-  videoElement.setAttribute('preload', 'auto');
-
-  // Handle format unsupported or decode error (common with H.265/HEVC on mobile webview)
-  videoElement.onerror = (e) => {
-    console.warn('HTML5 <video> format not supported natively by Webview. Switching to H.264 Fast-Stream...');
-    state.hasVideoDecodeError = true;
-    showToast('⚡ Webview Codec មិនស្គាល់ - កំពុងបម្លែងជា H.264 Fast-Stream ជូន...');
-    const streamUrl = state.previewUrl || (state.videoFilename ? `/api/preview/${state.videoFilename}` : null);
-    if (streamUrl) {
-      videoElement.removeAttribute('crossorigin');
-      videoElement.removeAttribute('poster');
-      videoElement.src = streamUrl;
-      videoElement.load();
-      videoElement.play().catch(err => console.log('Preview fallback play note:', err));
-    } else if (state.thumbnailUrl) {
-      applyThumbnailFallback(state.thumbnailUrl);
-    }
-  };
-
-  videoElement.onloadedmetadata = () => {
-    // Auto-adapt viewport to video aspect ratio (e.g. 16:9 landscape vs 9:16 vertical)
-    const isLandscape = (videoElement.videoWidth || 9) > (videoElement.videoHeight || 16);
-    const vp = document.getElementById('video-viewport');
-    if (vp) {
-      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
-    }
-    updateBlurBoxLimits();
-    if (state.blurMask.enabled) {
-      updateBlurBoxFromSliders();
-    }
-    updateVideoTime();
-
-    // Start native smooth playback immediately (muted for autoplay policy compliance)
-    videoElement.muted = true;
-    const playP = videoElement.play();
-    if (playP !== undefined) {
-      playP.then(() => {
-        const btn = document.getElementById('btn-play-toggle');
-        if (btn) btn.innerText = '⏸ ផ្អាក';
-      }).catch(err => {
-        console.log('Autoplay muted note:', err);
-      });
-    }
-  };
-
-  // Direct tap on video toggles playback
-  videoElement.onclick = (e) => {
-    e.stopPropagation();
-    toggleVideoPlayback();
-  };
-
-  videoElement.ontimeupdate = updateVideoTime;
-
-  videoElement.onplay = () => {
-    const btn = document.getElementById('btn-play-toggle');
-    if (btn) btn.innerText = '⏸ ផ្អាក';
-  };
-
-  videoElement.onplaying = () => {
-    const btn = document.getElementById('btn-play-toggle');
-    if (btn) btn.innerText = '⏸ ផ្អាក';
-  };
-
-  videoElement.onpause = () => {
-    const btn = document.getElementById('btn-play-toggle');
-    if (btn) btn.innerText = '▶️ ចាក់';
-  };
-
-  videoElement.onended = () => {
-    const btn = document.getElementById('btn-play-toggle');
-    if (btn) btn.innerText = '▶️ ចាក់';
+  previewVideo.onloadedmetadata = () => {
+    try {
+      previewVideo.currentTime = 0.05;
+    } catch (err) {}
     updateVideoTime();
   };
 
-  // Trigger immediate video load
-  videoElement.load();
-  showToast('✓ វីដេអូបានបើកក្នុង Player Preview ត្រូវទម្រង់ ១០០%!');
+  previewVideo.oncanplay = () => {
+    previewVideo.play().catch(() => {});
+  };
 
-  // 2. Upload to Cloud Server asynchronously in background with real-time progress
-  uploadVideoToCloud(file);
-}
+  showToast('🎬 កំពុងបើកវីដេអូ & Sync Cloud...');
 
-function uploadVideoToCloud(file) {
+  // Upload to Cloud Server in background
   const formData = new FormData();
   formData.append('file', file);
-
-  const statusText = document.getElementById('render-progress-status');
-  const progressBar = document.getElementById('render-progress-bar');
-  const percentText = document.getElementById('render-progress-percent');
-
-  if (statusText) statusText.innerText = '⚡ កំពុង Upload វីដេអូទៅកាន់ Cloud... (0%)';
-  if (progressBar) progressBar.style.width = '0%';
-  if (percentText) percentText.innerText = '0%';
-
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/api/upload', true);
-
-  xhr.upload.onprogress = (e) => {
-    if (e.lengthComputable) {
-      const pct = Math.round((e.loaded / e.total) * 100);
-      if (progressBar) progressBar.style.width = `${pct}%`;
-      if (percentText) percentText.innerText = `${pct}%`;
-      if (statusText) statusText.innerText = `⚡ កំពុង Upload វីដេអូទៅកាន់ Cloud... (${pct}%)`;
-    }
-  };
-
-  xhr.onload = () => {
-    if (xhr.status === 200) {
-      try {
-        const data = JSON.parse(xhr.responseText);
-        if (data.status === 'ok') {
-          state.videoFilename = data.filename;
-          if (data.preview_url) {
-            state.previewUrl = data.preview_url;
-          }
-          if (data.thumbnail_url) {
-            state.thumbnailUrl = data.thumbnail_url;
-          }
-
-          // If native video failed to play or had error on mobile, seamlessly switch to H.264 preview stream!
-          if (state.hasVideoDecodeError || (previewVideo && previewVideo.error)) {
-            const streamUrl = data.preview_url || `/api/preview/${data.filename}`;
-            previewVideo.removeAttribute('crossorigin');
-            previewVideo.removeAttribute('poster');
-            previewVideo.src = streamUrl;
-            previewVideo.load();
-            previewVideo.play().then(() => {
-              const btn = document.getElementById('btn-play-toggle');
-              if (btn) btn.innerText = '⏸ ផ្អាក';
-              showToast('✓ វីដេអូ H.264 Fast-Stream ចាក់ដំណើរការរលូន ១០០%!');
-            }).catch(e => console.log('Preview play note:', e));
-          } else if (state.hasVideoDecodeError && data.thumbnail_url) {
-            applyThumbnailFallback(data.thumbnail_url);
-          }
-
-          if (progressBar) progressBar.style.width = '100%';
-          if (percentText) percentText.innerText = '100%';
-          if (statusText) statusText.innerText = '✓ វីដេអូភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)';
-          showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)');
+  
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      state.videoFilename = data.filename;
+      // Switch video player to server stream (H.264 preview or direct file stream)
+      // This completely solves the Android WebView blob limitation!
+      const streamUrl = data.file_url || data.preview_url;
+      if (streamUrl) {
+        previewVideo.src = streamUrl;
+        if (data.thumbnail_url) {
+          previewVideo.poster = data.thumbnail_url;
         }
-      } catch (err) {
-        console.warn('Upload parse error:', err);
+        previewVideo.load();
+        previewVideo.play().catch(() => {});
       }
-    } else {
-      if (statusText) statusText.innerText = '⚠️ Upload មិនបានសម្រេច សូមព្យាយាមម្ដងទៀត';
+      showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)');
     }
-  };
-
-  xhr.onerror = () => {
-    console.warn('Upload network error');
-    if (statusText) statusText.innerText = '⚠️ បញ្ហាបណ្ដាញ Cloud Upload';
-  };
-
-  xhr.send(formData);
-}
-
-function applyThumbnailFallback(thumbUrl) {
-  if (!thumbUrl) return;
-  if (previewVideo && state.hasVideoDecodeError) {
-    previewVideo.poster = thumbUrl;
+  } catch (err) {
+    console.warn('Local preview active, cloud sync note:', err);
   }
-  // Adapt viewport aspect ratio to server thumbnail image
-  const img = new Image();
-  img.onload = () => {
-    const isLandscape = img.naturalWidth > img.naturalHeight;
-    const vp = document.getElementById('video-viewport');
-    if (vp) {
-      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
-    }
-    updateBlurBoxLimits();
-    if (state.blurMask.enabled) {
-      updateBlurBoxFromSliders();
-    }
-  };
-  img.src = thumbUrl;
 }
 
 async function handleSrtUpload(input) {
@@ -683,61 +472,11 @@ async function handleSrtUpload(input) {
 }
 
 function updateVideoTime() {
-  if (!previewVideo) return;
   const cur = Math.floor(previewVideo.currentTime || 0);
   const dur = Math.floor(previewVideo.duration || 0);
   const format = (s) => `${Math.floor(s/60).toString().padStart(2, '0')}:${(s%60).toString().padStart(2, '0')}`;
   const el = document.getElementById('video-time-display');
   if (el) el.innerText = `${format(cur)} / ${format(dur)}`;
-}
-
-// ── ROBUST VIDEO PLAYBACK HANDLERS FOR MOBILE WEBVIEW ─────────────
-function toggleVideoPlayback() {
-  if (!previewVideo) return;
-  const btn = document.getElementById('btn-play-toggle');
-
-  if (previewVideo.paused || previewVideo.ended) {
-    previewVideo.muted = false;
-    const playPromise = previewVideo.play();
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        if (btn) btn.innerText = '⏸ ផ្អាក';
-      }).catch(err => {
-        console.warn('Playback unmuted error, retrying muted:', err);
-        previewVideo.muted = true;
-        previewVideo.play().then(() => {
-          if (btn) btn.innerText = '⏸ ផ្អាក';
-          console.warn('Playback on blob failed, checking H.264 preview fallback:', err2);
-          const streamUrl = state.previewUrl || (state.videoFilename ? `/api/preview/${state.videoFilename}` : null);
-          if (streamUrl) {
-            showToast('⚡ កំពុងបើកចាក់វីដេអូ H.264 Fast-Stream...');
-            previewVideo.removeAttribute('crossorigin');
-            previewVideo.removeAttribute('poster');
-            previewVideo.src = streamUrl;
-            previewVideo.load();
-            previewVideo.play().then(() => {
-              if (btn) btn.innerText = '⏸ ផ្អាក';
-            }).catch(e => {
-              console.warn('H.264 preview playback note:', e);
-              showToast('⚠️ Webview មិនគាំទ្រចាក់ទម្រង់ Codec វីដេអូនេះ');
-            });
-          }
-        });
-      });
-    }
-  } else {
-    previewVideo.pause();
-    if (btn) btn.innerText = '▶️ ចាក់';
-  }
-}
-
-function resetVideoPlayback() {
-  if (!previewVideo) return;
-  previewVideo.currentTime = 0;
-  previewVideo.pause();
-  const btn = document.getElementById('btn-play-toggle');
-  if (btn) btn.innerText = '▶️ ចាក់';
-  updateVideoTime();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -855,59 +594,6 @@ function toggleTextOverlay(enabled) {
   showToast(enabled ? '✓ បានបើកអក្សរ Dual-Tone' : 'បានបិទអក្សរ');
 }
 
-// ── QUICK MARQUEE NAME PRESETS ──────────────────────────────
-function applyMarqueePreset(text1, text2 = '') {
-  const p1Input = document.getElementById('text-part1-input');
-  const p2Input = document.getElementById('text-part2-input');
-  const customInput = document.getElementById('marquee-custom-input');
-
-  if (p1Input) p1Input.value = text1;
-  if (p2Input) p2Input.value = text2;
-  if (customInput) customInput.value = text2 ? `${text1} ${text2}` : text1;
-
-  state.textPart1.text = text1;
-  state.textPart2.text = text2;
-
-  // Auto-activate text overlay & running marquee
-  state.textOverlay.enabled = true;
-  state.marquee.enabled = true;
-  const toggleText = document.getElementById('toggle-text');
-  if (toggleText) toggleText.checked = true;
-  const toggleMarquee = document.getElementById('toggle-marquee');
-  if (toggleMarquee) toggleMarquee.checked = true;
-
-  updateDualTonePreview();
-  updateMarqueeAnimation();
-  showToast(`✓ ឈ្មោះអក្សររត់៖ ${text1} ${text2}`.trim());
-}
-
-function applyCustomMarqueeText(val) {
-  const trimmed = (val || '').trim();
-  if (!trimmed) return;
-
-  const parts = trimmed.split(/\s+(.*)/s);
-  const p1 = parts[0] || '';
-  const p2 = parts[1] || '';
-
-  const p1Input = document.getElementById('text-part1-input');
-  const p2Input = document.getElementById('text-part2-input');
-  if (p1Input) p1Input.value = p1;
-  if (p2Input) p2Input.value = p2;
-
-  state.textPart1.text = p1;
-  state.textPart2.text = p2;
-
-  state.textOverlay.enabled = true;
-  state.marquee.enabled = true;
-  const toggleText = document.getElementById('toggle-text');
-  if (toggleText) toggleText.checked = true;
-  const toggleMarquee = document.getElementById('toggle-marquee');
-  if (toggleMarquee) toggleMarquee.checked = true;
-
-  updateDualTonePreview();
-  updateMarqueeAnimation();
-}
-
 function setQuickTextColor(colorHex) {
   const p1Col = document.getElementById('text-part1-color');
   const p2Col = document.getElementById('text-part2-color');
@@ -979,10 +665,8 @@ function updateDualTonePreview() {
   state.textPart2.effect = document.getElementById('text-part2-effect')?.value || 'none';
   state.textPart2.outlineColor = document.getElementById('text-part2-outline-color')?.value || '#000000';
 
-  // Read fonts
-  state.textPart1.font = document.getElementById('text-part1-font')?.value || "'Moul', serif";
-  state.textPart2.font = document.getElementById('text-part2-font')?.value || "'Kantumruy Pro', sans-serif";
-  state.textOverlay.font = state.textPart1.font;
+  // Read font
+  state.textOverlay.font = document.getElementById('text-font-select')?.value || "'Moul', serif";
 
   // Show/hide outline rows
   const p1eff = state.textPart1.effect;
@@ -999,15 +683,15 @@ function updateDualTonePreview() {
   if (p1Span) {
     p1Span.innerText = state.textPart1.text;
     p1Span.style.color = state.textPart1.color;
-    p1Span.style.fontFamily = state.textPart1.font;
-    p1Span.style.fontSize = (state.textOverlay.size || 16) + 'px';
+    p1Span.style.fontFamily = state.textOverlay.font;
+    p1Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
     _applyEffectToSpan(p1Span, state.textPart1.effect, state.textPart1.color, state.textPart1.outlineColor);
   }
   if (p2Span) {
     p2Span.innerText = ' ' + state.textPart2.text;
     p2Span.style.color = state.textPart2.color;
-    p2Span.style.fontFamily = state.textPart2.font;
-    p2Span.style.fontSize = (state.textOverlay.size || 16) + 'px';
+    p2Span.style.fontFamily = state.textOverlay.font;
+    p2Span.style.fontSize = (state.textOverlay.size || 26) + 'px';
     _applyEffectToSpan(p2Span, state.textPart2.effect, state.textPart2.color, state.textPart2.outlineColor);
   }
 }
@@ -1036,184 +720,41 @@ function _applyEffectToSpan(span, effect, color, outlineColor) {
 }
 
 
-// ── VIDEO VIEWPORT GEOMETRY & BOUNDING CLAMPS ───────────────────────
-function getVideoRenderRect() {
-  const vp = document.getElementById('video-viewport');
-  const fallback = { left: 0, top: 0, width: 280, height: 320 };
-  if (!vp) return fallback;
-
-  const vpW = vp.clientWidth || 280;
-  const vpH = vp.clientHeight || 320;
-  const vid = previewVideo;
-
-  // 1. If HTML5 Video is loaded with valid dimensions
-  if (vid && vid.videoWidth > 0 && vid.videoHeight > 0) {
-    const vidRatio = vid.videoWidth / vid.videoHeight;
-    const vpRatio = vpW / vpH;
-    let renderW = vpW;
-    let renderH = vpH;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    if (vidRatio > vpRatio) {
-      // Letterboxed top and bottom
-      renderW = vpW;
-      renderH = vpW / vidRatio;
-      offsetY = (vpH - renderH) / 2;
-    } else {
-      // Pillarboxed left and right
-      renderH = vpH;
-      renderW = vpH * vidRatio;
-      offsetX = (vpW - renderW) / 2;
-    }
-    return {
-      left: Math.max(0, Math.round(offsetX)),
-      top: Math.max(0, Math.round(offsetY)),
-      width: Math.max(30, Math.round(renderW)),
-      height: Math.max(20, Math.round(renderH))
-    };
-  }
-
-  // 2. If fallback poster image is active
-  const poster = document.getElementById('video-fallback-poster');
-  if (poster && poster.naturalWidth > 0 && poster.naturalHeight > 0) {
-    const pRatio = poster.naturalWidth / poster.naturalHeight;
-    const vpRatio = vpW / vpH;
-    let renderW = vpW;
-    let renderH = vpH;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    if (pRatio > vpRatio) {
-      renderW = vpW;
-      renderH = vpW / pRatio;
-      offsetY = (vpH - renderH) / 2;
-    } else {
-      renderH = vpH;
-      renderW = vpH * pRatio;
-      offsetX = (vpW - renderW) / 2;
-    }
-    return {
-      left: Math.max(0, Math.round(offsetX)),
-      top: Math.max(0, Math.round(offsetY)),
-      width: Math.max(30, Math.round(renderW)),
-      height: Math.max(20, Math.round(renderH))
-    };
-  }
-
-  return { left: 0, top: 0, width: vpW, height: vpH };
-}
-
-function clampBoxWithinVideo(x, y, w, h) {
-  const rect = getVideoRenderRect();
-  const minW = 20;
-  const minH = 10;
-  const maxW = Math.max(minW, rect.width - 2);
-  const maxH = Math.max(minH, rect.height - 2);
-
-  // Clamp dimensions
-  w = Math.max(minW, Math.min(maxW, Math.round(w)));
-  h = Math.max(minH, Math.min(maxH, Math.round(h)));
-
-  // Clamp coordinates strictly within the visible video rect
-  const minX = rect.left;
-  const maxX = Math.max(minX, rect.left + rect.width - w);
-  const minY = rect.top;
-  const maxY = Math.max(minY, rect.top + rect.height - h);
-
-  x = Math.max(minX, Math.min(maxX, Math.round(x)));
-  y = Math.max(minY, Math.min(maxY, Math.round(y)));
-
-  return { x, y, w, h };
-}
-
-// ── SMOOTH THROTTLED SLIDER SYNCHRONIZATION (JANK-FREE 60FPS) ──────
-let blurSyncRaf = null;
-let lastBlurSyncTime = 0;
-
-function throttledSyncBlurSliders(x, y, w, h, force = false) {
-  state.blurMask.x = Math.round(x);
-  state.blurMask.y = Math.round(y);
-  if (w !== undefined) state.blurMask.w = Math.round(w);
-  if (h !== undefined) state.blurMask.h = Math.round(h);
-
-  const now = performance.now();
-  if (force || (now - lastBlurSyncTime > 35)) {
-    lastBlurSyncTime = now;
-    if (blurSyncRaf) cancelAnimationFrame(blurSyncRaf);
-    blurSyncRaf = requestAnimationFrame(() => {
-      _syncSlider('blur-x-slider', state.blurMask.x);
-      _syncSlider('blur-y-slider', state.blurMask.y);
-      if (w !== undefined) _syncSlider('blur-w-slider', state.blurMask.w);
-      if (h !== undefined) _syncSlider('blur-h-slider', state.blurMask.h);
-
-      const xVal = document.getElementById('blur-x-val');
-      const yVal = document.getElementById('blur-y-val');
-      const wVal = document.getElementById('blur-w-val');
-      const hVal = document.getElementById('blur-h-val');
-      if (xVal) xVal.innerText = `${state.blurMask.x}px`;
-      if (yVal) yVal.innerText = `${state.blurMask.y}px`;
-      if (wVal && w !== undefined) wVal.innerText = `${state.blurMask.w}px`;
-      if (hVal && h !== undefined) hVal.innerText = `${state.blurMask.h}px`;
-    });
-  }
-}
-
-// ── BLUR BOX SLIDERS (CLAMPS STRICTLY WITHIN VIDEO BOUNDARIES) ─────
+// ── BLUR BOX SLIDERS (HORIZONTAL RECTANGLE: W: 50-280px, H: 20-80px) ──────
 function updateBlurBoxLimits() {
-  const rect = getVideoRenderRect();
+  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
   const wSlider = document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blur-h-slider');
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
-  const curW = state.blurMask.w || 75;
-  const curH = state.blurMask.h || 28;
-
   if (wSlider) {
-    wSlider.min = 20;
-    wSlider.max = Math.max(40, rect.width - 4);
+    wSlider.min = 50;
+    wSlider.max = 280;
   }
   if (hSlider) {
-    hSlider.min = 10;
-    hSlider.max = Math.max(20, rect.height - 4);
+    hSlider.min = 20;
+    hSlider.max = 80;
   }
-  if (xSlider) {
-    xSlider.min = rect.left;
-    xSlider.max = Math.max(rect.left, rect.left + rect.width - curW);
-  }
-  if (ySlider) {
-    ySlider.min = rect.top;
-    ySlider.max = Math.max(rect.top, rect.top + rect.height - curH);
-  }
-}
-
-// ── DEBOUNCED / RAF BLUR SLIDER INPUT FOR SMOOTH 60FPS TOUCH ──────
-let blurSliderInputRaf = null;
-function handleBlurSliderInput() {
-  if (blurSliderInputRaf) cancelAnimationFrame(blurSliderInputRaf);
-  blurSliderInputRaf = requestAnimationFrame(() => {
-    updateBlurBoxFromSliders();
-  });
-}
-
-function initPassiveSliderTouch() {
-  document.querySelectorAll('.cyber-slider').forEach(slider => {
-    slider.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
-    slider.addEventListener('touchmove', (e) => { e.stopPropagation(); }, { passive: true });
-  });
+  if (xSlider) xSlider.max = Math.max(0, vpW - (state.blurMask.w || 140));
+  if (ySlider) ySlider.max = Math.max(0, vpH - (state.blurMask.h || 45));
 }
 
 function updateBlurBoxFromSliders() {
-  let w = parseInt(document.getElementById('blur-w-slider')?.value || 75);
-  let h = parseInt(document.getElementById('blur-h-slider')?.value || 28);
-  let x = parseInt(document.getElementById('blur-x-slider')?.value || 10);
-  let y = parseInt(document.getElementById('blur-y-slider')?.value || 10);
+  if (!state.blurMask.enabled) {
+    state.blurMask.enabled = true;
+    const toggle = document.getElementById('toggle-blur');
+    if (toggle) toggle.checked = true;
+    if (blurBox) {
+      blurBox.classList.add('active-visible');
+      blurBox.style.display = 'block';
+    }
+  }
 
-  const clamped = clampBoxWithinVideo(x, y, w, h);
-  x = clamped.x;
-  y = clamped.y;
-  w = clamped.w;
-  h = clamped.h;
+  const w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
+  const h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
+  const x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
+  const y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
 
   state.blurMask.x = x;
   state.blurMask.y = y;
@@ -1225,9 +766,6 @@ function updateBlurBoxFromSliders() {
     blurBox.style.top = `${y}px`;
     blurBox.style.width = `${w}px`;
     blurBox.style.height = `${h}px`;
-    // Respect user's explicit enabled switch: strictly OFF by default
-    blurBox.style.display = state.blurMask.enabled ? 'block' : 'none';
-    blurBox.classList.toggle('active-visible', state.blurMask.enabled);
   }
 
   const wVal = document.getElementById('blur-w-val');
@@ -1241,6 +779,15 @@ function updateBlurBoxFromSliders() {
 }
 
 function updateBlurIntensity(val) {
+  if (!state.blurMask.enabled) {
+    state.blurMask.enabled = true;
+    const toggle = document.getElementById('toggle-blur');
+    if (toggle) toggle.checked = true;
+    if (blurBox) {
+      blurBox.classList.add('active-visible');
+      blurBox.style.display = 'block';
+    }
+  }
   const intVal = parseInt(val) || 25;
   state.blurMask.intensity = intVal;
   let label = `${intVal}`;
@@ -1271,82 +818,44 @@ function setBlurPreset(level) {
   updateBlurIntensity(val);
 }
 
-// 🎨 Real Blur Tint Modes: Pure Blur, Dark Black, or Transparent White Tint
-function setBlurTintPreset(mode) {
-  state.blurMask.tintMode = mode;
-  ['btn-tint-pure', 'btn-tint-dark', 'btn-tint-white'].forEach(id => {
-    document.getElementById(id)?.classList.remove('active');
-  });
-  const btn = document.getElementById(`btn-tint-${mode}`);
-  if (btn) btn.classList.add('active');
-
-  const tintSlider = document.getElementById('blur-tint-slider');
-  let opacityPct = parseInt(tintSlider?.value || 40);
-
-  if (mode === 'pure') {
-    state.blurMask.tintColor = 'rgba(0, 0, 0, 0)';
-    if (tintSlider) tintSlider.value = 0;
-    opacityPct = 0;
-  } else if (mode === 'dark') {
-    if (opacityPct === 0) opacityPct = 40;
-    if (tintSlider) tintSlider.value = opacityPct;
-  } else if (mode === 'white') {
-    if (opacityPct === 0) opacityPct = 30;
-    if (tintSlider) tintSlider.value = opacityPct;
-  }
-  updateBlurTint(opacityPct);
-  showToast(mode === 'pure' ? '🌫️ ផ្ទៃព្រាលសុទ្ធ' : (mode === 'white' ? '⬜ សថ្លា' : '⬛ ខ្មៅងងឹត'));
-}
-
 function updateBlurTint(val) {
+  if (!state.blurMask.enabled) {
+    state.blurMask.enabled = true;
+    const toggle = document.getElementById('toggle-blur');
+    if (toggle) toggle.checked = true;
+    if (blurBox) {
+      blurBox.classList.add('active-visible');
+      blurBox.style.display = 'block';
+    }
+  }
   const pct = parseInt(val) || 0;
   state.blurMask.tintOpacity = pct / 100.0;
   const tintValEl = document.getElementById('blur-tint-val');
   if (tintValEl) tintValEl.innerText = `${pct}%`;
-
-  const mode = state.blurMask.tintMode || 'dark';
   if (blurBox) {
-    if (mode === 'pure' || pct === 0) {
-      blurBox.style.backgroundColor = 'transparent';
-    } else if (mode === 'white') {
-      blurBox.style.backgroundColor = `rgba(255, 255, 255, ${state.blurMask.tintOpacity})`;
-    } else {
-      blurBox.style.backgroundColor = `rgba(0, 0, 0, ${state.blurMask.tintOpacity})`;
-    }
+    blurBox.style.backgroundColor = `rgba(0, 0, 0, ${state.blurMask.tintOpacity})`;
   }
 }
 
 function setBlurCorner(corner) {
-  const rect = getVideoRenderRect();
-  const w = Math.min(state.blurMask.w || 75, rect.width - 10);
-  const h = Math.min(state.blurMask.h || 28, rect.height - 10);
-  let x = rect.left + 8;
-  let y = rect.top + 8;
+  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
+  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
+  const w = state.blurMask.w || 140;
+  const h = state.blurMask.h || 45;
+  let x = 15, y = 15;
+  if (corner === 'top-left') { x = 10; y = 10; }
+  else if (corner === 'top-right') { x = Math.max(0, vpW - w - 10); y = 10; }
+  else if (corner === 'bottom-left') { x = 10; y = Math.max(0, vpH - h - 10); }
+  else if (corner === 'bottom-right') { x = Math.max(0, vpW - w - 10); y = Math.max(0, vpH - h - 10); }
 
-  if (corner === 'top-left') {
-    x = rect.left + 8;
-    y = rect.top + 8;
-  } else if (corner === 'top-right') {
-    x = rect.left + rect.width - w - 8;
-    y = rect.top + 8;
-  } else if (corner === 'bottom-left') {
-    x = rect.left + 8;
-    y = rect.top + rect.height - h - 8;
-  } else if (corner === 'bottom-right') {
-    x = rect.left + rect.width - w - 8;
-    y = rect.top + rect.height - h - 8;
-  }
-
-  const clamped = clampBoxWithinVideo(x, y, w, h);
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
-  if (xSlider) xSlider.value = clamped.x;
-  if (ySlider) ySlider.value = clamped.y;
+  if (xSlider) xSlider.value = x;
+  if (ySlider) ySlider.value = y;
   updateBlurBoxFromSliders();
 }
 
-
-// ── SPONSOR CONTROLS (WIDTH, SCALE & DUAL-STYLE SUPPORT) ────
+// ── SPONSOR CONTROLS (2-LINE CONCISE SPONSOR) ────
 function toggleSponsorOverlay(enabled) {
   state.sponsor.enabled = enabled;
   const toggle = document.getElementById('toggle-sponsor');
@@ -1360,86 +869,40 @@ function toggleSponsorOverlay(enabled) {
 }
 
 function updateSponsorContent() {
-  const topText = (document.getElementById('sponsor-top-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
-  const bottomText = (document.getElementById('sponsor-bottom-input')?.value || '📱 012 345 678 | Telegram').trim();
-
-  // Colors & Fonts
-  const topColor = document.getElementById('sponsor-top-color')?.value || '#f59e0b';
-  const bottomColor = document.getElementById('sponsor-bottom-color')?.value || '#22d3ee';
-  const topFont = document.getElementById('sponsor-top-font')?.value || "'Kantumruy Pro', sans-serif";
-  const bottomFont = document.getElementById('sponsor-bottom-font')?.value || "'Kantumruy Pro', sans-serif";
-  const topEffect = document.getElementById('sponsor-top-effect')?.value || 'glow';
-  const bottomEffect = document.getElementById('sponsor-bottom-effect')?.value || 'none';
-
-  // Size, Width, Scale & Position
-  const widthPct = parseInt(document.getElementById('sponsor-width-slider')?.value || 88);
-  const scalePct = parseInt(document.getElementById('sponsor-scale-slider')?.value || 100);
-  const scale = scalePct / 100.0;
+  const topText = (document.getElementById('sponsor-top-input')?.value || document.getElementById('sponsor-brand-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
+  const bottomText = (document.getElementById('sponsor-bottom-input')?.value || document.getElementById('sponsor-contact-input')?.value || '📱 012 345 678 | Telegram').trim();
+  const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
+  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 17);
   const yPercent = parseInt(document.getElementById('sponsor-y-slider')?.value || 88);
   const bg = document.getElementById('sponsor-bg-select')?.value || 'rgba(8, 6, 18, 0.90)';
 
   state.sponsor.topLine = topText;
   state.sponsor.bottomLine = bottomText;
-  state.sponsor.topColor = topColor;
-  state.sponsor.bottomColor = bottomColor;
-  state.sponsor.topFont = topFont;
-  state.sponsor.bottomFont = bottomFont;
-  state.sponsor.topEffect = topEffect;
-  state.sponsor.bottomEffect = bottomEffect;
-  state.sponsor.widthPercent = widthPct;
-  state.sponsor.scale = scale;
+  state.sponsor.color = color;
+  state.sponsor.fontSize = size;
   state.sponsor.yPercent = yPercent;
   state.sponsor.bgColor = bg;
-
-  const widthVal = document.getElementById('sponsor-width-val');
-  if (widthVal) widthVal.innerText = `${widthPct}%`;
-  const scaleVal = document.getElementById('sponsor-scale-val');
-  if (scaleVal) scaleVal.innerText = `${scale.toFixed(1)}x`;
 
   const topEl = document.getElementById('sponsor-top-tag') || document.getElementById('sponsor-brand-tag');
   const bottomEl = document.getElementById('sponsor-bottom-tag') || document.getElementById('sponsor-contact-tag');
 
-  const baseSize = Math.max(10, Math.round(14 * scale));
-
   if (topEl) {
     topEl.innerText = topText;
-    topEl.style.color = topColor;
-    topEl.style.fontFamily = topFont;
-    topEl.style.fontSize = baseSize + 'px';
-    _applyEffectToSpan(topEl, topEffect, topColor, '#000');
+    topEl.style.color = color;
+    topEl.style.fontSize = size + 'px';
   }
   if (bottomEl) {
     bottomEl.innerText = bottomText;
-    bottomEl.style.color = bottomColor;
-    bottomEl.style.fontFamily = bottomFont;
-    bottomEl.style.fontSize = Math.max(9, Math.round(baseSize * 0.85)) + 'px';
-    _applyEffectToSpan(bottomEl, bottomEffect, bottomColor, '#000');
+    bottomEl.style.color = '#22d3ee';
+    bottomEl.style.fontSize = Math.max(11, size - 3) + 'px';
   }
-
   const bannerBar = document.getElementById('sponsor-banner-bar');
   if (bannerBar) {
     bannerBar.style.backgroundColor = bg;
-    bannerBar.style.padding = `${Math.round(4 * scale)}px ${Math.round(8 * scale)}px`;
   }
   if (sponsorElement) {
-    const rect = getVideoRenderRect();
-    const vp = document.getElementById('video-viewport');
-    const vpH = vp ? vp.clientHeight : 320;
-
-    sponsorElement.style.width = 'max-content';
-    const maxAllowedWidth = Math.min(rect.width - 12, Math.round(rect.width * (widthPct / 100.0)));
-    sponsorElement.style.maxWidth = `${Math.max(50, maxAllowedWidth)}px`;
-    sponsorElement.style.left = `${Math.round(rect.left + rect.width / 2)}px`;
-    sponsorElement.style.transform = 'translateX(-50%)';
-
-    if (state.sponsor.position === 'top') {
-      sponsorElement.style.top = `${Math.round(rect.top + 8)}px`;
-      sponsorElement.style.bottom = 'auto';
-    } else {
-      const bottomInset = Math.max(8, Math.round((vpH - (rect.top + rect.height)) + 8));
-      sponsorElement.style.bottom = `${bottomInset}px`;
-      sponsorElement.style.top = 'auto';
-    }
+    sponsorElement.style.bottom = 'auto';
+    sponsorElement.style.top = `${yPercent}%`;
   }
 }
 
@@ -1459,17 +922,8 @@ function setSponsorPosition(pos) {
     if (yVal) yVal.innerText = '88%';
   }
   if (sponsorElement) {
-    const rect = getVideoRenderRect();
-    const vp = document.getElementById('video-viewport');
-    const vpH = vp ? vp.clientHeight : 320;
-    if (pos === 'top') {
-      sponsorElement.style.top = `${Math.round(rect.top + 8)}px`;
-      sponsorElement.style.bottom = 'auto';
-    } else {
-      const bottomInset = Math.max(8, Math.round((vpH - (rect.top + rect.height)) + 8));
-      sponsorElement.style.bottom = `${bottomInset}px`;
-      sponsorElement.style.top = 'auto';
-    }
+    sponsorElement.style.bottom = 'auto';
+    sponsorElement.style.top = `${state.sponsor.yPercent}%`;
   }
 }
 
@@ -1485,114 +939,144 @@ function updateLogoPosition() {
   logoElement.style.top = `${y}px`;
 }
 
-// ── DIRECT DUAL-TONE HEADER MARQUEE ANIMATION ───────────────
-function toggleMarqueeAnimation(enabled) {
-  state.marquee.enabled = enabled;
-  const toggle = document.getElementById('toggle-marquee');
-  if (toggle && toggle.checked !== enabled) toggle.checked = enabled;
-
-  updateMarqueeAnimation();
-  showToast(enabled ? '🎬 បានបើកចលនាចំណងជើងរត់ (Header Marquee)' : 'បានបិទអក្សររត់');
-}
-
-// Natural Speed Slider: 1 = 20s (Very Slow), 5 = 8s (Normal), 10 = 3s (Very Fast)
-function setMarqueeSpeedNatural(val) {
-  const level = parseInt(val) || 5;
-  // Map level 1..10 to duration in seconds: 10 -> 3s, 1 -> 20s
-  const speedSec = Math.max(2, Math.round(20 - (level - 1) * 1.88));
-  state.marquee.speedSec = speedSec;
-  state.marquee.speedLevel = level;
-
-  let label = `${level}x (មធ្យម)`;
-  if (level <= 3) label = `${level}x (យឺត 🐢)`;
-  else if (level >= 8) label = `${level}x (លឿន 🚀)`;
-  const valEl = document.getElementById('marquee-speed-natural-val');
-  if (valEl) valEl.innerText = label;
-
-  updateMarqueeAnimation();
-}
-
-function setMarqueeDir(dir) {
-  state.marquee.direction = dir;
-  ['up', 'down', 'left', 'right'].forEach(d => {
-    const btn = document.getElementById(`btn-marquee-dir-${d}`);
-    if (btn) btn.classList.toggle('active', d === dir);
-  });
-  updateMarqueeAnimation();
-  showToast(`✓ ទិសដៅរត់៖ ${dir.toUpperCase()}`);
-}
-
-function updateMarqueeAnimation() {
-  if (!textElement) return;
-
-  const dir = state.marquee.direction || 'left';
-  const speedSec = parseFloat(state.marquee.speedSec) || 8.0;
-
-  if (!state.marquee.enabled) {
-    textElement.classList.remove('marquee-active', 'dir-up', 'dir-down', 'dir-left', 'dir-right');
-    textElement.style.removeProperty('animation');
-    textElement.style.removeProperty('--marquee-duration');
-    textElement.style.left = `${state.textOverlay.x || 10}px`;
-    textElement.style.top = `${state.textOverlay.y || 15}px`;
-    textElement.style.transform = '';
-    textElement.style.display = state.textOverlay.enabled ? 'block' : 'none';
-    return;
-  }
-
-  // Ensure text overlay is enabled and visible
-  state.textOverlay.enabled = true;
-  const toggleText = document.getElementById('toggle-text');
-  if (toggleText) toggleText.checked = true;
-
-  // IMPORTANT: Remove inline left/top/transform so CSS @keyframes can take full control!
-  textElement.style.removeProperty('left');
-  textElement.style.removeProperty('top');
-  textElement.style.removeProperty('transform');
-  textElement.style.removeProperty('right');
-  textElement.style.removeProperty('bottom');
-
-  textElement.style.display = 'block';
-  textElement.classList.add('active-visible', 'marquee-active');
-  textElement.classList.remove('dir-up', 'dir-down', 'dir-left', 'dir-right');
-  textElement.classList.add('dir-' + dir);
-
-  // Set duration via CSS variable
-  textElement.style.setProperty('--marquee-duration', `${speedSec}s`);
-
-  let animName = 'marqueeScrollLeft';
-  if (dir === 'up') animName = 'marqueeScrollUp';
-  else if (dir === 'down') animName = 'marqueeScrollDown';
-  else if (dir === 'right') animName = 'marqueeScrollRight';
-
-  // Force reflow to immediately restart animation seamlessly
-  textElement.style.animation = 'none';
-  void textElement.offsetHeight;
-  textElement.style.animation = `${animName} ${speedSec}s linear infinite`;
-}
-
-// Legacy Marquee Helpers for compatibility
+// ── MARQUEE ────────────────────────────────────────────────
 function toggleMarqueeOverlay(enabled) {
-  toggleMarqueeAnimation(enabled);
+  state.marquee.enabled = enabled;
+  if (marqueeElement) {
+    marqueeElement.classList.toggle('active-visible', enabled);
+    marqueeElement.style.display = enabled ? 'block' : 'none';
+  }
+  updateMarqueeAnimation();
+  showToast(enabled ? '✓ បានបើកអក្សររត់ (Marquee)' : 'បានបិទអក្សររត់');
 }
 
 function updateMarqueeText(val) {
-  // Directly maps to Dual-Tone Part 1
-  if (document.getElementById('text-part1-input')) {
-    document.getElementById('text-part1-input').value = val;
-    updateDualTonePreview();
-  }
+  state.marquee.text = val;
+  if (marqueeTrack) marqueeTrack.innerText = val;
 }
 
 function setMarqueeDirection(dir) {
-  setMarqueeDir(dir);
+  state.marquee.direction = dir;
+  // Update active button states
+  ['up', 'down', 'left', 'right'].forEach(d => {
+    const btn = document.getElementById(`marquee-dir-${d}`);
+    if (btn) btn.classList.toggle('active', d === dir);
+  });
+  updateMarqueeAnimation();
 }
 
 function setMarqueeSpeed(preset) {
-  let level = 5;
-  if (preset === 'slow') level = 2;
-  if (preset === 'normal') level = 5;
-  if (preset === 'fast') level = 9;
-  setMarqueeSpeedNatural(level);
+  let sec = 8;
+  if (preset === 'slow') sec = 15;
+  if (preset === 'normal') sec = 8;
+  if (preset === 'fast') sec = 4;
+  setMarqueeSpeedSeconds(sec);
+}
+
+function setMarqueeSpeedSeconds(sec) {
+  const val = parseInt(sec) || 8;
+  state.marquee.speedSec = val;
+  const valEl = document.getElementById('marquee-speed-val');
+  if (valEl) valEl.innerText = `${val}s`;
+  const slider = document.getElementById('marquee-speed-slider');
+  if (slider && parseInt(slider.value) !== val) slider.value = val;
+
+  ['slow', 'normal', 'fast'].forEach(p => {
+    const btn = document.getElementById(`btn-speed-${p}`);
+    if (btn) btn.classList.remove('active');
+  });
+  if (val >= 14) document.getElementById('btn-speed-slow')?.classList.add('active');
+  else if (val <= 5) document.getElementById('btn-speed-fast')?.classList.add('active');
+  else document.getElementById('btn-speed-normal')?.classList.add('active');
+
+  updateMarqueeAnimation();
+}
+
+function setMarqueeEffect(effect) {
+  state.marquee.effect = effect;
+  ['none', 'shadow', 'glow', 'outline'].forEach(e => {
+    const btn = document.getElementById(`effect-btn-${e}`);
+    if (btn) btn.classList.toggle('active', e === effect);
+  });
+
+  // Show glow color picker only for glow
+  const glowRow = document.getElementById('glow-color-row');
+  if (glowRow) glowRow.style.display = effect === 'glow' ? 'flex' : 'none';
+
+  applyMarqueeStyles();
+}
+
+function applyMarqueeStyles() {
+  if (!marqueeTrack) return;
+  const font = document.getElementById('marquee-font-select')?.value || "'Kantumruy Pro', sans-serif";
+  const color = document.getElementById('marquee-color-picker')?.value || '#f59e0b';
+  const glowColor = document.getElementById('marquee-glow-color')?.value || '#c084fc';
+  const fontSize = parseInt(document.getElementById('marquee-size-slider')?.value || 22);
+
+  state.marquee.font = font;
+  state.marquee.color = color;
+  state.marquee.glowColor = glowColor;
+  state.marquee.fontSize = fontSize;
+
+  // Apply CSS to preview marquee
+  marqueeTrack.style.fontFamily = font;
+  marqueeTrack.style.color = color;
+  marqueeTrack.style.fontSize = fontSize + 'px';
+  marqueeTrack.style.textShadow = '';
+  marqueeTrack.style.webkitTextStroke = '';
+
+  switch (state.marquee.effect) {
+    case 'shadow':
+      marqueeTrack.style.textShadow = '2px 2px 6px rgba(0,0,0,0.9)';
+      break;
+    case 'glow':
+      marqueeTrack.style.textShadow = `0 0 10px ${glowColor}, 0 0 25px ${glowColor}88`;
+      break;
+    case 'outline':
+      marqueeTrack.style.webkitTextStroke = `2px rgba(0,0,0,0.9)`;
+      break;
+  }
+}
+
+function updateMarqueeAnimation() {
+  if (!marqueeElement || !marqueeTrack) return;
+
+  const dir = state.marquee.direction || 'up';
+  const speedSec = parseFloat(state.marquee.speedSec) || 8.0;
+
+  if (!state.marquee.enabled) {
+    marqueeElement.classList.remove('active-visible');
+    marqueeElement.style.display = 'none';
+    marqueeTrack.style.animation = 'none';
+    return;
+  }
+
+  marqueeElement.classList.add('active-visible');
+  marqueeElement.style.display = 'block';
+
+  // Toggle directional classes
+  if (dir === 'left' || dir === 'right') {
+    marqueeTrack.classList.add('dir-horizontal');
+    marqueeTrack.classList.remove('dir-vertical');
+  } else {
+    marqueeTrack.classList.add('dir-vertical');
+    marqueeTrack.classList.remove('dir-horizontal');
+  }
+
+  let animName = 'scrollUp';
+  switch (dir) {
+    case 'down':   animName = 'scrollDown';  break;
+    case 'left':   animName = 'scrollLeft';  break;
+    case 'right':  animName = 'scrollRight'; break;
+    default:       animName = 'scrollUp';    break;
+  }
+
+  // Force reflow to immediately restart animation seamlessly
+  marqueeTrack.style.animation = 'none';
+  void marqueeTrack.offsetHeight;
+  marqueeTrack.style.animation = `${animName} ${speedSec}s linear infinite`;
+
+  applyMarqueeStyles();
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1636,143 +1120,67 @@ function updateVideoCssFilters() {
 }
 
 // ══════════════════════════════════════════════════════════
-// ⚡ 7. TOUCH & DRAG SYSTEM (Optimized for Mobile Viewport & Touch)
+// ⚡ 7. TOUCH & DRAG SYSTEM (Optimized for Mobile Viewport)
 // ══════════════════════════════════════════════════════════
 function makeDraggable(element) {
-  if (!element) return;
   let isDragging = false;
   let startX = 0, startY = 0, initialLeft = 0, initialTop = 0;
 
-  function onDragStart(clientX, clientY, target) {
-    if (target && target.closest && target.closest('.resizer-handle')) return false;
+  element.addEventListener('pointerdown', (e) => {
+    if (e.target.classList.contains('resizer-handle')) return;
     isDragging = true;
-    startX = clientX;
-    startY = clientY;
+    startX = e.clientX;
+    startY = e.clientY;
     initialLeft = element.offsetLeft;
     initialTop = element.offsetTop;
-    element.classList.add('is-dragging');
-    return true;
-  }
 
-  function onDragMove(clientX, clientY) {
-    if (!isDragging) return;
-    const dx = clientX - startX;
-    const dy = clientY - startY;
-
-    if (element === blurBox) {
-      const rect = getVideoRenderRect();
-      const minX = rect.left;
-      const maxX = Math.max(minX, rect.left + rect.width - element.offsetWidth);
-      const minY = rect.top;
-      const maxY = Math.max(minY, rect.top + rect.height - element.offsetHeight);
-
-      const newLeft = Math.max(minX, Math.min(maxX, Math.round(initialLeft + dx)));
-      const newTop = Math.max(minY, Math.min(maxY, Math.round(initialTop + dy)));
-
-      element.style.left = `${newLeft}px`;
-      element.style.top = `${newTop}px`;
-
-      throttledSyncBlurSliders(newLeft, newTop, element.offsetWidth, element.offsetHeight, false);
-    } else {
-      const parent = element.parentElement || document.getElementById('video-viewport');
-      const pW = parent ? parent.clientWidth : 280;
-      const pH = parent ? parent.clientHeight : 320;
-      const maxLeft = Math.max(0, pW - element.offsetWidth);
-      const maxTop = Math.max(0, pH - element.offsetHeight);
-
-      const newLeft = Math.max(0, Math.min(maxLeft, Math.round(initialLeft + dx)));
-      const newTop = Math.max(0, Math.min(maxTop, Math.round(initialTop + dy)));
-
-      element.style.left = `${newLeft}px`;
-      element.style.top = `${newTop}px`;
-
-      if (element === logoElement) {
-        state.logoOverlay.x = newLeft;
-        state.logoOverlay.y = newTop;
-        _syncSlider('logo-x-slider', newLeft);
-        _syncSlider('logo-y-slider', newTop);
-        const lxVal = document.getElementById('logo-x-val');
-        const lyVal = document.getElementById('logo-y-val');
-        if (lxVal) lxVal.innerText = `${newLeft}px`;
-        if (lyVal) lyVal.innerText = `${newTop}px`;
-      } else if (element === textElement) {
-        _syncSlider('text-x-slider', newLeft);
-        _syncSlider('text-y-slider', newTop);
-        const txVal = document.getElementById('text-x-val');
-        const tyVal = document.getElementById('text-y-val');
-        if (txVal) txVal.innerText = `${newLeft}px`;
-        if (tyVal) tyVal.innerText = `${newTop}px`;
-      }
-    }
-  }
-
-  function onDragEnd() {
-    if (!isDragging) return;
-    isDragging = false;
-    element.classList.remove('is-dragging');
-    if (element === blurBox) {
-      throttledSyncBlurSliders(element.offsetLeft, element.offsetTop, element.offsetWidth, element.offsetHeight, true);
-    }
-  }
-
-  // 1. Native Mobile Touch Handlers
-  element.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      if (onDragStart(touch.clientX, touch.clientY, e.target)) {
-        e.stopPropagation();
-      }
-    }
-  }, { passive: false });
-
-  element.addEventListener('touchmove', (e) => {
-    if (isDragging && e.touches.length === 1) {
-      e.preventDefault(); // Stop mobile screen scrolling during drag!
-      e.stopPropagation();
-      const touch = e.touches[0];
-      onDragMove(touch.clientX, touch.clientY);
-    }
-  }, { passive: false });
-
-  element.addEventListener('touchend', (e) => {
-    if (isDragging) {
-      e.stopPropagation();
-      onDragEnd();
-    }
-  }, { passive: false });
-
-  element.addEventListener('touchcancel', () => {
-    onDragEnd();
-  }, { passive: true });
-
-  // 2. Desktop Mouse / Pointer Handlers
-  element.addEventListener('pointerdown', (e) => {
-    if (e.pointerType === 'touch') return;
-    if (onDragStart(e.clientX, e.clientY, e.target)) {
-      try { element.setPointerCapture(e.pointerId); } catch (err) {}
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    try {
+      element.setPointerCapture(e.pointerId);
+    } catch (err) {}
+    e.preventDefault();
   });
 
   element.addEventListener('pointermove', (e) => {
-    if (e.pointerType === 'touch') return;
-    if (isDragging) {
-      e.preventDefault();
-      onDragMove(e.clientX, e.clientY);
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    const parent = element.parentElement;
+    const maxLeft = Math.max(0, parent.clientWidth - element.offsetWidth);
+    const maxTop = Math.max(0, parent.clientHeight - element.offsetHeight);
+
+    const newLeft = Math.max(0, Math.min(maxLeft, initialLeft + dx));
+    const newTop = Math.max(0, Math.min(maxTop, initialTop + dy));
+
+    element.style.left = `${newLeft}px`;
+    element.style.top = `${newTop}px`;
+
+    // Sync back to state & sliders
+    if (element === blurBox) {
+      state.blurMask.x = newLeft;
+      state.blurMask.y = newTop;
+      _syncSlider('blur-x-slider', newLeft);
+      _syncSlider('blur-y-slider', newTop);
+      document.getElementById('blur-x-val').innerText = Math.round(newLeft) + 'px';
+      document.getElementById('blur-y-val').innerText = Math.round(newTop) + 'px';
+    } else if (element === logoElement) {
+      state.logoOverlay.x = newLeft;
+      state.logoOverlay.y = newTop;
+      _syncSlider('logo-x-slider', newLeft);
+      _syncSlider('logo-y-slider', newTop);
+      document.getElementById('logo-x-val').innerText = Math.round(newLeft) + 'px';
+      document.getElementById('logo-y-val').innerText = Math.round(newTop) + 'px';
     }
   });
 
   const onPointerEnd = (e) => {
-    if (e.pointerType === 'touch') return;
-    if (isDragging) {
-      try {
-        if (element.hasPointerCapture(e.pointerId)) {
-          element.releasePointerCapture(e.pointerId);
-        }
-      } catch (err) {}
-      onDragEnd();
-    }
+    if (!isDragging) return;
+    isDragging = false;
+    try {
+      if (element.hasPointerCapture(e.pointerId)) {
+        element.releasePointerCapture(e.pointerId);
+      }
+    } catch (err) {}
   };
 
   element.addEventListener('pointerup', onPointerEnd);
@@ -1785,163 +1193,64 @@ function _syncSlider(sliderId, value) {
 }
 
 function makeResizable(element) {
-  if (!element) return;
-  const handles = element.querySelectorAll('.resizer-handle');
-  if (!handles || handles.length === 0) return;
+  const handle = element.querySelector('.resizer-handle.se');
+  if (!handle) return;
 
-  handles.forEach(handle => {
-    let isResizing = false;
-    let startX = 0, startY = 0;
-    let startLeft = 0, startTop = 0;
-    let startW = 0, startH = 0;
-    const corner = handle.classList.contains('se') ? 'se'
-                 : handle.classList.contains('sw') ? 'sw'
-                 : handle.classList.contains('ne') ? 'ne' : 'nw';
+  let isResizing = false;
+  let startX = 0, startY = 0, startW = 0, startH = 0;
 
-    function onResizeStart(clientX, clientY) {
-      isResizing = true;
-      startX = clientX;
-      startY = clientY;
-      startLeft = element.offsetLeft;
-      startTop = element.offsetTop;
-      startW = element.offsetWidth;
-      startH = element.offsetHeight;
-      element.classList.add('is-dragging');
-    }
+  handle.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    isResizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startW = element.offsetWidth;
+    startH = element.offsetHeight;
 
-    function onResizeMove(clientX, clientY) {
-      if (!isResizing) return;
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-      const rect = getVideoRenderRect();
-      const minW = 24;
-      const minH = 12;
-
-      let newLeft = startLeft;
-      let newTop = startTop;
-      let newW = startW;
-      let newH = startH;
-
-      if (corner === 'se') {
-        const maxW = rect.left + rect.width - startLeft;
-        const maxH = rect.top + rect.height - startTop;
-        newW = Math.max(minW, Math.min(maxW, startW + dx));
-        newH = Math.max(minH, Math.min(maxH, startH + dy));
-      } else if (corner === 'sw') {
-        const rightEdge = startLeft + startW;
-        newLeft = Math.max(rect.left, Math.min(rightEdge - minW, startLeft + dx));
-        newW = rightEdge - newLeft;
-        const maxH = rect.top + rect.height - startTop;
-        newH = Math.max(minH, Math.min(maxH, startH + dy));
-      } else if (corner === 'ne') {
-        const bottomEdge = startTop + startH;
-        const maxW = rect.left + rect.width - startLeft;
-        newW = Math.max(minW, Math.min(maxW, startW + dx));
-        newTop = Math.max(rect.top, Math.min(bottomEdge - minH, startTop + dy));
-        newH = bottomEdge - newTop;
-      } else if (corner === 'nw') {
-        const rightEdge = startLeft + startW;
-        const bottomEdge = startTop + startH;
-        newLeft = Math.max(rect.left, Math.min(rightEdge - minW, startLeft + dx));
-        newW = rightEdge - newLeft;
-        newTop = Math.max(rect.top, Math.min(bottomEdge - minH, startTop + dy));
-        newH = bottomEdge - newTop;
-      }
-
-      element.style.left = `${Math.round(newLeft)}px`;
-      element.style.top = `${Math.round(newTop)}px`;
-      element.style.width = `${Math.round(newW)}px`;
-      element.style.height = `${Math.round(newH)}px`;
-
-      if (element === blurBox) {
-        throttledSyncBlurSliders(Math.round(newLeft), Math.round(newTop), Math.round(newW), Math.round(newH), false);
-      }
-    }
-
-    function onResizeEnd() {
-      if (!isResizing) return;
-      isResizing = false;
-      element.classList.remove('is-dragging');
-      if (element === blurBox) {
-        throttledSyncBlurSliders(element.offsetLeft, element.offsetTop, element.offsetWidth, element.offsetHeight, true);
-      }
-    }
-
-    // Touch events for mobile screens
-    handle.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        e.preventDefault();
-        e.stopPropagation();
-        const touch = e.touches[0];
-        onResizeStart(touch.clientX, touch.clientY);
-      }
-    }, { passive: false });
-
-    handle.addEventListener('touchmove', (e) => {
-      if (isResizing && e.touches.length === 1) {
-        e.preventDefault();
-        e.stopPropagation();
-        const touch = e.touches[0];
-        onResizeMove(touch.clientX, touch.clientY);
-      }
-    }, { passive: false });
-
-    handle.addEventListener('touchend', (e) => {
-      if (isResizing) {
-        e.preventDefault();
-        e.stopPropagation();
-        onResizeEnd();
-      }
-    }, { passive: false });
-
-    handle.addEventListener('touchcancel', () => {
-      onResizeEnd();
-    }, { passive: true });
-
-    // Pointer events for desktop
-    handle.addEventListener('pointerdown', (e) => {
-      if (e.pointerType === 'touch') return;
-      e.stopPropagation();
-      e.preventDefault();
-      onResizeStart(e.clientX, e.clientY);
-      try { handle.setPointerCapture(e.pointerId); } catch (err) {}
-    });
-
-    handle.addEventListener('pointermove', (e) => {
-      if (e.pointerType === 'touch') return;
-      if (isResizing) {
-        e.preventDefault();
-        onResizeMove(e.clientX, e.clientY);
-      }
-    });
-
-    const onHandlePointerEnd = (e) => {
-      if (e.pointerType === 'touch') return;
-      if (isResizing) {
-        try {
-          if (handle.hasPointerCapture(e.pointerId)) {
-            handle.releasePointerCapture(e.pointerId);
-          }
-        } catch (err) {}
-        onResizeEnd();
-      }
-    };
-
-    handle.addEventListener('pointerup', onHandlePointerEnd);
-    handle.addEventListener('pointercancel', onHandlePointerEnd);
+    try {
+      handle.setPointerCapture(e.pointerId);
+    } catch (err) {}
   });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!isResizing) return;
+    const dw = e.clientX - startX;
+    const dh = e.clientY - startY;
+    const newW = Math.max(50, Math.min(280, startW + dw));
+    const newH = Math.max(20, Math.min(80, startH + dh));
+    element.style.width = `${newW}px`;
+    element.style.height = `${newH}px`;
+
+    // Sync back to blur sliders
+    if (element === blurBox) {
+      state.blurMask.w = newW;
+      state.blurMask.h = newH;
+      _syncSlider('blur-w-slider', newW);
+      _syncSlider('blur-h-slider', newH);
+      document.getElementById('blur-w-val').innerText = Math.round(newW) + 'px';
+      document.getElementById('blur-h-val').innerText = Math.round(newH) + 'px';
+    }
+  });
+
+  const onResizeEnd = (e) => {
+    if (!isResizing) return;
+    isResizing = false;
+    try {
+      if (handle.hasPointerCapture(e.pointerId)) {
+        handle.releasePointerCapture(e.pointerId);
+      }
+    } catch (err) {}
+  };
+
+  handle.addEventListener('pointerup', onResizeEnd);
+  handle.addEventListener('pointercancel', onResizeEnd);
 }
 
 // ══════════════════════════════════════════════════════════
 // ⚡ 8. BUILD OPTIONS PAYLOAD (shared by auto-process & render)
 // ══════════════════════════════════════════════════════════
 function _buildRenderOptions() {
-  const rect = getVideoRenderRect();
-  const bx = blurBox ? blurBox.offsetLeft : (state.blurMask.x || 15);
-  const by = blurBox ? blurBox.offsetTop : (state.blurMask.y || 15);
-  const bw = blurBox ? blurBox.offsetWidth : (state.blurMask.w || 140);
-  const bh = blurBox ? blurBox.offsetHeight : (state.blurMask.h || 45);
-
   return {
     flip_horizontal: state.flipHorizontal,
     crop_percent: state.cropPercent,
@@ -1949,27 +1258,21 @@ function _buildRenderOptions() {
     contrast: state.contrast,
     blur_mask: {
       enabled: state.blurMask.enabled,
-      x: bx,
-      y: by,
-      w: bw,
-      h: bh,
-      x_pct: Math.max(0, Math.min(1.0, (bx - rect.left) / rect.width)),
-      y_pct: Math.max(0, Math.min(1.0, (by - rect.top) / rect.height)),
-      w_pct: Math.max(0.01, Math.min(1.0, bw / rect.width)),
-      h_pct: Math.max(0.01, Math.min(1.0, bh / rect.height)),
-      vp_w: rect.width,
-      vp_h: rect.height,
+      x: blurBox.offsetLeft,
+      y: blurBox.offsetTop,
+      w: blurBox.offsetWidth,
+      h: blurBox.offsetHeight,
       intensity: state.blurMask.intensity || 25,
-      tint_opacity: state.blurMask.tintOpacity !== undefined ? state.blurMask.tintOpacity : 0.40,
-      tint_mode: state.blurMask.tintMode || 'dark'
+      tint_opacity: state.blurMask.tintOpacity !== undefined ? state.blurMask.tintOpacity : 0.40
     },
     marquee: {
       enabled: state.marquee.enabled,
+      text: state.marquee.text,
       direction: state.marquee.direction || 'up',
       speed_sec: state.marquee.speedSec || 8,
       speed: Math.round(300 / (state.marquee.speedSec || 8)),
-      color: _hexToFFmpegColor(state.textPart1.color || '#f59e0b'),
-      font_size: state.textOverlay.size || 26,
+      color: _hexToFFmpegColor(state.marquee.color),
+      font_size: state.marquee.fontSize || 24,
       font: 'kantumruy'
     },
     // Dual-tone text
@@ -1990,8 +1293,7 @@ function _buildRenderOptions() {
       outline_w: state.textPart1.outlineW,
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
-      size: state.textOverlay.size,
-      font: state.textPart1.font || 'moul'
+      size: state.textOverlay.size
     },
     text_part2: {
       enabled: state.textOverlay.enabled && state.textPart2.text.length > 0,
@@ -2002,25 +1304,18 @@ function _buildRenderOptions() {
       outline_w: state.textPart2.outlineW,
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
-      size: state.textOverlay.size,
-      font: state.textPart2.font || 'kantumruy'
+      size: state.textOverlay.size
     },
-    // Custom sponsor branding (2 concise lines + dual style + width & scale)
+    // Custom sponsor branding (2 concise lines + position)
     sponsor: {
       enabled: state.sponsor.enabled,
       top_line: state.sponsor.topLine,
       bottom_line: state.sponsor.bottomLine,
       position: state.sponsor.position,
       y_percent: state.sponsor.yPercent,
-      width_percent: state.sponsor.widthPercent || 88,
-      scale: state.sponsor.scale || 1.0,
-      color: _hexToFFmpegColor(state.sponsor.color || state.sponsor.topColor),
-      top_color: _hexToFFmpegColor(state.sponsor.topColor || '#f59e0b'),
-      bottom_color: _hexToFFmpegColor(state.sponsor.bottomColor || '#22d3ee'),
-      top_font: state.sponsor.topFont || 'kantumruy',
-      bottom_font: state.sponsor.bottomFont || 'kantumruy',
-      font_size: state.sponsor.fontSize || 16,
-      bg_color: state.sponsor.bgColor || 'rgba(8, 6, 18, 0.90)',
+      color: _hexToFFmpegColor(state.sponsor.color),
+      font_size: state.sponsor.fontSize,
+      bg_color: state.sponsor.bgColor,
       font: 'kantumruy'
     }
   };
@@ -2051,13 +1346,11 @@ async function triggerAutoProcessPipeline() {
   const progressWrap = document.getElementById('render-progress-wrap');
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
-  const progressPercent = document.getElementById('render-progress-percent');
   const downloadBtn = document.getElementById('btn-download-result');
 
   progressWrap.style.display = 'flex';
   downloadBtn.style.display = 'none';
   progressBar.style.width = '10%';
-  if (progressPercent) progressPercent.innerText = '10%';
   progressStatus.innerText = 'កំពុង Upload វីដេអូទៅ Server...';
 
   if (!state.videoFilename && state.videoFile) {
@@ -2073,13 +1366,13 @@ async function triggerAutoProcessPipeline() {
       }
     } catch (e) {
       showToast('⚠️ បរាជ័យក្នុងការ Upload វីដេអូទៅ Server');
+      progressWrap.style.display = 'none';
       return;
     }
   }
 
-  progressBar.style.width = '15%';
-  if (progressPercent) progressPercent.innerText = '15%';
-  progressStatus.innerText = 'កំពុងចាប់ផ្ដើម Auto Pipeline (Audio Extract & ASR)...';
+  progressBar.style.width = '25%';
+  progressStatus.innerText = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR) & បកប្រែជាភាសាខ្មែរ...';
 
   try {
     const res = await fetch('/api/auto-process', {
@@ -2098,12 +1391,15 @@ async function triggerAutoProcessPipeline() {
       pollJobStatus(data.job_id);
     } else if (data.license_required) {
       showToast('🔐 ' + data.error);
+      progressWrap.style.display = 'none';
       openLicenseModal();
     } else {
       showToast('⚠️ បរាជ័យក្នុងការចាប់ផ្ដើម Auto Pipeline');
+      progressWrap.style.display = 'none';
     }
   } catch (err) {
     showToast('⚠️ មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធបានទេ');
+    progressWrap.style.display = 'none';
   }
 }
 
@@ -2123,13 +1419,11 @@ async function triggerRenderExport() {
   const progressWrap = document.getElementById('render-progress-wrap');
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
-  const progressPercent = document.getElementById('render-progress-percent');
   const downloadBtn = document.getElementById('btn-download-result');
 
   progressWrap.style.display = 'flex';
   downloadBtn.style.display = 'none';
   progressBar.style.width = '15%';
-  if (progressPercent) progressPercent.innerText = '15%';
   progressStatus.innerText = 'កំពុងចាប់ផ្ដើម Render HD Video (Ultra-Fast Engine)...';
 
   if (!state.videoFilename && state.videoFile) {
@@ -2141,6 +1435,7 @@ async function triggerRenderExport() {
       if (data.status === 'ok') state.videoFilename = data.filename;
     } catch (e) {
       showToast('⚠️ បរាជ័យក្នុងការ Upload');
+      progressWrap.style.display = 'none';
       return;
     }
   }
@@ -2160,57 +1455,48 @@ async function triggerRenderExport() {
       pollJobStatus(data.job_id);
     } else if (data.license_required) {
       showToast('🔐 ' + data.error);
+      progressWrap.style.display = 'none';
       openLicenseModal();
     } else {
       showToast('⚠️ កំហុសក្នុងការ Render');
+      progressWrap.style.display = 'none';
     }
   } catch (err) {
     showToast('⚠️ កំហុស Server');
+    progressWrap.style.display = 'none';
   }
 }
 
 function pollJobStatus(jobId) {
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
-  const progressPercent = document.getElementById('render-progress-percent');
   const downloadBtn = document.getElementById('btn-download-result');
 
-  let failCount = 0;
   const interval = setInterval(async () => {
     try {
       const res = await fetch(`/api/job/${jobId}`);
-      if (!res.ok) {
-        failCount++;
-        if (failCount > 10) clearInterval(interval);
-        return;
-      }
-      failCount = 0;
       const job = await res.json();
 
-      const pct = job.progress !== undefined ? job.progress : 15;
-      progressBar.style.width = `${pct}%`;
-      if (progressPercent) progressPercent.innerText = `${pct}%`;
+      progressBar.style.width = `${job.progress || 30}%`;
       if (job.step) progressStatus.innerText = job.step;
 
       if (job.status === 'completed') {
         clearInterval(interval);
         progressBar.style.width = '100%';
-        if (progressPercent) progressPercent.innerText = '100%';
         progressStatus.innerText = '✓ ជោគជ័យ ១០០%! វីដេអូរួចរាល់សម្រាប់ការទាញយក។';
         downloadBtn.style.display = 'flex';
         downloadBtn.href = job.download_url;
         downloadBtn.setAttribute('download', job.filename);
-        showToast('✓ វីដេអូ Render ចប់សព្វគ្រប់ ១០០%!');
+        showToast('✓ វីដេអូ Render ចប់សព្វគ្រប់!');
       } else if (job.status === 'failed') {
         clearInterval(interval);
         progressStatus.innerText = `⚠️ បរាជ័យ: ${job.error || 'Unknown'}`;
         progressStatus.style.color = '#f87171';
       }
     } catch (e) {
-      failCount++;
-      if (failCount > 10) clearInterval(interval);
+      clearInterval(interval);
     }
-  }, 1200);
+  }, 1500);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2232,70 +1518,32 @@ window.addEventListener('DOMContentLoaded', () => {
   // Initialize sponsor preview
   updateSponsorContent();
 
-  // Initialize and clamp blur box limits (Default strictly OFF)
-  state.blurMask.enabled = false;
+  // Initialize and clamp blur box limits & default horizontal shape
   if (blurBox) {
-    blurBox.style.display = 'none';
-    blurBox.classList.remove('active-visible');
-    blurBox.style.width = '75px';
-    blurBox.style.height = '28px';
-    blurBox.style.left = '10px';
-    blurBox.style.top = '10px';
+    blurBox.style.width = '140px';
+    blurBox.style.height = '45px';
+    blurBox.style.left = '15px';
+    blurBox.style.top = '15px';
   }
   const initWSlider = document.getElementById('blur-w-slider');
   const initHSlider = document.getElementById('blur-h-slider');
-  if (initWSlider) initWSlider.value = 75;
-  if (initHSlider) initHSlider.value = 28;
+  if (initWSlider) initWSlider.value = 140;
+  if (initHSlider) initHSlider.value = 45;
   const initWVal = document.getElementById('blur-w-val');
   const initHVal = document.getElementById('blur-h-val');
-  if (initWVal) initWVal.innerText = '75px';
-  if (initHVal) initHVal.innerText = '28px';
-
-  const initXSlider = document.getElementById('blur-x-slider');
-  const initYSlider = document.getElementById('blur-y-slider');
-  if (initXSlider) initXSlider.value = 10;
-  if (initYSlider) initYSlider.value = 10;
-  const initXVal = document.getElementById('blur-x-val');
-  const initYVal = document.getElementById('blur-y-val');
-  if (initXVal) initXVal.innerText = '10px';
-  if (initYVal) initYVal.innerText = '10px';
-
-  const blurToggle = document.getElementById('toggle-blur');
-  if (blurToggle) blurToggle.checked = false;
-
-  // Initialize text size slider
-  const textSizeSlider = document.getElementById('text-size-slider');
-  if (textSizeSlider) textSizeSlider.value = 16;
-  const textSizeVal = document.getElementById('text-size-val');
-  if (textSizeVal) textSizeVal.innerText = '16px';
+  if (initWVal) initWVal.innerText = '140px';
+  if (initHVal) initHVal.innerText = '45px';
 
   updateBlurBoxLimits();
   window.addEventListener('resize', () => {
     updateBlurBoxLimits();
   });
 
-  // Enable passive touch listeners on all sliders for smooth mobile interactions
-  initPassiveSliderTouch();
-
   // Set default marquee animation
   updateMarqueeAnimation();
 
-  // Video Time Update & Playback listeners
+  // Video Time Update listener
   previewVideo.addEventListener('timeupdate', updateVideoTime);
-  previewVideo.addEventListener('play', () => {
-    const fb = document.getElementById('video-fallback-poster');
-    if (fb) fb.style.display = 'none';
-    const btn = document.getElementById('btn-play-toggle');
-    if (btn) btn.innerText = '⏸ ផ្អាក';
-  });
-  previewVideo.addEventListener('pause', () => {
-    const btn = document.getElementById('btn-play-toggle');
-    if (btn) btn.innerText = '▶️ ចាក់';
-  });
-  previewVideo.addEventListener('ended', () => {
-    const btn = document.getElementById('btn-play-toggle');
-    if (btn) btn.innerText = '▶️ ចាក់';
-  });
 
   // Effect button watcher: Part1 effect change
   document.getElementById('text-part1-effect')?.addEventListener('change', () => {
