@@ -103,7 +103,7 @@ const state = {
 };
 
 // ── DOM References ────────────────────────────────────────
-const previewVideo = document.getElementById('preview-video');
+const previewVideo = document.getElementById('previewVideo') || document.getElementById('preview-video');
 const videoViewport = document.getElementById('video-viewport');
 const videoOverlayLayer = document.getElementById('video-overlay-layer');
 
@@ -394,33 +394,63 @@ function handleVideoUpload(input) {
   if (!input.files || input.files.length === 0) return;
   const file = input.files[0];
   state.videoFile = file;
-  state.videoFilename = null; // Upload strictly deferred to 1-Click button!
 
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  previewVideo.style.display = 'block';
-  previewVideo.muted = false; // Enable audio immediately
-  previewVideo.playsInline = true;
-  previewVideo.setAttribute('playsinline', '');
-  previewVideo.setAttribute('webkit-playsinline', '');
+  const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || previewVideo;
+  if (!video) return;
 
-  // Instant Local Direct Play (0.1 second) - Zero network delay
-  const localUrl = URL.createObjectURL(file);
-  previewVideo.src = localUrl;
-  previewVideo.load();
-  previewVideo.play().catch(err => {
-    // If browser blocks unmuted autoplay without prior gesture, fallback to muted
-    previewVideo.muted = true;
-    previewVideo.play().catch(() => {});
-  });
+  video.style.display = 'block';
+  video.muted = false;
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
 
-  previewVideo.onloadedmetadata = () => {
+  // 1. Instant local direct playback (0.1s) with onloadeddata
+  try {
+    const localUrl = URL.createObjectURL(file);
+    video.src = localUrl;
+    video.onloadeddata = () => {
+      video.play().catch(err => {
+        // Fallback to muted if browser autoplay blocks audio
+        video.muted = true;
+        video.play().catch(() => {});
+      });
+    };
+    video.load();
+  } catch (err) {
+    console.warn('Local preview blob init:', err);
+  }
+
+  video.onloadedmetadata = () => {
     try {
-      previewVideo.currentTime = 0.05;
+      video.currentTime = 0.05;
     } catch (err) {}
     updateVideoTime();
   };
+
+  // 2. Background upload to Cloud Server for instant 1-Click + stream fallback
+  const formData = new FormData();
+  formData.append('file', file);
+  fetch('/api/upload', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        state.videoFilename = data.filename;
+        // If Android WebView MediaPlayer fails to decode blob (shows 00:00 or broken), switch to server stream:
+        if (video.error || (video.currentTime === 0 && video.paused)) {
+          const streamUrl = data.file_url || data.preview_url;
+          if (streamUrl) {
+            video.src = streamUrl;
+            if (data.thumbnail_url) video.poster = data.thumbnail_url;
+            video.load();
+            video.play().catch(() => {});
+          }
+        }
+      }
+    })
+    .catch(err => console.warn('Background sync note:', err));
 
   showToast('✓ វីដេអូបានបើកចាក់ភ្លាមៗ (0.1s)!');
 }

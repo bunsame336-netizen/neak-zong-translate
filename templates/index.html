@@ -30,28 +30,28 @@
       max-width: 100vw !important;
       height: 100vh !important;
       max-height: 100vh !important;
-      min-height: 100vh !important;
-      overflow: hidden !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
       background: #07080d !important;
-      display: flex !important;
-      flex-direction: column !important;
+      color: #ffffff !important;
+      font-family: 'Kantumruy Pro', -apple-system, sans-serif !important;
     }
 
     header.app-header {
       height: 40px !important;
       min-height: 40px !important;
       max-height: 40px !important;
-      flex: 0 0 40px !important;
+      width: 100vw !important;
       padding: 2px 10px !important;
       z-index: 100 !important;
       box-sizing: border-box !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
       background: rgba(14, 10, 26, 0.98) !important;
       border-bottom: 1px solid rgba(168, 85, 247, 0.3) !important;
+      position: sticky !important;
+      top: 0 !important;
     }
     .brand-title {
       font-size: 0.85rem !important;
@@ -63,21 +63,19 @@
 
     /* ════ FULL-SCREEN VERTICAL CONTAINER (NO DEAD SPACE) ════ */
     .studio-main-container {
-      flex: 1 1 auto !important;
       width: 100vw !important;
       max-width: 100vw !important;
-      height: calc(100vh - 40px) !important;
-      max-height: calc(100vh - 40px) !important;
+      min-height: calc(100vh - 40px) !important;
       margin: 0 !important;
-      padding: 4px 6px 6px 6px !important;
+      padding: 4px 6px 24px 6px !important;
       display: flex !important;
       flex-direction: column !important;
-      overflow: hidden !important;
       box-sizing: border-box !important;
-      gap: 5px !important;
+      gap: 6px !important;
+      background: transparent !important;
     }
 
-    /* ── 1. TOP: VIDEO PREVIEW STAGE (Live 9:16) ── */
+    /* ── 1. TOP: VIDEO STAGE (Centered 9:16 Live Preview) ── */
     .studio-stage-col {
       width: 100% !important;
       flex: 0 0 auto !important;
@@ -100,15 +98,16 @@
       display: flex !important;
       flex-direction: column !important;
       width: 100% !important;
-      max-width: 220px !important;
+      max-width: 230px !important;
+      margin: 0 auto !important;
     }
 
     .video-stage-viewport {
       position: relative !important;
       aspect-ratio: 9 / 16 !important;
       width: 100% !important;
-      height: 28vh !important;
-      max-height: 28vh !important;
+      height: 26vh !important;
+      max-height: 26vh !important;
       background: #050408 !important;
       display: flex !important;
       align-items: center !important;
@@ -145,7 +144,6 @@
     /* ── 2. MIDDLE: 1-CLICK ACTION BANNER ── */
     .auto-process-banner {
       width: 100% !important;
-      max-width: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
       flex-shrink: 0 !important;
@@ -176,20 +174,20 @@
       transform: scale(0.98) !important;
     }
 
-    /* ── 3. BOTTOM: CONTROLS & SLIDERS (Expands to fill 100% remaining space) ── */
+    /* ── 3. BOTTOM: CONTROLS & SLIDERS (Expands down, completely visible) ── */
     .studio-controls-col {
       width: 100% !important;
-      flex: 1 1 auto !important;
-      min-height: 0 !important; /* Critical for inner scrolling */
+      flex: 1 0 auto !important;
+      height: auto !important;
+      max-height: none !important;
       display: flex !important;
       flex-direction: column !important;
-      overflow: hidden !important;
-      background: rgba(14, 10, 26, 0.75) !important;
+      background: rgba(14, 10, 26, 0.8) !important;
       border: 1px solid rgba(168, 85, 247, 0.3) !important;
       border-radius: 8px !important;
-      padding: 0 !important;
+      padding: 4px !important;
       box-sizing: border-box !important;
-      gap: 0 !important;
+      gap: 4px !important;
     }
 
     /* ── FIXED GRID TABS: repeat(4, 1fr) - NO JITTER, ZERO HORIZONTAL SHIFT ── */
@@ -200,8 +198,8 @@
       width: 100% !important;
       background: rgba(10, 7, 20, 0.98) !important;
       border-bottom: 1px solid rgba(168, 85, 247, 0.3) !important;
-      border-radius: 8px 8px 0 0 !important;
-      padding: 4px !important;
+      border-radius: 6px 6px 0 0 !important;
+      padding: 3px !important;
       flex: 0 0 auto !important;
       box-sizing: border-box !important;
     }
@@ -235,18 +233,12 @@
       box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4) !important;
     }
 
-    /* Tab Panels Area: Spacious, scrollable, fills 100% bottom */
+    /* Tab Panels: Spacious, visible, comfortable sliders */
     .tab-panel-card {
       width: 100% !important;
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 8px 8px 30px 8px !important;
+      display: none !important;
+      padding: 6px 4px 16px 4px !important;
       box-sizing: border-box !important;
-      scrollbar-width: thin !important;
-      display: none;
     }
     .tab-panel-card.active {
       display: flex !important;
@@ -427,7 +419,7 @@
             <div class="placeholder-sub">Live Preview 9:16 បញ្ឈរធំច្បាស់</div>
           </div>
 
-          <video id="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
+          <video id="previewVideo" name="preview-video" playsinline webkit-playsinline muted controls preload="auto" style="display:none;"></video>
 
           <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
           <div class="video-overlay-layer" id="video-overlay-layer">
@@ -482,9 +474,6 @@
             </button>
             <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
               ⏮ ដើម
-            </button>
-            <button type="button" class="btn-ctrl" id="btn-toggle-sound" onclick="previewVideo.muted = !previewVideo.muted; this.innerText = previewVideo.muted ? '🔇 សំឡេង' : '🔊 សំឡេង';">
-              🔊 សំឡេង
             </button>
           </div>
           <div class="time-display" id="video-time-display">00:00 / 00:00</div>
