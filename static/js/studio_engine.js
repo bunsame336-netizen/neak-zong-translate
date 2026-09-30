@@ -123,11 +123,6 @@ function switchStudioTab(tabId) {
   document.querySelectorAll('.tab-nav-btn').forEach(btn => {
     const isTarget = btn.getAttribute('data-tab') === tabId;
     btn.classList.toggle('active', isTarget);
-    if (isTarget) {
-      try {
-        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      } catch (e) {}
-    }
   });
   document.querySelectorAll('.tab-panel-card').forEach(panel => {
     panel.classList.remove('active');
@@ -395,29 +390,30 @@ async function revokeAdminKey(key) {
 // ══════════════════════════════════════════════════════════
 // ⚡ 2. MEDIA UPLOAD & HANDLING
 // ══════════════════════════════════════════════════════════
-async function handleVideoUpload(input) {
+function handleVideoUpload(input) {
   if (!input.files || input.files.length === 0) return;
   const file = input.files[0];
   state.videoFile = file;
+  state.videoFilename = null; // Upload strictly deferred to 1-Click button!
 
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
   previewVideo.style.display = 'block';
-  previewVideo.muted = true;
+  previewVideo.muted = false; // Enable audio immediately
   previewVideo.playsInline = true;
   previewVideo.setAttribute('playsinline', '');
   previewVideo.setAttribute('webkit-playsinline', '');
 
-  let localUrl = null;
-  try {
-    localUrl = URL.createObjectURL(file);
-    previewVideo.src = localUrl;
-    previewVideo.load();
+  // Instant Local Direct Play (0.1 second) - Zero network delay
+  const localUrl = URL.createObjectURL(file);
+  previewVideo.src = localUrl;
+  previewVideo.load();
+  previewVideo.play().catch(err => {
+    // If browser blocks unmuted autoplay without prior gesture, fallback to muted
+    previewVideo.muted = true;
     previewVideo.play().catch(() => {});
-  } catch (err) {
-    console.warn('Local preview blob init:', err);
-  }
+  });
 
   previewVideo.onloadedmetadata = () => {
     try {
@@ -426,37 +422,7 @@ async function handleVideoUpload(input) {
     updateVideoTime();
   };
 
-  previewVideo.oncanplay = () => {
-    previewVideo.play().catch(() => {});
-  };
-
-  showToast('🎬 កំពុងបើកវីដេអូ & Sync Cloud...');
-
-  // Upload to Cloud Server in background
-  const formData = new FormData();
-  formData.append('file', file);
-  
-  try {
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.status === 'ok') {
-      state.videoFilename = data.filename;
-      // Switch video player to server stream (H.264 preview or direct file stream)
-      // This completely solves the Android WebView blob limitation!
-      const streamUrl = data.file_url || data.preview_url;
-      if (streamUrl) {
-        previewVideo.src = streamUrl;
-        if (data.thumbnail_url) {
-          previewVideo.poster = data.thumbnail_url;
-        }
-        previewVideo.load();
-        previewVideo.play().catch(() => {});
-      }
-      showToast('✓ វីដេអូបានភ្ជាប់ទៅកាន់ Cloud Server (Ready for AI)');
-    }
-  } catch (err) {
-    console.warn('Local preview active, cloud sync note:', err);
-  }
+  showToast('✓ វីដេអូបានបើកចាក់ភ្លាមៗ (0.1s)!');
 }
 
 async function handleSrtUpload(input) {

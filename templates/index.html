@@ -27,70 +27,67 @@
       margin: 0 !important;
       padding: 0 !important;
       width: 100vw !important;
-      max-width: 100% !important;
-      height: 100dvh !important;
-      max-height: 100dvh !important;
-      min-height: 100dvh !important;
+      max-width: 100vw !important;
+      height: 100vh !important;
+      max-height: 100vh !important;
+      min-height: 100vh !important;
       overflow: hidden !important;
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
       right: 0 !important;
       bottom: 0 !important;
+      background: #07080d !important;
+      display: flex !important;
+      flex-direction: column !important;
     }
+
     header.app-header {
-      height: 44px !important;
-      min-height: 44px !important;
-      max-height: 44px !important;
-      flex: 0 0 44px !important;
-      padding: 2px 8px !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      flex: 0 0 40px !important;
+      padding: 2px 10px !important;
       z-index: 100 !important;
       box-sizing: border-box !important;
+      background: rgba(14, 10, 26, 0.98) !important;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.3) !important;
     }
     .brand-title {
       font-size: 0.85rem !important;
     }
     .brand-dragon-badge {
-      width: 28px !important;
-      height: 28px !important;
+      width: 26px !important;
+      height: 26px !important;
     }
 
-    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID (MATCH USER SCREENSHOT EXACTLY) ════ */
+    /* ════ FULL-SCREEN VERTICAL CONTAINER (NO DEAD SPACE) ════ */
     .studio-main-container {
-      display: grid !important;
-      grid-template-columns: 46% 54% !important;
+      flex: 1 1 auto !important;
       width: 100vw !important;
-      max-width: 100% !important;
-      height: calc(100dvh - 44px) !important;
-      max-height: calc(100dvh - 44px) !important;
+      max-width: 100vw !important;
+      height: calc(100vh - 40px) !important;
+      max-height: calc(100vh - 40px) !important;
       margin: 0 !important;
-      padding: 3px 4px 6px 4px !important;
+      padding: 4px 6px 6px 6px !important;
+      display: flex !important;
+      flex-direction: column !important;
       overflow: hidden !important;
       box-sizing: border-box !important;
       gap: 5px !important;
     }
 
-    /* ── LEFT COLUMN (46%): VIDEO PREVIEW + PLAYBACK + 1-CLICK ACTION ── */
+    /* ── 1. TOP: VIDEO PREVIEW STAGE (Live 9:16) ── */
     .studio-stage-col {
       width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
+      flex: 0 0 auto !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-items: stretch !important;
-      padding: 0 3px 0 0 !important;
+      align-items: center !important;
+      padding: 0 !important;
       border: none !important;
-      border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
       background: transparent !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      box-sizing: border-box !important;
       gap: 4px !important;
-      scrollbar-width: none !important;
-    }
-    .studio-stage-col::-webkit-scrollbar {
-      display: none !important;
     }
 
     .video-stage-card {
@@ -102,18 +99,16 @@
       position: relative !important;
       display: flex !important;
       flex-direction: column !important;
-      flex-shrink: 0 !important;
       width: 100% !important;
-      max-width: 100% !important;
-      height: auto !important;
-      max-height: none !important;
+      max-width: 220px !important;
     }
 
     .video-stage-viewport {
       position: relative !important;
       aspect-ratio: 9 / 16 !important;
       width: 100% !important;
-      max-height: 48vh !important;
+      height: 28vh !important;
+      max-height: 28vh !important;
       background: #050408 !important;
       display: flex !important;
       align-items: center !important;
@@ -123,14 +118,15 @@
     }
 
     .video-toolbar {
-      height: 24px !important;
-      min-height: 24px !important;
-      padding: 1px 4px !important;
+      height: 22px !important;
+      min-height: 22px !important;
+      padding: 1px 6px !important;
       flex-shrink: 0 !important;
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
       background: #080612 !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     .video-toolbar .playback-controls {
       display: flex !important;
@@ -139,150 +135,161 @@
     }
     .video-toolbar .btn-ctrl {
       font-size: 0.62rem !important;
-      padding: 2px 5px !important;
-      height: 20px !important;
+      padding: 2px 6px !important;
+      height: 18px !important;
     }
     .video-toolbar .time-display {
       font-size: 0.58rem !important;
     }
 
+    /* ── 2. MIDDLE: 1-CLICK ACTION BANNER ── */
     .auto-process-banner {
       width: 100% !important;
-      margin: 2px 0 0 0 !important;
+      max-width: 100% !important;
+      margin: 0 !important;
       padding: 0 !important;
       flex-shrink: 0 !important;
-      border-radius: 6px !important;
+      border-radius: 8px !important;
     }
     .btn-auto-process {
-      padding: 6px 4px !important;
-      font-size: 0.68rem !important;
+      padding: 8px 6px !important;
+      font-size: 0.82rem !important;
       font-weight: 800 !important;
       width: 100% !important;
-      min-height: 32px !important;
-      height: auto !important;
+      min-height: 40px !important;
+      height: 40px !important;
+      display: flex !important;
+      align-items: center !important;
       justify-content: center !important;
-      letter-spacing: 0px !important;
-      border-radius: 6px !important;
+      letter-spacing: 0.3px !important;
+      border-radius: 8px !important;
       text-align: center !important;
       white-space: normal !important;
       line-height: 1.25 !important;
+      background: linear-gradient(135deg, #ec4899 0%, #a855f7 50%, #06b6d4 100%) !important;
+      color: #ffffff !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.45) !important;
+      box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4) !important;
+      cursor: pointer !important;
+    }
+    .btn-auto-process:active {
+      transform: scale(0.98) !important;
     }
 
-    /* ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── */
+    /* ── 3. BOTTOM: CONTROLS & SLIDERS (Expands to fill 100% remaining space) ── */
     .studio-controls-col {
       width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important; /* Critical for inner scrolling */
       display: flex !important;
       flex-direction: column !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      -webkit-overflow-scrolling: touch !important;
-      padding: 0 2px 40px 2px !important;
-      background: transparent !important;
+      overflow: hidden !important;
+      background: rgba(14, 10, 26, 0.75) !important;
+      border: 1px solid rgba(168, 85, 247, 0.3) !important;
+      border-radius: 8px !important;
+      padding: 0 !important;
       box-sizing: border-box !important;
-      gap: 4px !important;
-      scrollbar-width: thin !important;
+      gap: 0 !important;
     }
 
-    /* Tabs Bar at top of Controls */
+    /* ── FIXED GRID TABS: repeat(4, 1fr) - NO JITTER, ZERO HORIZONTAL SHIFT ── */
     .studio-tabs-nav {
-      display: flex !important;
-      flex-direction: row !important;
-      flex-wrap: nowrap !important;
-      overflow-x: auto !important;
-      overflow-y: hidden !important;
-      -webkit-overflow-scrolling: touch !important;
-      white-space: nowrap !important;
-      width: 100% !important;
-      background: rgba(14, 10, 26, 0.95) !important;
-      border: 1px solid rgba(168, 85, 247, 0.3) !important;
-      border-radius: 6px !important;
-      padding: 2px !important;
+      display: grid !important;
+      grid-template-columns: repeat(4, 1fr) !important;
       gap: 3px !important;
-      flex-shrink: 0 !important;
-      height: 32px !important;
-      min-height: 32px !important;
-      max-height: 32px !important;
-      scrollbar-width: none !important;
-    }
-    .studio-tabs-nav::-webkit-scrollbar {
-      display: none !important;
+      width: 100% !important;
+      background: rgba(10, 7, 20, 0.98) !important;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.3) !important;
+      border-radius: 8px 8px 0 0 !important;
+      padding: 4px !important;
+      flex: 0 0 auto !important;
+      box-sizing: border-box !important;
     }
 
     .tab-nav-btn {
-      flex: 0 0 auto !important;
-      padding: 0 7px !important;
-      font-size: 0.68rem !important;
-      font-weight: 700 !important;
-      border-radius: 4px !important;
-      display: inline-flex !important;
+      flex: 1 1 auto !important;
+      width: 100% !important;
+      display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 2px !important;
+      font-size: 0.68rem !important;
+      font-weight: 700 !important;
+      padding: 5px 2px !important;
+      height: 28px !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 6px !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: #94a3b8 !important;
       white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      text-align: center !important;
       cursor: pointer !important;
-      height: 26px !important;
-      min-height: 26px !important;
-    }
-    .tab-nav-btn[data-tab="marquee"] {
-      border-color: rgba(245, 158, 11, 0.5) !important;
-      background: rgba(245, 158, 11, 0.15) !important;
-      color: #fbbf24 !important;
-      font-weight: 800 !important;
+      transition: all 0.15s ease !important;
     }
 
-    /* Active Tab Panel */
+    .tab-nav-btn.active {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(6, 182, 212, 0.8)) !important;
+      color: #ffffff !important;
+      border-color: #c084fc !important;
+      box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4) !important;
+    }
+
+    /* Tab Panels Area: Spacious, scrollable, fills 100% bottom */
     .tab-panel-card {
       width: 100% !important;
-      padding: 5px 6px !important;
-      background: rgba(15, 11, 26, 0.96) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      border-radius: 6px !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      padding: 8px 8px 30px 8px !important;
       box-sizing: border-box !important;
-      gap: 4px !important;
-      display: none !important;
+      scrollbar-width: thin !important;
+      display: none;
     }
     .tab-panel-card.active {
       display: flex !important;
       flex-direction: column !important;
+      gap: 6px !important;
     }
+
     .panel-section-title {
-      font-size: 0.7rem !important;
-      padding: 1px 0 !important;
+      font-size: 0.72rem !important;
+      padding: 2px 0 !important;
       margin: 0 !important;
     }
     .form-row {
       margin: 0 !important;
-      gap: 1px !important;
+      gap: 2px !important;
     }
     .form-label {
-      font-size: 0.62rem !important;
-      margin-bottom: 1px !important;
+      font-size: 0.65rem !important;
+      margin-bottom: 2px !important;
     }
     .form-label-val {
-      font-size: 0.6rem !important;
+      font-size: 0.62rem !important;
     }
     .cyber-input {
-      font-size: 0.68rem !important;
-      padding: 2px 4px !important;
-      height: 28px !important;
+      font-size: 0.70rem !important;
+      padding: 4px 6px !important;
+      height: 30px !important;
     }
     .slider-group-box {
-      padding: 4px 6px !important;
-      gap: 2px !important;
-      border-radius: 5px !important;
+      padding: 5px 7px !important;
+      gap: 3px !important;
+      border-radius: 6px !important;
     }
     .slider-group-title {
-      font-size: 0.62rem !important;
-      margin-bottom: 2px !important;
+      font-size: 0.65rem !important;
+      margin-bottom: 3px !important;
     }
 
     /* Touch-friendly Sliders */
     .cyber-slider {
       width: 100% !important;
-      height: 6px !important;
-      margin: 2px 0 !important;
+      height: 8px !important;
+      margin: 4px 0 !important;
       touch-action: pan-x !important;
       -webkit-appearance: none !important;
       appearance: none !important;
@@ -291,8 +298,8 @@
     .cyber-slider::-webkit-slider-thumb {
       -webkit-appearance: none !important;
       appearance: none !important;
-      width: 20px !important;
-      height: 20px !important;
+      width: 22px !important;
+      height: 22px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
       border: 2px solid #ffffff !important;
@@ -300,8 +307,8 @@
       cursor: pointer !important;
     }
     .cyber-slider::-moz-range-thumb {
-      width: 20px !important;
-      height: 20px !important;
+      width: 22px !important;
+      height: 22px !important;
       border-radius: 50% !important;
       background: var(--neon-purple-bright) !important;
       border: 2px solid #ffffff !important;
@@ -318,8 +325,8 @@
     }
     .btn-color-quick {
       border: none !important;
-      padding: 2px 7px !important;
-      font-size: 0.62rem !important;
+      padding: 3px 8px !important;
+      font-size: 0.64rem !important;
       font-weight: 700 !important;
       border-radius: 4px !important;
       cursor: pointer !important;
@@ -332,12 +339,11 @@
       transform: scale(0.92) !important;
     }
 
-    /* Pure Blur Box without text */
+    /* Blur Box: Pure semi-transparent tint, zero hardware black crash */
     #blur-overlay-box {
       border: 1.5px dashed var(--neon-cyan-bright) !important;
-      backdrop-filter: blur(16px) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
-      background: rgba(0, 0, 0, 0.4) !important;
+      background: rgba(0, 240, 255, 0.15) !important;
+      box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.25) !important;
     }
     .blur-watermark-label {
       display: none !important;
@@ -477,6 +483,9 @@
             <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
               ⏮ ដើម
             </button>
+            <button type="button" class="btn-ctrl" id="btn-toggle-sound" onclick="previewVideo.muted = !previewVideo.muted; this.innerText = previewVideo.muted ? '🔇 សំឡេង' : '🔊 សំឡេង';">
+              🔊 សំឡេង
+            </button>
           </div>
           <div class="time-display" id="video-time-display">00:00 / 00:00</div>
         </div>
@@ -507,29 +516,29 @@
     <div class="studio-controls-col">
       <!-- Tabs Bar at Top of Controls Column (Logo, Blur, Text, Sponsor, Marquee) -->
       <nav class="studio-tabs-nav">
-        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
-          🖼️ Logo
-        </button>
         <button type="button" class="tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
-          🌫️ ព្រាល Blur
+          🌫️ ព្រាល
         </button>
         <button type="button" class="tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
           📝 Text
         </button>
         <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
-          🤝 Sponsor
+          📢 Sponsor
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
+          🖼️ Logo
         </button>
         <button type="button" class="tab-nav-btn" data-tab="marquee" id="tab-nav-marquee" onclick="switchStudioTab('marquee')">
-          🎬 Marquee
+          📜 Marquee
         </button>
         <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
           🎙️ សំឡេង
         </button>
         <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
-          📂 Media
+          📁 Media
         </button>
         <button type="button" class="tab-nav-btn" data-tab="tools" onclick="switchStudioTab('tools')">
-          ✂️ Export
+          ⚙️ Export
         </button>
       </nav>
 
