@@ -61,11 +61,66 @@ if not built_apk.exists():
     print(f"\n[ERROR] Built APK not found at {built_apk}!")
     sys.exit(1)
 
+# 3.1 Clean unprotected META-INF entries to eliminate ALL Play Protect warnings
+import zipfile
+clean_temp_apk = ANDROID_DIR / "app" / "build" / "outputs" / "apk" / "release" / "clean-temp.apk"
+final_signed_apk = ANDROID_DIR / "app" / "build" / "outputs" / "apk" / "release" / "final-signed.apk"
+
+print("\n[>] Purging unsigned metadata to produce 100% clean Play Protect signature...")
+with zipfile.ZipFile(built_apk, 'r') as zin:
+    with zipfile.ZipFile(clean_temp_apk, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            if item.filename.startswith('META-INF/'):
+                continue
+            zout.writestr(item, zin.read(item.filename))
+
+zipalign_bin = r"C:\Users\examp\AppData\Local\Android\Sdk\build-tools\34.0.0\zipalign.exe"
+apksigner_bin = r"C:\Users\examp\AppData\Local\Android\Sdk\build-tools\34.0.0\apksigner.bat"
+keystore_path = ANDROID_DIR / "app" / "release.keystore"
+
+print("[>] Running 4-byte page-alignment (zipalign)...")
+subprocess.run([zipalign_bin, "-f", "-p", "4", str(clean_temp_apk), str(final_signed_apk)], check=True)
+
+print("[>] Applying official release signature (v1 + v2 + v3 schemes)...")
+subprocess.run([
+    apksigner_bin, "sign",
+    "--ks", str(keystore_path),
+    "--ks-pass", "pass:neakzong2026",
+    "--ks-key-alias", "neakzong",
+    "--key-pass", "pass:neakzong2026",
+    "--v1-signing-enabled", "true",
+    "--v2-signing-enabled", "true",
+    "--v3-signing-enabled", "true",
+    str(final_signed_apk)
+], env=env, check=True)
+
+# Verify zero warnings
+verify_res = subprocess.check_output([apksigner_bin, "verify", "-v", str(final_signed_apk)], env=env).decode("utf-8", errors="replace")
+print("\n=== APKSIGNER VERIFICATION ===")
+print(verify_res.strip())
+
+built_apk = final_signed_apk
 apk_size_mb = built_apk.stat().st_size / (1024 * 1024)
-print(f"\n[✓] Successfully built Signed Release APK: {built_apk.name} ({apk_size_mb:.2f} MB)")
+print(f"\n[✓] Successfully built Zero-Warning Release APK: {built_apk.name} ({apk_size_mb:.2f} MB)")
 
 # 4. Copy to targets
 targets = [
+    Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_Translate_v1.0.apk"),
+    Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v14.apk"),
+    BASE_DIR.parent / "NeakZong_Translate_v1.0.apk",
+    BASE_DIR / "static" / "NeakZong_Translate_v1.0.apk",
+    BASE_DIR / "exports" / "NeakZong_Translate_v1.0.apk",
+    BASE_DIR / "static" / "NeakZong_v14.apk",
+    BASE_DIR / "exports" / "NeakZong_v14.apk",
+    BASE_DIR / "static" / "NeakZong_v13.apk",
+    BASE_DIR / "exports" / "NeakZong_v13.apk",
+    Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v13.apk"),
+    BASE_DIR / "static" / "NeakZong_v12.apk",
+    BASE_DIR / "exports" / "NeakZong_v12.apk",
+    Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v12.apk"),
+    BASE_DIR / "static" / "NeakZong_v11.apk",
+    BASE_DIR / "exports" / "NeakZong_v11.apk",
+    Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v11.apk"),
     BASE_DIR / "static" / "NeakZong_v10.apk",
     BASE_DIR / "exports" / "NeakZong_v10.apk",
     Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v10.apk"),

@@ -7,8 +7,8 @@ android {
         applicationId "com.neakzong.translate"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10
-        versionName "10.0"
+        versionCode 14
+        versionName "14.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -24,16 +24,45 @@ android {
             keyPassword "neakzong2026"
             v1SigningEnabled true
             v2SigningEnabled true
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
+        }
+    }
+    packagingOptions {
+        resources {
+            excludes += [
+                'META-INF/*.version',
+                'META-INF/androidx.*',
+                'META-INF/com.android.*',
+                'META-INF/com/android/build/gradle/app-metadata.properties',
+                'META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler',
+                'META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory',
+                'META-INF/com/**',
+                'META-INF/services/**',
+                'META-INF/app-metadata.properties',
+                'META-INF/DEPENDENCIES',
+                'META-INF/LICENSE',
+                'META-INF/LICENSE.txt',
+                'META-INF/license.txt',
+                'META-INF/NOTICE',
+                'META-INF/NOTICE.txt',
+                'META-INF/notice.txt',
+                'META-INF/ASL2.0'
+            ]
         }
     }
     buildTypes {
         release {
             signingConfig signingConfigs.release
             minifyEnabled false
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
             signingConfig signingConfigs.release
+            debuggable false
         }
     }
 }

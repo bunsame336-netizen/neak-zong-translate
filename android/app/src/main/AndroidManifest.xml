@@ -7,6 +7,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:hardwareAccelerated="true"
         android:theme="@style/AppTheme">
 
         <activity
@@ -15,6 +17,7 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
+            android:hardwareAccelerated="true"
             android:exported="true">
 
             <intent-filter>
@@ -35,7 +38,11 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
-
+    <!-- Clean Scoped Permissions for Play Protect & Modern Android -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 </manifest>
