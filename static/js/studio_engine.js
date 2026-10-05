@@ -407,38 +407,67 @@ function handleVideoUpload(input) {
   video.style.display = 'block';
   video.playsInline = true;
   video.controls = true;
+  video.muted = true;
+  video.defaultMuted = true;
+  video.autoplay = true;
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('controls', 'true');
   video.setAttribute('preload', 'auto');
 
-  // URL.createObjectURL and onloadedmetadata play()
+  // Bulletproof video loading for Android WebView & Desktop
   if (file) {
     if (state.localVideoUrl) {
       try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
     }
-    const blobUrl = URL.createObjectURL(file);
+
+    // Explicit video/mp4 MIME type ensures Android MediaPlayer doesn't reject untyped blobs
+    const mimeType = (file.type && file.type.startsWith('video/')) ? file.type : 'video/mp4';
+    const cleanBlob = new Blob([file], { type: mimeType });
+    const blobUrl = URL.createObjectURL(cleanBlob);
     state.localVideoUrl = blobUrl;
+
     video.src = blobUrl;
+
     video.onloadedmetadata = function() {
       const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);
       const vp = document.getElementById('video-viewport');
       if (vp) {
         vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
       }
-      try {
-        video.currentTime = 0.05;
-      } catch (err) {}
       updateVideoTime();
-      const p = video.play();
-      if (p !== undefined) {
-        p.catch(err => {
-          console.log('Autoplay unmuted notice, retrying with muted:', err);
-          video.muted = true;
-          video.play().catch(() => {});
-        });
-      }
+      video.play().catch(function() {
+        video.muted = true;
+        video.play().catch(function() {});
+      });
     };
+
+    video.oncanplay = function() {
+      updateVideoTime();
+      video.play().catch(function() {});
+    };
+
+    // Fallback: If blob decoding fails in WebView, read directly via FileReader
+    video.onerror = function() {
+      console.warn('Direct blob URL playback failed, loading via FileReader ArrayBuffer fallback...');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const abBlob = new Blob([e.target.result], { type: 'video/mp4' });
+          const fallbackUrl = URL.createObjectURL(abBlob);
+          video.src = fallbackUrl;
+          video.load();
+          video.play().catch(function() {
+            video.muted = true;
+            video.play().catch(function() {});
+          });
+        } catch (errFallback) {
+          console.error('FileReader fallback failed:', errFallback);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    };
+
     video.load();
   }
 
