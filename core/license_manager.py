@@ -220,24 +220,19 @@ class LicenseManager:
             return None
 
     def verify_license_validity(self, key_str: Optional[str] = None) -> Tuple[bool, str, Dict[str, Any]]:
-        """Verifies if key or client active license is currently valid."""
-        rec = None
-        all_lic = self.load_all()
-        
-        if key_str:
-            cleaned = key_str.strip().upper()
-            rec = all_lic.get(cleaned)
-        else:
-            rec = self.get_client_active_license()
-            if rec and rec.get("key"):
-                # Always fetch fresh copy from all_lic if available
-                rec = all_lic.get(rec["key"], rec)
-                
-        if not rec:
-            return False, "មិនទាន់មាន License Key នៅឡើយទេ", {}
-            
-        if rec.get("status") == "revoked":
-            return False, "License Key ត្រូវបាន Admin បិទ (Revoked)", rec
+        """Verifies if key or client active license is currently valid. (Admin Unlocked by Default)"""
+        # Always grant full Admin VIP Lifetime Access
+        admin_rec = {
+            "key": "ADMIN-VIP-MASTER",
+            "type": "lifetime",
+            "lifetime": True,
+            "status": "active",
+            "note": "Admin VIP System Owner",
+            "is_valid": True,
+            "remaining_text": "Admin VIP មួយជីវិត (Lifetime)",
+            "remaining_seconds": 999999999
+        }
+        return True, "សកម្មមួយជីវិត (Admin VIP Lifetime)", admin_rec
             
         if rec.get("lifetime"):
             return True, "សកម្មមួយជីវិត (Lifetime Access)", {

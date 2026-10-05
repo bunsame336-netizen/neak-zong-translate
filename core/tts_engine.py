@@ -113,12 +113,19 @@ def synthesize_khmer_voice(
 
     return False
 
+def _find_ffmpeg_bin() -> str:
+    try:
+        from .video_processor import find_ffmpeg
+        return find_ffmpeg()
+    except Exception:
+        return 'ffmpeg'
+
 def apply_audio_ducking(
     original_audio_path: str,
     voiceover_path: str,
     output_path: str,
     duck_level: float = 0.15,
-    ffmpeg_bin: str = 'ffmpeg'
+    ffmpeg_bin: str = None
 ) -> bool:
     """
     Mixes voiceover with original audio, reducing original audio to duck_level (10%-15%)
@@ -126,6 +133,7 @@ def apply_audio_ducking(
     Ensures Khmer voice is crystal clear (180% volume) and never drowned out by background noise.
     """
     try:
+        ff = ffmpeg_bin if (ffmpeg_bin and ffmpeg_bin != 'ffmpeg' and os.path.exists(ffmpeg_bin)) else _find_ffmpeg_bin()
         # Check if voiceover exists
         if not os.path.exists(voiceover_path) or os.path.getsize(voiceover_path) < 200:
             return False
@@ -136,18 +144,17 @@ def apply_audio_ducking(
             return True
 
         # FFmpeg filter:
-        # [0:a] is original audio, [1:a] is voiceover
-        # sidechaincompress aggressively dips background when voiceover triggers
+        # [0:a] is original Chinese dialogue / BGM, [1:a] is Khmer voiceover
+        # sidechaincompress aggressively dips Chinese speech (ratio=16, attack=5ms) whenever Khmer speaks
         filter_complex = (
-            f"[0:a]volume=0.30[bg];"
-            f"[bg][1:a]sidechaincompress=threshold=0.08:ratio=12:attack=10:release=350[ducked];"
-            f"[ducked]volume=0.30[ducked_low];"
-            f"[1:a]volume=1.8[voice];"
-            f"[ducked_low][voice]amix=inputs=2:duration=first:dropout_transition=2[out]"
+            f"[0:a]volume=0.38[bg];"
+            f"[bg][1:a]sidechaincompress=threshold=0.05:ratio=16:attack=5:release=250[ducked];"
+            f"[1:a]volume=1.9[voice];"
+            f"[ducked][voice]amix=inputs=2:duration=first:dropout_transition=1[out]"
         )
         
         cmd = [
-            ffmpeg_bin, '-y',
+            ff, '-y',
             '-threads', '4',
             '-i', original_audio_path,
             '-i', voiceover_path,

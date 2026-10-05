@@ -140,6 +140,35 @@ class ChineseSpeechRecognizer:
                     })
                     idx += 1
 
+            if cues_list and target_audio and os.path.exists(target_audio):
+                try:
+                    import librosa
+                    import numpy as np
+                    y_audio, sr_audio = librosa.load(target_audio, sr=16000)
+                    for c in cues_list:
+                        s_idx = max(0, int(float(c.get('start', 0)) * sr_audio))
+                        e_idx = min(len(y_audio), int(float(c.get('end', 0)) * sr_audio))
+                        if e_idx - s_idx >= int(sr_audio * 0.12):
+                            slice_y = y_audio[s_idx:e_idx]
+                            rms = float(np.sqrt(np.mean(slice_y**2)))
+                            if rms >= 0.003:
+                                f0 = librosa.yin(slice_y, fmin=65, fmax=350, sr=sr_audio)
+                                valid_f0 = f0[~np.isnan(f0)]
+                                if len(valid_f0) >= 3:
+                                    med_f0 = float(np.median(valid_f0))
+                                    c['pitch_hz'] = round(med_f0, 1)
+                                    if med_f0 < 165.0:
+                                        c['gender'] = 'male'
+                                        c['voice'] = 'male'
+                                    elif med_f0 > 175.0:
+                                        c['gender'] = 'female'
+                                        c['voice'] = 'female'
+                                    else:
+                                        c['gender'] = 'female' if med_f0 >= 170.0 else 'male'
+                                        c['voice'] = c['gender']
+                except Exception:
+                    pass
+
             if not cues_list:
                 cues_list = self._fallback_cues(actual_duration)
             return cues_list

@@ -398,20 +398,26 @@ def _build_filter_graph(
         h_pct = blur_opts.get('h_pct')
 
         if x_pct is not None and y_pct is not None and w_pct is not None and h_pct is not None:
-            # Resolution-independent exact pixel formulas using FFmpeg iw & ih
-            bx_expr = f"trunc(iw*{max(0.0, min(0.95, float(x_pct))):.4f})"
-            by_expr = f"trunc(ih*{max(0.0, min(0.95, float(y_pct))):.4f})"
-            bw_expr = f"trunc(iw*{max(0.02, min(1.0, float(w_pct))):.4f})"
-            bh_expr = f"trunc(ih*{max(0.02, min(1.0, float(h_pct))):.4f})"
+            # Resolution-independent exact pixel formulas
+            crop_x = f"trunc(iw*{max(0.0, min(0.95, float(x_pct))):.4f})"
+            crop_y = f"trunc(ih*{max(0.0, min(0.95, float(y_pct))):.4f})"
+            crop_w = f"trunc(iw*{max(0.02, min(1.0, float(w_pct))):.4f})"
+            crop_h = f"trunc(ih*{max(0.02, min(1.0, float(h_pct))):.4f})"
+            overlay_x = f"trunc(W*{max(0.0, min(0.95, float(x_pct))):.4f})"
+            overlay_y = f"trunc(H*{max(0.0, min(0.95, float(y_pct))):.4f})"
+            box_x = crop_x
+            box_y = crop_y
+            box_w = crop_w
+            box_h = crop_h
         else:
             bx = max(0, min(710, int(blur_opts.get('x', 10))))
             by = max(0, min(1270, int(blur_opts.get('y', 10))))
             bw = max(10, min(720 - bx, int(blur_opts.get('w', 120))))
             bh = max(10, min(1280 - by, int(blur_opts.get('h', 45))))
-            bx_expr = str(bx)
-            by_expr = str(by)
-            bw_expr = str(bw)
-            bh_expr = str(bh)
+            crop_x = overlay_x = box_x = str(bx)
+            crop_y = overlay_y = box_y = str(by)
+            crop_w = box_w = str(bw)
+            crop_h = box_h = str(bh)
 
         if tint_mode == 'white':
             tint_color = 'white'
@@ -427,16 +433,16 @@ def _build_filter_graph(
             out = next_pad()
             blur_chain = (
                 f"{current_pad}split=2[base_{uid}][work_{uid}];"
-                f"[work_{uid}]crop={bw_expr}:{bh_expr}:{bx_expr}:{by_expr},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
-                f"[base_{uid}][blurred_{uid}]overlay={bx_expr}:{by_expr}{out_blur};"
-                f"{out_blur}drawbox=x={bx_expr}:y={by_expr}:w={bw_expr}:h={bh_expr}:color={tint_color}@{tint_opacity:.2f}:t=fill{out}"
+                f"[work_{uid}]crop={crop_w}:{crop_h}:{crop_x}:{crop_y},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
+                f"[base_{uid}][blurred_{uid}]overlay={overlay_x}:{overlay_y}{out_blur};"
+                f"{out_blur}drawbox=x={box_x}:y={box_y}:w={box_w}:h={box_h}:color={tint_color}@{tint_opacity:.2f}:t=fill{out}"
             )
         else:
             out = next_pad()
             blur_chain = (
                 f"{current_pad}split=2[base_{uid}][work_{uid}];"
-                f"[work_{uid}]crop={bw_expr}:{bh_expr}:{bx_expr}:{by_expr},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
-                f"[base_{uid}][blurred_{uid}]overlay={bx_expr}:{by_expr}{out}"
+                f"[work_{uid}]crop={crop_w}:{crop_h}:{crop_x}:{crop_y},avgblur=sizeX={intensity}:sizeY={intensity}[blurred_{uid}];"
+                f"[base_{uid}][blurred_{uid}]overlay={overlay_x}:{overlay_y}{out}"
             )
         steps.append(blur_chain)
         current_pad = out
@@ -482,7 +488,8 @@ def _build_filter_graph(
         # Animate the actual Dual-Tone Title directly across the screen!
         direction = marquee_opts.get('direction', 'up').lower()
         speed_sec = float(marquee_opts.get('speed_sec') or 8.0)
-        font_size = int(text_opts.get('size', 26))
+        # Responsive mobile font scale (3.5% of video height, minimum 18px)
+        font_size_expr = "trunc(max(18\\,h*0.035))"
         m_color = (tp1.get('color') if tp1 else None) or marquee_opts.get('color', '0xF59E0B')
         m_font_name = (tp1.get('font') if tp1 else None) or 'moul'
         m_font_path = _resolve_font_path(m_font_name) or _resolve_font_path('kantumruy')
@@ -508,7 +515,7 @@ def _build_filter_graph(
         draw_marquee = (
             f"{current_pad}drawtext="
             f"{m_font_arg}"
-            f"textfile='{m_tf_path}':fontcolor={m_color}:fontsize={font_size}:"
+            f"textfile='{m_tf_path}':fontcolor={m_color}:fontsize='{font_size_expr}':"
             f"box=1:boxcolor=black@0.65:boxborderw=5:"
             f"x={x_expr}:y={y_expr}{out}"
         )
@@ -702,9 +709,9 @@ def render_segment(
         cmd.extend(['-map', '0:v'])
         
     if has_audio_out:
-        cmd.extend(['-map', '[aout]', '-c:a', 'aac', '-b:a', '192k'])
+        cmd.extend(['-map', '[aout]', '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-ac', '2'])
     elif orig_has_audio:
-        cmd.extend(['-map', '0:a', '-c:a', 'aac', '-b:a', '192k'])
+        cmd.extend(['-map', '0:a', '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-ac', '2'])
         
     # Ultrafast encode per segment with Multi-threading (threads=4)
     cmd.extend([
@@ -880,9 +887,9 @@ def _render_direct_fast(
         cmd.extend(['-map', '0:v'])
         
     if has_audio_out:
-        cmd.extend(['-map', '[aout]', '-c:a', 'aac', '-b:a', '192k'])
+        cmd.extend(['-map', '[aout]', '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-ac', '2'])
     elif orig_has_audio:
-        cmd.extend(['-map', '0:a', '-c:a', 'aac', '-b:a', '192k'])
+        cmd.extend(['-map', '0:a', '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-ac', '2'])
         
     cmd.extend([
         '-c:v', 'libx264',

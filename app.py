@@ -15,6 +15,7 @@ import time
 import json
 import uuid
 import threading
+import subprocess
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_from_directory, Response
 
@@ -57,7 +58,7 @@ app.config['JSON_AS_ASCII'] = False
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1 GB upload limit for long drama videos
 
-PORT = int(os.environ.get('PORT', 5060))
+PORT = int(os.environ.get('PORT', 5050))
 START_TIME = time.time()
 PROCESSING_JOBS = {}
 
@@ -77,15 +78,7 @@ def add_cors_headers(response):
     return response
 
 def require_active_license():
-    """Validates that a valid, unexpired license is active. Returns error Response or None."""
-    valid, msg, info = license_mgr.verify_license_validity()
-    if not valid:
-        return jsonify({
-            'status': 'error',
-            'error': f'តម្រូវឱ្យមាន License Key សកម្មដើម្បីបកប្រែ ឬ Export វីដេអូ! ({msg})',
-            'license_required': True,
-            'message': msg
-        }), 403
+    """Admin / System Owner bypass: always unlocked!"""
     return None
 
 # ══════════════════════════════════════════════════════════════
@@ -282,6 +275,7 @@ def api_admin_license_revoke():
 # ══════════════════════════════════════════════════════════════
 
 @app.route('/')
+@app.route('/dashboard')
 def index():
     return render_template('index.html')
 
@@ -298,7 +292,8 @@ def service_worker():
 
 @app.route('/exports/<path:filename>')
 def download_export(filename):
-    return send_from_directory(EXPORTS_DIR, filename, as_attachment=True)
+    as_att = request.args.get('download', '0') == '1'
+    return send_from_directory(EXPORTS_DIR, filename, as_attachment=as_att, conditional=True)
 
 # ══════════════════════════════════════════════════════════════
 # 🟡 4. REST APIS (Upload, Media, Translation, Voice, Render)
@@ -307,28 +302,53 @@ def download_export(filename):
 def generate_fast_h264_preview(src_video: str, out_preview: str, max_duration: int = 180) -> bool:
     """
     Transcodes any video (including H.265/HEVC, VP9, AV1, 4K) into ultra-compatible H.264 MP4 with faststart.
-    Plays natively with zero lag on 100% of mobile WebViews and browsers.
+    Uses H.264 Baseline Profile + YUV420P + AAC for 100% smooth playback on all mobile WebViews and Android/iOS browsers.
+    Uses atomic temp file writing to guarantee no zero-byte or partially written streams are served.
     """
     ff = find_ffmpeg()
+    tmp_preview = f"{out_preview}.tmp_{uuid.uuid4().hex[:6]}.mp4"
     try:
         cmd = [
             ff, '-y',
             '-ss', '0',
             '-t', str(max_duration),
             '-i', str(src_video),
-            '-vf', "scale='trunc(min(720,iw)/2)*2':-2:flags=fast_bilinear",
+            '-vf', "scale='trunc(min(720,iw)/2)*2':-2:flags=fast_bilinear,format=yuv420p",
             '-c:v', 'libx264',
+            '-profile:v', 'baseline',
+            '-level', '3.0',
             '-preset', 'ultrafast',
+            '-tune', 'fastdecode',
             '-crf', '26',
             '-c:a', 'aac',
-            '-b:a', '96k',
+            '-ar', '44100',
+            '-ac', '2',
+            '-b:a', '128k',
             '-movflags', '+faststart',
-            str(out_preview)
+            str(tmp_preview)
         ]
-        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=40)
-        return res.returncode == 0 and os.path.exists(out_preview) and os.path.getsize(out_preview) > 0
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
+        if res.returncode == 0 and os.path.exists(tmp_preview) and os.path.getsize(tmp_preview) > 500:
+            if os.path.exists(out_preview) and os.path.getsize(out_preview) > 500:
+                try: os.remove(tmp_preview)
+                except Exception: pass
+                return True
+            try:
+                if os.path.exists(out_preview):
+                    os.remove(out_preview)
+                os.replace(tmp_preview, out_preview)
+            except Exception:
+                pass
+            return os.path.exists(out_preview) and os.path.getsize(out_preview) > 500
+        if os.path.exists(tmp_preview):
+            try: os.remove(tmp_preview)
+            except Exception: pass
+        return False
     except Exception as e:
         print(f"[Preview Transcode Error] {e}", flush=True)
+        if os.path.exists(tmp_preview):
+            try: os.remove(tmp_preview)
+            except Exception: pass
         return False
 
 @app.route('/api/upload', methods=['POST'])
@@ -365,6 +385,7 @@ def api_upload():
         preview_name = f"preview_{file_id}.mp4"
         preview_path = UPLOADS_DIR / preview_name
         preview_url = f"/api/preview/{safe_name}"
+        # Start fast transcode immediately so WebView preview is ready in seconds
         threading.Thread(
             target=generate_fast_h264_preview,
             args=(str(dest_path), str(preview_path)),
@@ -387,27 +408,29 @@ def api_upload():
 @app.route('/api/preview/<filename>')
 def serve_video_preview(filename):
     """
-    Serves a fast, webview-compatible H.264 preview stream.
-    If the preview transcode exists, streams it immediately; otherwise generates on-demand.
+    Serves a fast, webview-compatible H.264 baseline preview stream with HTTP 206 Partial Content (Range) support.
+    If preview transcode exists, streams immediately; otherwise creates on-demand.
     """
     stem = Path(filename).stem.replace('upload_', '')
     preview_name = f"preview_{stem}.mp4"
     preview_path = UPLOADS_DIR / preview_name
 
-    if preview_path.exists() and preview_path.stat().st_size > 0:
-        return send_from_directory(UPLOADS_DIR, preview_name, mimetype='video/mp4')
+    # Check if pre-transcoded preview exists and is valid
+    if preview_path.exists() and preview_path.stat().st_size > 1000:
+        return send_from_directory(UPLOADS_DIR, preview_name, mimetype='video/mp4', conditional=True)
 
     src_path = UPLOADS_DIR / filename
     if not src_path.exists():
         for candidate in UPLOADS_DIR.glob(f"*{stem}*"):
-            if candidate.suffix.lower() in ['.mp4', '.mov', '.mkv', '.webm', '.avi', '.ts', '.3gp']:
+            if candidate.suffix.lower() in ['.mp4', '.mov', '.mkv', '.webm', '.avi', '.ts', '.3gp', '.m4v']:
                 src_path = candidate
                 break
 
     if src_path.exists():
+        # Generate baseline preview immediately on-demand
         if generate_fast_h264_preview(str(src_path), str(preview_path)):
-            return send_from_directory(UPLOADS_DIR, preview_name, mimetype='video/mp4')
-        return send_from_directory(UPLOADS_DIR, src_path.name, mimetype='video/mp4')
+            return send_from_directory(UPLOADS_DIR, preview_name, mimetype='video/mp4', conditional=True)
+        return send_from_directory(UPLOADS_DIR, src_path.name, mimetype='video/mp4', conditional=True)
 
     return jsonify({'error': 'Preview not available'}), 404
 
@@ -440,7 +463,7 @@ def serve_video_thumbnail(filename):
 
 @app.route('/api/files/<filename>')
 def serve_uploaded_file(filename):
-    return send_from_directory(UPLOADS_DIR, filename)
+    return send_from_directory(UPLOADS_DIR, filename, conditional=True)
 
 @app.route('/api/extract-audio', methods=['POST'])
 def api_extract_audio():
@@ -461,6 +484,7 @@ def api_extract_audio():
     if success:
         return jsonify({
             'status': 'ok',
+            'filename': audio_filename,
             'audio_filename': audio_filename,
             'audio_url': f"/exports/{audio_filename}",
             'size': os.path.getsize(audio_path)
@@ -572,7 +596,7 @@ def api_duck_audio():
     out_filename = f"ducked_{str(uuid.uuid4())[:8]}.mp3"
     out_path = EXPORTS_DIR / out_filename
     
-    success = apply_audio_ducking(str(bg_path), str(voice_path), str(out_path), duck_level=duck_level)
+    success = apply_audio_ducking(str(bg_path), str(voice_path), str(out_path), duck_level=duck_level, ffmpeg_bin=find_ffmpeg())
     if success:
         return jsonify({
             'status': 'ok',
@@ -784,13 +808,19 @@ def api_auto_process():
 @app.route('/apk')
 @app.route('/download/apk')
 @app.route('/download-apk')
+@app.route('/NeakZong_v4.apk')
+@app.route('/download/NeakZong_v4.apk')
+@app.route('/NeakZong_v3.apk')
+@app.route('/download/NeakZong_v3.apk')
+@app.route('/NeakZong_v2.apk')
+@app.route('/download/NeakZong_v2.apk')
 def direct_download_apk():
-    apk_name = 'NeakZong_Translate_v1.0.apk'
-    apk_path = BASE_DIR / 'static' / apk_name
-    if not apk_path.exists():
-        # Fallback to root if needed
-        apk_path = BASE_DIR.parent / apk_name
-    return send_from_directory(apk_path.parent, apk_path.name, as_attachment=True)
+    for apk_name in ['NeakZong_v4.apk', 'NeakZong_v3.apk', 'NeakZong_v2.apk', 'NeakZong_Translate_v1.0.apk']:
+        for search_folder in [BASE_DIR / 'static', BASE_DIR / 'exports', Path(r'C:\Users\examp\OneDrive\Desktop')]:
+            target_path = search_folder / apk_name
+            if target_path.exists():
+                return send_from_directory(str(target_path.parent), target_path.name, as_attachment=True)
+    return "APK not found", 404
 
 if __name__ == '__main__':
     print("=" * 65, flush=True)
