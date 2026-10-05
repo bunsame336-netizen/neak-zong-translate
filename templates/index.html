@@ -409,7 +409,19 @@
   <main class="studio-main-container">
 
     <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
+    <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
     <div class="studio-stage-col">
+
+      <!-- ⚡ QUICK ACTION CONTROL BAR: VIDEO 2 STYLE -->
+      <div class="video-main-actions-bar" style="display: flex; gap: 6px; width: 100%; margin-bottom: 4px;">
+        <button type="button" id="btn-main-start-process" class="btn-start-process-green" onclick="triggerAutoProcessPipeline()" style="flex: 1.3; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; border: 1.5px solid #34d399; border-radius: 8px; font-size: 0.85rem; font-weight: 800; padding: 7px 10px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(16, 185, 129, 0.45); cursor: pointer;">
+          <span>▶️ ដំណើរការ</span>
+        </button>
+        <button type="button" id="btn-save-all" class="btn-save-all-blue" onclick="handleSaveAllVideos()" style="flex: 1; background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff; border: 1.5px solid #38bdf8; border-radius: 8px; font-size: 0.76rem; font-weight: 700; padding: 7px 8px; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
+          <span>💾 រក្សាទុកទាំងអស់</span>
+        </button>
+      </div>
+
       <!-- VIDEO STAGE & CANVAS PREVIEW (Sticky 9:16) -->
       <div class="video-stage-card">
         <div class="video-stage-viewport" id="video-viewport">
@@ -429,8 +441,8 @@
           <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
           <div class="video-overlay-layer" id="video-overlay-layer">
 
-            <!-- 1. Blur Mask Box (Pure Blur, zero text) -->
-            <div class="interactive-overlay" id="blur-overlay-box">
+            <!-- 1. Blur Mask Box (Hidden by Directive) -->
+            <div class="interactive-overlay" id="blur-overlay-box" style="display:none !important;">
               <div class="resizer-handle nw"></div>
               <div class="resizer-handle ne"></div>
               <div class="resizer-handle sw"></div>
@@ -456,7 +468,7 @@
             <!-- 4. Animated Vertical Scrolling Marquee -->
             <div class="interactive-overlay" id="marquee-overlay-element">
               <div class="marquee-scrolling-track" id="marquee-track">
-                សូមចុច Subscribe &amp; Follow «នាគហ្សង បកប្រែ AI»
+                សូមចុច Subscribe &amp; Follow «នាគហោះ បកប្រែ AI»
               </div>
             </div>
 
@@ -488,38 +500,45 @@
         </div>
       </div>
 
-      <!-- ⚡ 1-CLICK AUTO PROCESS BANNER -->
-      <div class="auto-process-banner">
-        <button type="button" class="btn-auto-process" onclick="triggerAutoProcessPipeline()">
-          🪄 បកប្រែ &amp; បញ្ចូលសំឡេង &amp; Export (1-Click)
-        </button>
-      </div>
+      <!-- ⚡ STEP-BY-STEP PROGRESS BAR (ZERO-FREEZE ASYNC PIPELINE) -->
+      <div id="render-progress-wrap" style="display: none; flex-direction: column; gap: 4px; padding: 7px; background: rgba(12, 10, 26, 0.95); border: 1.5px solid #00f2fe; border-radius: 8px; margin-top: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem;">
+          <span id="render-progress-status" style="color: #38bdf8; font-weight: 700;">កំពុងដំណើរការ...</span>
+          <span id="render-progress-pct" style="color: #10b981; font-weight: 800;">0%</span>
+        </div>
 
-      <!-- ⚡ RENDER PROGRESS BAR -->
-      <div id="render-progress-wrap">
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-          <span id="render-progress-status" style="color: var(--neon-purple-bright); font-weight: 700;">កំពុងដំណើរការ...</span>
+        <!-- 6 Visual Stages -->
+        <div class="stepper-stages-row" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; font-size: 0.54rem; text-align: center; margin: 2px 0;">
+          <div id="step-separate" class="step-pill" style="padding: 2px 0; border-radius: 4px; background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid transparent;">1.Separate</div>
+          <div id="step-transcript" class="step-pill" style="padding: 2px 0; border-radius: 4px; background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid transparent;">2.ASR</div>
+          <div id="step-gender" class="step-pill" style="padding: 2px 0; border-radius: 4px; background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid transparent;">3.Gender</div>
+          <div id="step-translate" class="step-pill" style="padding: 2px 0; border-radius: 4px; background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid transparent;">4.Translate</div>
+          <div id="step-speech" class="step-pill" style="padding: 2px 0; border-radius: 4px; background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid transparent;">5.Speech</div>
+          <div id="step-export" class="step-pill" style="padding: 2px 0; border-radius: 4px; background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid transparent;">6.Export</div>
         </div>
-        <div class="render-progress-track">
-          <div class="render-progress-bar" id="render-progress-bar"></div>
+
+        <div class="render-progress-track" style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+          <div class="render-progress-bar" id="render-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #00f2fe); transition: width 0.3s ease;"></div>
         </div>
-        <a id="btn-download-result" href="#" download>
-          📥 ទាញយក MP4 HD (Save to Phone)
-        </a>
+
+        <!-- Success Action Row (Zero Latency Instant Action) -->
+        <div id="success-action-row" style="display: none; gap: 6px; margin-top: 4px;">
+          <button type="button" id="btn-play-successful" onclick="playExportedVideo()" style="flex: 1.2; background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 6px; padding: 7px 10px; font-size: 0.78rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);">
+            <span>▶️ Play Video / ជោគជ័យ</span>
+          </button>
+          <a id="btn-download-result" href="#" download style="flex: 1; background: linear-gradient(135deg, #a855f7, #6366f1); color: white; border-radius: 6px; padding: 7px 8px; font-size: 0.75rem; font-weight: bold; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            <span>📥 Save / Download</span>
+          </a>
+        </div>
+        <div id="export-save-path-info" style="font-size: 0.64rem; color: #a7f3d0; margin-top: 3px; display: none; word-break: break-all;"></div>
       </div>
     </div>
 
     <!-- ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── -->
     <div class="studio-controls-col">
-      <!-- Tabs Bar at Top of Controls Column (Logo, Blur, Text, Sponsor, Marquee) -->
+      <!-- Tabs Bar at Top of Controls Column (Logo, Blur [Hidden], Text, Sponsor, Marquee) -->
       <nav class="studio-tabs-nav">
-        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
-          🖼️ Logo
-        </button>
-        <button type="button" class="tab-nav-btn active" data-tab="blur" onclick="switchStudioTab('blur')">
-          🌫️ ព្រាល Blur
-        </button>
-        <button type="button" class="tab-nav-btn" data-tab="text" onclick="switchStudioTab('text')">
+        <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
           📝 Text
         </button>
         <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
@@ -531,6 +550,12 @@
         <button type="button" class="tab-nav-btn" data-tab="voice" onclick="switchStudioTab('voice')">
           🎙️ សំឡេង
         </button>
+        <button type="button" class="tab-nav-btn" data-tab="logo" onclick="switchStudioTab('logo')">
+          🖼️ Logo
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="blur" style="display: none !important;" onclick="switchStudioTab('blur')">
+          🌫️ Blur
+        </button>
         <button type="button" class="tab-nav-btn" data-tab="media" onclick="switchStudioTab('media')">
           📂 Media
         </button>
@@ -540,7 +565,7 @@
       </nav>
 
       <!-- ── TAB 1: TEXT OVERLAY (DUAL-TONE) ─────────────────── -->
-      <div class="tab-panel-card" id="tab-panel-text">
+      <div class="tab-panel-card active" id="tab-panel-text">
         <div class="panel-section-title">
           <span>📝 ដាក់អក្សរ ២ ពណ៌ (Dual-Tone Text Overlay)</span>
         </div>
@@ -722,8 +747,8 @@
         </div>
       </div>
 
-      <!-- ── TAB 3: BLUR MASK ─────────────────────────────────── -->
-      <div class="tab-panel-card active" id="tab-panel-blur">
+      <!-- ── TAB 3: BLUR MASK (Hidden by Directive) ────────── -->
+      <div class="tab-panel-card" id="tab-panel-blur" style="display:none !important;">
         <div class="panel-section-title">
           <span>🌫️ ផ្ទាំងព្រិលបាំង Watermark / Logo ចាស់</span>
         </div>

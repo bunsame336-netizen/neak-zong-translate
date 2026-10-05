@@ -39,6 +39,10 @@ def _resolve_font_path(font_name: str = '') -> str:
         os.path.abspath('fonts/KhmerOSsiemreap.ttf'),
         os.path.abspath('fonts/Siemreap.ttf'),
         os.path.abspath('fonts/Moul.ttf'),
+        os.path.join(os.path.dirname(__file__), '..', 'fonts', 'KantumruyPro-Bold.ttf'),
+        os.path.join(os.path.dirname(__file__), '..', 'fonts', 'KhmerOSsiemreap.ttf'),
+        os.path.join(os.path.dirname(__file__), '..', 'fonts', 'Moul.ttf'),
+        os.path.join(os.path.dirname(__file__), '..', 'fonts', 'Siemreap.ttf'),
         os.path.join(os.path.dirname(__file__), '..', '..', 'fonts', 'KantumruyPro-Bold.ttf'),
         os.path.join(os.path.dirname(__file__), '..', '..', 'fonts', 'KhmerOSsiemreap.ttf'),
     ]
@@ -464,14 +468,14 @@ def _build_filter_graph(
     def _build_drawtext_with_effect(text: str, color: str, effect: str,
                                      outline_color: str, outline_w: int,
                                      x_expr: str, y_expr: str, font_size: int,
-                                     font_name: str = 'noto') -> str:
-        """Build a drawtext filter string with optional shadow/glow/outline effect."""
-        safe_text = _sanitize_ffmpeg_text(text)
-        resolved_font = _resolve_font_path(font_name)
+                                     font_name: str = 'kantumruy') -> str:
+        """Build a drawtext filter string with optional shadow/glow/outline effect using UTF-8 textfile."""
+        tf_path = _write_temp_text_file(text)
+        resolved_font = _resolve_font_path(font_name) or _resolve_font_path('kantumruy')
         font_arg = f"fontfile='{resolved_font}':" if resolved_font else ""
         base = (
             f"{font_arg}"
-            f"text='{safe_text}':fontcolor={color}:fontsize={font_size}:"
+            f"textfile='{tf_path}':fontcolor={color}:fontsize={font_size}:"
             f"x={x_expr}:y={y_expr}"
         )
         if effect == 'shadow':
@@ -554,19 +558,19 @@ def _build_filter_graph(
             steps.append(f"{current_pad}{dt2}{out}")
             current_pad = out
     elif text_opts and text_opts.get('enabled') and text_opts.get('text'):
-        s_text = _sanitize_ffmpeg_text(text_opts['text'])
+        tf_path = _write_temp_text_file(text_opts['text'])
         tx = text_opts.get('x', '20')
         ty = text_opts.get('y', '20')
         tsize = text_opts.get('size', 26)
         tcolor = text_opts.get('color', 'white')
         border_w = text_opts.get('border_w', 2)
         border_c = text_opts.get('border_color', 'black')
-        legacy_font = _resolve_font_path(text_opts.get('font', 'noto'))
+        legacy_font = _resolve_font_path(text_opts.get('font', 'kantumruy')) or _resolve_font_path('kantumruy')
         font_arg = f"fontfile='{legacy_font}':" if legacy_font else ""
         out = next_pad()
         steps.append(
             f"{current_pad}drawtext={font_arg}"
-            f"text='{s_text}':fontcolor={tcolor}:fontsize={tsize}:"
+            f"textfile='{tf_path}':fontcolor={tcolor}:fontsize={tsize}:"
             f"borderw={border_w}:bordercolor={border_c}:x={tx}:y={ty}{out}"
         )
         current_pad = out

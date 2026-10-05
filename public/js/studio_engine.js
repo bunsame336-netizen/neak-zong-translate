@@ -1340,12 +1340,18 @@ async function triggerAutoProcessPipeline() {
   const progressWrap = document.getElementById('render-progress-wrap');
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
+  const progressPct = document.getElementById('render-progress-pct');
+  const successRow = document.getElementById('success-action-row');
   const downloadBtn = document.getElementById('btn-download-result');
+  const savePathInfo = document.getElementById('export-save-path-info');
 
-  progressWrap.style.display = 'flex';
-  downloadBtn.style.display = 'none';
-  progressBar.style.width = '10%';
-  progressStatus.innerText = 'កំពុង Upload វីដេអូទៅ Server...';
+  if (progressWrap) progressWrap.style.display = 'flex';
+  if (successRow) successRow.style.display = 'none';
+  if (savePathInfo) savePathInfo.style.display = 'none';
+  if (progressBar) progressBar.style.width = '10%';
+  if (progressPct) progressPct.innerText = '10%';
+  if (progressStatus) progressStatus.innerText = '1. កំពុង Upload វីដេអូទៅ Server...';
+  _updateStepperStage(10, 'upload');
 
   if (!state.videoFilename && state.videoFile) {
     const formData = new FormData();
@@ -1360,13 +1366,15 @@ async function triggerAutoProcessPipeline() {
       }
     } catch (e) {
       showToast('⚠️ បរាជ័យក្នុងការ Upload វីដេអូទៅ Server');
-      progressWrap.style.display = 'none';
+      if (progressWrap) progressWrap.style.display = 'none';
       return;
     }
   }
 
-  progressBar.style.width = '25%';
-  progressStatus.innerText = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR) & បកប្រែជាភាសាខ្មែរ...';
+  if (progressBar) progressBar.style.width = '20%';
+  if (progressPct) progressPct.innerText = '20%';
+  if (progressStatus) progressStatus.innerText = '2. AI Faster-Whisper កំពុងដំណើរការស្ដាប់សំឡេងដើម...';
+  _updateStepperStage(20, 'transcript');
 
   try {
     const res = await fetch('/api/auto-process', {
@@ -1385,98 +1393,133 @@ async function triggerAutoProcessPipeline() {
       pollJobStatus(data.job_id);
     } else {
       showToast(data.error ? ('⚠️ ' + data.error) : '⚠️ បរាជ័យក្នុងការចាប់ផ្ដើម Auto Pipeline');
-      progressWrap.style.display = 'none';
+      if (progressWrap) progressWrap.style.display = 'none';
     }
   } catch (err) {
     showToast('⚠️ មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធបានទេ');
-    progressWrap.style.display = 'none';
+    if (progressWrap) progressWrap.style.display = 'none';
   }
 }
 
-async function triggerRenderExport() {
-  if (!state.videoFile && !state.videoFilename) {
-    showToast('⚠️ សូមរើសវីដេអូជាមុនសិន');
-    document.getElementById('video-file-input').click();
+function playExportedVideo() {
+  if (!state.lastExportUrl) {
+    showToast('⚠️ មិនទាន់មានវីដេអូបកប្រែរួចនៅឡើយ');
     return;
   }
-
-  const progressWrap = document.getElementById('render-progress-wrap');
-  const progressBar = document.getElementById('render-progress-bar');
-  const progressStatus = document.getElementById('render-progress-status');
-  const downloadBtn = document.getElementById('btn-download-result');
-
-  progressWrap.style.display = 'flex';
-  downloadBtn.style.display = 'none';
-  progressBar.style.width = '15%';
-  progressStatus.innerText = 'កំពុងចាប់ផ្ដើម Render HD Video (Ultra-Fast Engine)...';
-
-  if (!state.videoFilename && state.videoFile) {
-    const formData = new FormData();
-    formData.append('file', state.videoFile);
-    try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
-      if (data.status === 'ok') state.videoFilename = data.filename;
-    } catch (e) {
-      showToast('⚠️ បរាជ័យក្នុងការ Upload');
-      progressWrap.style.display = 'none';
-      return;
-    }
-  }
-
-  try {
-    const res = await fetch('/api/render', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        video_name: state.videoFilename,
-        audio_name: state.audioFilename || undefined,
-        options: _buildRenderOptions()
-      })
+  const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || previewVideo;
+  const placeholder = document.getElementById('video-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+  if (video) {
+    video.style.display = 'block';
+    video.src = state.lastExportUrl;
+    video.controls = true;
+    video.muted = false;
+    video.load();
+    video.play().catch(() => {
+      video.muted = true;
+      video.play().catch(() => {});
     });
-    const data = await res.json();
-    if (data.status === 'started') {
-      pollJobStatus(data.job_id);
-    } else {
-      showToast(data.error ? ('⚠️ ' + data.error) : '⚠️ កំហុសក្នុងការ Render');
-      progressWrap.style.display = 'none';
-    }
-  } catch (err) {
-    showToast('⚠️ កំហុស Server');
-    progressWrap.style.display = 'none';
+    showToast('✓ កំពុងចាក់វីដេអូដែលបកប្រែរួច (Dubbed Video Playing)!');
   }
+}
+
+function handleSaveAllVideos() {
+  if (state.lastExportUrl) {
+    const a = document.createElement('a');
+    a.href = state.lastExportUrl;
+    a.download = state.lastExportFilename || 'NeakZong_Dubbed.mp4';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast(`✓ រក្សាទុកវីដេអូទៅកាន់ Folder /exports (${state.lastExportFilename || 'NeakZong_Dubbed.mp4'})`);
+  } else {
+    showToast('💡 វីដេអូដែលបកប្រែរួចទាំងអស់ ត្រូវបានរក្សាទុកក្នុង Folder: /exports');
+  }
+}
+
+function _updateStepperStage(pct, stage) {
+  const stages = [
+    { id: 'step-separate', threshold: 12 },
+    { id: 'step-transcript', threshold: 25 },
+    { id: 'step-gender', threshold: 40 },
+    { id: 'step-translate', threshold: 55 },
+    { id: 'step-speech', threshold: 70 },
+    { id: 'step-export', threshold: 85 }
+  ];
+
+  stages.forEach(st => {
+    const el = document.getElementById(st.id);
+    if (!el) return;
+    if (pct >= 100 || (stage && stage === 'completed')) {
+      el.style.background = 'rgba(16, 185, 129, 0.35)';
+      el.style.color = '#34d399';
+      el.style.borderColor = '#10b981';
+      el.style.fontWeight = 'bold';
+    } else if (pct >= st.threshold) {
+      el.style.background = 'rgba(0, 242, 254, 0.25)';
+      el.style.color = '#38bdf8';
+      el.style.borderColor = '#00f2fe';
+      el.style.fontWeight = 'bold';
+    } else {
+      el.style.background = 'rgba(255, 255, 255, 0.06)';
+      el.style.color = '#94a3b8';
+      el.style.borderColor = 'transparent';
+      el.style.fontWeight = 'normal';
+    }
+  });
 }
 
 function pollJobStatus(jobId) {
   const progressBar = document.getElementById('render-progress-bar');
   const progressStatus = document.getElementById('render-progress-status');
+  const progressPct = document.getElementById('render-progress-pct');
+  const successRow = document.getElementById('success-action-row');
   const downloadBtn = document.getElementById('btn-download-result');
+  const savePathInfo = document.getElementById('export-save-path-info');
 
   const interval = setInterval(async () => {
     try {
       const res = await fetch(`/api/job/${jobId}`);
       const job = await res.json();
 
-      progressBar.style.width = `${job.progress || 30}%`;
-      if (job.step) progressStatus.innerText = job.step;
+      const pct = job.progress || 30;
+      if (progressBar) progressBar.style.width = `${pct}%`;
+      if (progressPct) progressPct.innerText = `${pct}%`;
+      if (job.step && progressStatus) progressStatus.innerText = job.step;
+
+      _updateStepperStage(pct, job.stage);
 
       if (job.status === 'completed') {
         clearInterval(interval);
-        progressBar.style.width = '100%';
-        progressStatus.innerText = '✓ ជោគជ័យ ១០០%! វីដេអូរួចរាល់សម្រាប់ការទាញយក។';
-        downloadBtn.style.display = 'flex';
-        downloadBtn.href = job.download_url;
-        downloadBtn.setAttribute('download', job.filename);
-        showToast('✓ វីដេអូ Render ចប់សព្វគ្រប់!');
+        if (progressBar) progressBar.style.width = '100%';
+        if (progressPct) progressPct.innerText = '100%';
+        if (progressStatus) progressStatus.innerText = '✓ ជោគជ័យ ១០០%! វីដេអូរួចរាល់សម្រាប់ការចាក់ ឬ Save All';
+
+        state.lastExportUrl = job.download_url;
+        state.lastExportFilename = job.filename || 'NeakZong_Dubbed.mp4';
+
+        if (successRow) successRow.style.display = 'flex';
+        if (downloadBtn) {
+          downloadBtn.href = job.download_url;
+          downloadBtn.setAttribute('download', state.lastExportFilename);
+        }
+        if (savePathInfo) {
+          savePathInfo.style.display = 'block';
+          savePathInfo.innerHTML = `📁 <b>ទីតាំងរក្សាទុក:</b> ${job.save_path || ('/exports/' + state.lastExportFilename)}`;
+        }
+
+        showToast('🎉 បកប្រែ និង Dubbing សំឡេងខ្មែរចប់សព្វគ្រប់ ១០០%!');
       } else if (job.status === 'failed') {
         clearInterval(interval);
-        progressStatus.innerText = `⚠️ បរាជ័យ: ${job.error || 'Unknown'}`;
-        progressStatus.style.color = '#f87171';
+        if (progressStatus) {
+          progressStatus.innerText = `⚠️ បរាជ័យ: ${job.error || 'Unknown'}`;
+          progressStatus.style.color = '#f87171';
+        }
       }
     } catch (e) {
       clearInterval(interval);
     }
-  }, 1500);
+  }, 1200);
 }
 
 // ══════════════════════════════════════════════════════════

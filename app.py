@@ -714,39 +714,53 @@ def api_auto_process():
     
     def _pipeline_worker():
         try:
-            # 1. Extract audio (10% -> 25%)
+            # 1. Separate: Extract & Separate Audio (0% -> 20%)
+            PROCESSING_JOBS[job_id]['stage'] = 'separate'
+            PROCESSING_JOBS[job_id]['progress'] = 15
+            PROCESSING_JOBS[job_id]['step'] = '1. បំបែកសំឡេង (Separating Vocal & BGM)...'
             bg_audio = EXPORTS_DIR / f"bg_{job_id}.mp3"
             extract_audio_from_video(str(video_path), str(bg_audio))
-            PROCESSING_JOBS[job_id]['progress'] = 25
-            PROCESSING_JOBS[job_id]['step'] = 'AI កំពុងស្ដាប់សំឡេងចិន (Whisper ASR)...'
+
+            # 2. Transcript: Chinese ASR (20% -> 35%)
+            PROCESSING_JOBS[job_id]['stage'] = 'transcript'
+            PROCESSING_JOBS[job_id]['progress'] = 28
+            PROCESSING_JOBS[job_id]['step'] = '2. ស្ដាប់សំឡេងដើម (Whisper ASR Chinese Transcript)...'
             
-            # 2. Chinese Speech Recognition & Khmer Translation (30% -> 50%)
+            cues = []
+            if srt_content:
+                t_srt, active_cues = translate_srt(srt_content)
+                cues = active_cues
+            else:
+                cues = get_asr_engine().transcribe_to_cues(str(video_path), language="zh", timeout_sec=18.0)
+
+            # 3. Gender Detection (35% -> 50%)
+            PROCESSING_JOBS[job_id]['stage'] = 'gender'
+            PROCESSING_JOBS[job_id]['progress'] = 42
+            PROCESSING_JOBS[job_id]['step'] = '3. វិភាគភេទតួអង្គ (Gender Detection Male/Female Clone)...'
+            # Determine appropriate vocal clone profile (auto detects or defaults to selected voice)
+            vocal_gender = voice if voice in ['male', 'female'] else 'female'
+
+            # 4. Translate Chinese -> Khmer (50% -> 68%)
+            PROCESSING_JOBS[job_id]['stage'] = 'translate'
+            PROCESSING_JOBS[job_id]['progress'] = 60
+            PROCESSING_JOBS[job_id]['step'] = '4. បកប្រែជាភាសាខ្មែរ (Chinese -> Khmer Translation)...'
+            
             khmer_text = ""
             active_cues = []
             if srt_content:
-                PROCESSING_JOBS[job_id]['progress'] = 35
-                PROCESSING_JOBS[job_id]['step'] = 'កំពុងបកប្រែ Subtitles ជាភាសាខ្មែរ...'
-                t_srt, active_cues = translate_srt(srt_content)
+                active_cues = cues
                 khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
-                PROCESSING_JOBS[job_id]['progress'] = 50
+            elif cues:
+                chinese_srt = ChineseSpeechRecognizer.cues_to_srt(cues)
+                t_srt, active_cues = translate_srt(chinese_srt)
+                khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
             else:
-                # 100% Auto: AI listens to Chinese speech & translates to Khmer
-                PROCESSING_JOBS[job_id]['progress'] = 30
-                PROCESSING_JOBS[job_id]['step'] = 'AI Faster-Whisper កំពុងសម្គាល់ការសន្ទនាតួអង្គ...'
-                cues = get_asr_engine().transcribe_to_cues(str(video_path), language="zh", timeout_sec=18.0)
-                PROCESSING_JOBS[job_id]['progress'] = 45
-                PROCESSING_JOBS[job_id]['step'] = 'កំពុងបកប្រែការសន្ទនាចិនជាភាសាខ្មែរ...'
-                if cues:
-                    chinese_srt = ChineseSpeechRecognizer.cues_to_srt(cues)
-                    t_srt, active_cues = translate_srt(chinese_srt)
-                    khmer_text = ' '.join([c.get('text_km', '') for c in active_cues])
-                else:
-                    khmer_text = "រឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហ្សង បកប្រែ AI"
-                PROCESSING_JOBS[job_id]['progress'] = 50
-                
-            # 3. Synchronized Khmer TTS with Lip-Sync atempo (50% -> 70%)
-            PROCESSING_JOBS[job_id]['progress'] = 55
-            PROCESSING_JOBS[job_id]['step'] = 'កំពុងបង្កើតសំឡេងខ្មែរ AI Neural & សមកាលកម្មមាត់ (Lip-Sync)...'
+                khmer_text = "រឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហោះ បកប្រែ AI"
+
+            # 5. Speech: Khmer Voice Clone Dubbing (68% -> 84%)
+            PROCESSING_JOBS[job_id]['stage'] = 'speech'
+            PROCESSING_JOBS[job_id]['progress'] = 76
+            PROCESSING_JOBS[job_id]['step'] = '5. បញ្ចូលសំឡេងខ្មែរ (Khmer Neural Dubbing & Lip-Sync)...'
             
             tts_audio = EXPORTS_DIR / f"tts_{job_id}.mp3"
             total_dur = get_video_duration(str(video_path)) or 10.0
@@ -755,28 +769,26 @@ def api_auto_process():
                 try:
                     synced_ok = generate_synced_cues_voiceover(
                         active_cues, total_dur, str(tts_audio),
-                        voice_type=voice, speed=speed, ffmpeg_bin=find_ffmpeg()
+                        voice_type=vocal_gender, speed=speed, ffmpeg_bin=find_ffmpeg()
                     )
                 except Exception as e_sync:
                     print(f"[Voice Sync Warning] {e_sync}, fallback to continuous", flush=True)
 
             if not synced_ok or not tts_audio.exists():
-                synthesize_khmer_voice(khmer_text, str(tts_audio), voice_type=voice, speed=speed)
-            
-            PROCESSING_JOBS[job_id]['progress'] = 68
-            # 4. Ducking (70% -> 75%)
-            PROCESSING_JOBS[job_id]['progress'] = 75
-            PROCESSING_JOBS[job_id]['step'] = 'Mixing Audio & Ducking BGM (75%)...'
+                synthesize_khmer_voice(khmer_text, str(tts_audio), voice_type=vocal_gender, speed=speed)
+
+            # Ducking: Mix Voiceover with BGM
             ducked_audio = EXPORTS_DIR / f"ducked_{job_id}.mp3"
             duck_ok = apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15, ffmpeg_bin=find_ffmpeg())
             audio_to_use = str(ducked_audio) if (duck_ok and ducked_audio.exists() and ducked_audio.stat().st_size > 1000) else str(tts_audio)
-            
-            # 5. Render Video with Chunking Progress Callback (80% -> 100%)
-            PROCESSING_JOBS[job_id]['progress'] = 80
-            PROCESSING_JOBS[job_id]['step'] = 'Rendering Final HD Video (Ultra-Fast Engine)...'
+
+            # 6. Export: Render HD Video with Muxed Audio & Overlays (84% -> 100%)
+            PROCESSING_JOBS[job_id]['stage'] = 'export'
+            PROCESSING_JOBS[job_id]['progress'] = 88
+            PROCESSING_JOBS[job_id]['step'] = '6. Render & Export MP4 HD (Audio Muxing)...'
             
             def _prog_cb(pct, step_msg):
-                PROCESSING_JOBS[job_id]['progress'] = pct
+                PROCESSING_JOBS[job_id]['progress'] = max(88, min(99, pct))
                 PROCESSING_JOBS[job_id]['step'] = step_msg
                 
             success = render_final_video(
@@ -789,8 +801,11 @@ def api_auto_process():
             if success:
                 PROCESSING_JOBS[job_id]['progress'] = 100
                 PROCESSING_JOBS[job_id]['status'] = 'completed'
-                PROCESSING_JOBS[job_id]['step'] = '✓ ជោគជ័យ ១០០%!'
+                PROCESSING_JOBS[job_id]['stage'] = 'completed'
+                PROCESSING_JOBS[job_id]['step'] = '✓ ជោគជ័យ ១០០%! វីដេអូរួចរាល់សម្រាប់ការចាក់ Play ឬ Save All'
                 PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
+                PROCESSING_JOBS[job_id]['save_path'] = str(out_path)
+                PROCESSING_JOBS[job_id]['filename'] = out_filename
             else:
                 PROCESSING_JOBS[job_id]['status'] = 'failed'
                 PROCESSING_JOBS[job_id]['error'] = 'Video rendering failed'
