@@ -103,7 +103,13 @@
       gap: 12px !important;
     }
 
-    /* ── 1. VIDEO PREVIEW COLUMN (TOP OF 1-COLUMN FLOW) ── */
+    /* ── 1. STICKY VIDEO PREVIEW CONTAINER (PINNED AT TOP 50px) ── */
+    .video-preview-wrapper, #video-container, .studio-stage-col, .video-stage-card {
+      position: sticky !important;
+      top: 50px !important;
+      z-index: 99 !important;
+      background: #000000 !important;
+    }
     .studio-stage-col {
       width: 100% !important;
       max-width: 100% !important;
@@ -113,19 +119,97 @@
       flex-direction: column !important;
       justify-content: flex-start !important;
       align-items: stretch !important;
-      padding: 0 !important;
+      padding: 0 0 4px 0 !important;
       border: none !important;
-      background: transparent !important;
+      background: #000000 !important;
       overflow: visible !important;
       overflow-x: hidden !important;
       box-sizing: border-box !important;
-      gap: 6px !important;
-      position: relative !important;
-      top: 0 !important;
-      z-index: 20 !important;
+      gap: 4px !important;
     }
     .studio-stage-col::-webkit-scrollbar {
       display: none !important;
+    }
+
+    /* ⚡ DYNAMIC SPONSOR ANIMATIONS (POP-UP ZOOM, FADE-SLIDE & NEON PULSE) */
+    @keyframes glow-pulse {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.45), inset 0 0 8px rgba(168, 85, 247, 0.25);
+        border-color: #f59e0b;
+        text-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+      }
+      50% {
+        box-shadow: 0 0 25px rgba(245, 158, 11, 0.95), 0 0 35px rgba(34, 211, 238, 0.8), inset 0 0 16px rgba(245, 158, 11, 0.4);
+        border-color: #38bdf8;
+        text-shadow: 0 0 16px rgba(34, 211, 238, 0.95), 0 0 22px rgba(245, 158, 11, 0.9);
+      }
+    }
+    @keyframes sponsor-popup-in {
+      0% {
+        opacity: 0;
+        transform: scale(0.6) translateY(24px);
+      }
+      65% {
+        opacity: 1;
+        transform: scale(1.06) translateY(-4px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    @keyframes sponsor-slide-out {
+      0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      30% {
+        opacity: 0.9;
+        transform: scale(0.98) translateY(2px);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.7) translateY(28px);
+      }
+    }
+    .sponsor-banner-bar {
+      border-radius: 8px;
+      animation: glow-pulse 2s infinite ease-in-out;
+      transform-origin: center center;
+    }
+    .sponsor-banner-bar.sponsor-entering {
+      animation: sponsor-popup-in 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, glow-pulse 2s infinite ease-in-out !important;
+    }
+    .sponsor-banner-bar.sponsor-exiting {
+      animation: sponsor-slide-out 0.6s ease-in forwards !important;
+    }
+
+    /* ⚡ GLOW BUTTON & DUAL-TONE STYLES */
+    .btn-color-quick {
+      box-shadow: 0 0 8px rgba(0, 242, 254, 0.4);
+      transition: all 0.2s ease;
+    }
+    .btn-color-quick:hover, .btn-color-quick:active {
+      transform: scale(1.08);
+      box-shadow: 0 0 14px rgba(0, 242, 254, 0.8);
+    }
+    .part1-badge {
+      background: rgba(245, 158, 11, 0.25) !important;
+      border: 1px solid var(--neon-gold) !important;
+      color: var(--neon-gold) !important;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5) !important;
+    }
+    .part2-badge {
+      background: rgba(34, 211, 238, 0.25) !important;
+      border: 1px solid var(--neon-cyan-bright) !important;
+      color: var(--neon-cyan-bright) !important;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.5) !important;
+    }
+    .text-preview-part1 {
+      text-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
+    }
+    .text-preview-part2 {
+      text-shadow: 0 0 12px rgba(34, 211, 238, 0.7);
     }
 
     #previewVideo, #preview-video, .video-stage-viewport video {
@@ -464,9 +548,8 @@
   ══════════════════════════════════════════════════════════ -->
   <main class="studio-main-container" id="app-container">
 
-    <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
-    <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
-    <div class="studio-stage-col">
+    <!-- ── 9:16 LIVE PREVIEW STAGE (STICKY TOP PREVIEW) ────────── -->
+    <div class="studio-stage-col video-preview-wrapper" id="video-container">
 
       <!-- ⚡ QUICK ACTION CONTROL BAR: VIDEO 2 STYLE -->
       <div class="video-main-actions-bar" style="display: flex; gap: 6px; width: 100%; margin-bottom: 4px;">
@@ -903,16 +986,16 @@
         </div>
       </div>
 
-      <!-- ── TAB: CUSTOM SPONSOR (2 LINES ONLY) ──────────────── -->
+      <!-- ── TAB: CUSTOM SPONSOR (DYNAMIC ANIMATED) ────────── -->
       <div class="tab-panel-card" id="tab-panel-sponsor">
         <div class="panel-section-title">
-          <span>🤝 ផ្ទាំងផ្សាយ Sponsor (២ បន្ទាត់)</span>
+          <span>🤝 ផ្ទាំងផ្សាយ Sponsor (ចលនា Dynamic Pop-up)</span>
         </div>
 
         <div class="toggle-switch-wrap">
           <div>
-            <div class="toggle-switch-label">បើកបង្ហាញ Sponsor Banner</div>
-            <div style="font-size: 0.72rem; color: var(--text-muted);">បង្ហាញព័ត៌មាន Sponsor ២ បន្ទាត់ខ្លី gọn លើវីដេអូ</div>
+            <div class="toggle-switch-label">បើកដំណើរការ Sponsor Banner</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">ចលនាលោត Pop-up Zoom និង Fade-Slide បាត់ទៅវិញ</div>
           </div>
           <label class="cyber-switch">
             <input type="checkbox" id="toggle-sponsor" onchange="toggleSponsorOverlay(this.checked)">
@@ -920,7 +1003,27 @@
           </label>
         </div>
 
-        <div class="form-row">
+        <!-- ⏱️ DURATION TIMER (10s, 15s, 20s & SLIDER) -->
+        <div class="slider-group-box" style="margin-top: 4px; border: 1.5px solid rgba(245, 158, 11, 0.45); background: rgba(245, 158, 11, 0.06);">
+          <div class="slider-group-title" style="color: #fbbf24; display: flex; justify-content: space-between; align-items: center;">
+            <span>⏱️ រយៈពេលបង្ហាញ (Duration Timer)</span>
+            <span class="form-label-val" id="sponsor-duration-val" style="color: #fbbf24; font-size: 0.82rem; font-weight: 800;">15s</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin: 4px 0;">
+            <button type="button" id="sponsor-dur-10" class="btn-ctrl" style="justify-content: center; font-size: 0.72rem; height: 32px; font-weight: bold;" onclick="setSponsorDuration(10)">
+              ⚡ 10s
+            </button>
+            <button type="button" id="sponsor-dur-15" class="btn-ctrl active" style="justify-content: center; font-size: 0.72rem; height: 32px; font-weight: bold;" onclick="setSponsorDuration(15)">
+              🌟 15s
+            </button>
+            <button type="button" id="sponsor-dur-20" class="btn-ctrl" style="justify-content: center; font-size: 0.72rem; height: 32px; font-weight: bold;" onclick="setSponsorDuration(20)">
+              ⏳ 20s
+            </button>
+          </div>
+          <input type="range" min="5" max="30" step="1" value="15" class="cyber-slider" id="sponsor-duration-slider" oninput="setSponsorDuration(this.value)">
+        </div>
+
+        <div class="form-row" style="margin-top: 4px;">
           <label class="form-label">ជួរលើ (Top Line) — អត្ថបទ Sponsor</label>
           <input type="text" id="sponsor-top-input" class="cyber-input" value="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" placeholder="📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor" oninput="updateSponsorContent()">
         </div>
@@ -1001,15 +1104,18 @@
           <input type="text" id="marquee-text-input" class="cyber-input" value="🎬 សូមចុច Subscribe &amp; Follow ឆានែលដើម្បីទស្សនាភាគបន្ត!" placeholder="វាយអត្ថបទរត់លើវីដេអូ..." oninput="updateMarqueeText(this.value)">
         </div>
 
-        <!-- Direction Buttons (Up & Down) -->
+        <!-- Direction Buttons (Up, Down, Right Horizontal) -->
         <div class="form-row" style="margin-top: 4px;">
-          <label class="form-label" style="font-size: 0.68rem;">↕️ ទិសដៅរត់ (Direction)</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('up')">
-              ⬆️ រត់ពីក្រោមឡើងលើ
+          <label class="form-label" style="font-size: 0.68rem;">↕️ ទិសដៅរត់អក្សរ (Direction Control)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" id="marquee-dir-up" class="btn-ctrl active" style="justify-content: center; font-size: 0.65rem; height: 32px; padding: 0 2px;" onclick="setMarqueeDirection('up')">
+              ⬆️ ក្រោមឡើងលើ
             </button>
-            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.70rem; height: 32px;" onclick="setMarqueeDirection('down')">
-              ⬇️ រត់ពីលើចុះក្រោម
+            <button type="button" id="marquee-dir-down" class="btn-ctrl" style="justify-content: center; font-size: 0.65rem; height: 32px; padding: 0 2px;" onclick="setMarqueeDirection('down')">
+              ⬇️ លើចុះក្រោម
+            </button>
+            <button type="button" id="marquee-dir-right" class="btn-ctrl" style="justify-content: center; font-size: 0.65rem; height: 32px; padding: 0 2px;" onclick="setMarqueeDirection('right')">
+              ➡️ រត់ផ្ដេក (L to R)
             </button>
           </div>
         </div>

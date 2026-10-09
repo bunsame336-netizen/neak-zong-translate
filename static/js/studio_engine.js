@@ -398,12 +398,12 @@ function handleVideoUpload(input) {
   if (!files || files.length === 0) return;
   const file = files[0];
   state.videoFile = file;
-  state.videoFilename = null;
+  state.videoFilename = file.name;
 
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || previewVideo;
+  const video = document.getElementById('previewVideo') || document.querySelector('video') || document.getElementById('preview-video');
   if (!video) return;
 
   video.style.display = 'block';
@@ -415,38 +415,38 @@ function handleVideoUpload(input) {
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('preload', 'auto');
 
-  if (state.localVideoUrl) {
+  showToast('⏳ កំពុងផ្ទុកវីដេអូ...');
+
+  if (state.localVideoUrl && state.localVideoUrl.startsWith('blob:')) {
     try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
   }
 
-  // ⚡ URL.createObjectURL direct decode playback
-  try {
-    video.src = URL.createObjectURL(file);
-    state.localVideoUrl = video.src;
-  } catch (err) {
-    console.warn('URL.createObjectURL fallback to FileReader:', err);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      video.src = e.target.result;
+  // ⚡ Read file as DataURL (Base64) for Android WebView zero-CORS compatibility & Force Play
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    video.src = e.target.result;
+    state.localVideoUrl = e.target.result;
+    video.muted = false;
+    video.playsInline = true;
+    video.load();
+    video.play().catch(() => {
+      video.muted = true;
+      video.play().catch(err => console.log('Muted autoplay fallback:', err));
+    });
+    showToast('✓ វីដេអូចាក់លើ Live Preview ភ្លាមៗ (Instant Playback 0.1s)!');
+  };
+  reader.onerror = function(err) {
+    console.warn('FileReader error, fallback to URL.createObjectURL:', err);
+    try {
+      video.src = URL.createObjectURL(file);
+      state.localVideoUrl = video.src;
       video.muted = false;
       video.playsInline = true;
       video.load();
-      video.play().catch(e2 => console.log(e2));
-    };
-    reader.readAsDataURL(file);
-    return;
-  }
-
-  // ⚡ Direct play with unmuted sound and catch policy fallback
-  video.muted = false;
-  video.playsInline = true;
-  video.load();
-  video.play().catch(e => {
-    console.log(e);
-    // If browser/device requires muted playback on first touch
-    video.muted = true;
-    video.play().catch(err2 => console.log(err2));
-  });
+      video.play().catch(() => { video.muted = true; video.play(); });
+    } catch (e2) {}
+  };
+  reader.readAsDataURL(file);
 
   video.onloadedmetadata = function() {
     const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);
@@ -457,8 +457,6 @@ function handleVideoUpload(input) {
     updateVideoTime();
   };
   video.ontimeupdate = updateVideoTime;
-
-  showToast('✓ វីដេអូចាក់លើ Live Preview ភ្លាមៗ (Instant Playback 0.1s)!');
 }
 
 async function handleSrtUpload(input) {
@@ -864,6 +862,71 @@ function setBlurCorner(corner) {
 }
 
 // ── SPONSOR CONTROLS (2-LINE CONCISE SPONSOR) ────
+// ── SPONSOR CONTROLS (DYNAMIC POP-UP ANIMATED & TIMER) ────
+let sponsorCycleTimer = null;
+let sponsorExitTimer = null;
+
+function setSponsorDuration(sec) {
+  const val = parseInt(sec) || 15;
+  state.sponsor.duration = val;
+  const valEl = document.getElementById('sponsor-duration-val');
+  if (valEl) valEl.innerText = `${val}s`;
+  const slider = document.getElementById('sponsor-duration-slider');
+  if (slider && parseInt(slider.value) !== val) slider.value = val;
+
+  [10, 15, 20].forEach(d => {
+    const btn = document.getElementById(`sponsor-dur-${d}`);
+    if (btn) btn.classList.toggle('active', d === val);
+  });
+
+  restartSponsorCycle();
+}
+
+function startSponsorCycle() {
+  stopSponsorCycle();
+  if (!state.sponsor.enabled) return;
+
+  const bar = document.getElementById('sponsor-banner-bar');
+  if (!bar || !sponsorElement) return;
+
+  sponsorElement.style.display = 'block';
+  sponsorElement.classList.add('active-visible');
+
+  // Trigger Pop-up Scale-in entry with bounce
+  bar.classList.remove('sponsor-exiting');
+  bar.classList.add('sponsor-entering');
+
+  const durationMs = (state.sponsor.duration || 15) * 1000;
+
+  // After duration ends -> Trigger Exit Animation (Smooth Slide-down / Fade-out)
+  sponsorExitTimer = setTimeout(() => {
+    bar.classList.remove('sponsor-entering');
+    bar.classList.add('sponsor-exiting');
+
+    // Wait for exit animation to complete (600ms) then pause 5s before next cycle
+    sponsorCycleTimer = setTimeout(() => {
+      bar.classList.remove('sponsor-exiting');
+      if (state.sponsor.enabled) {
+        startSponsorCycle();
+      }
+    }, 5600);
+  }, durationMs);
+}
+
+function stopSponsorCycle() {
+  if (sponsorExitTimer) clearTimeout(sponsorExitTimer);
+  if (sponsorCycleTimer) clearTimeout(sponsorCycleTimer);
+  sponsorExitTimer = null;
+  sponsorCycleTimer = null;
+}
+
+function restartSponsorCycle() {
+  stopSponsorCycle();
+  if (state.sponsor.enabled) {
+    startSponsorCycle();
+  }
+}
+
 function toggleSponsorOverlay(enabled) {
   state.sponsor.enabled = enabled;
   const toggle = document.getElementById('toggle-sponsor');
@@ -873,7 +936,14 @@ function toggleSponsorOverlay(enabled) {
     sponsorElement.style.display = enabled ? 'block' : 'none';
   }
   updateSponsorContent();
-  showToast(enabled ? '✓ បានបើកបង្ហាញ Sponsor Banner' : 'បានបិទ Sponsor');
+  if (enabled) {
+    startSponsorCycle();
+  } else {
+    stopSponsorCycle();
+    const bar = document.getElementById('sponsor-banner-bar');
+    if (bar) bar.classList.remove('sponsor-entering', 'sponsor-exiting');
+  }
+  showToast(enabled ? `✓ បានបើកដំណើរការ Sponsor (${state.sponsor.duration || 15}s Pop-up & Glow)` : 'បានបិទ Sponsor');
 }
 
 function updateSponsorContent() {
