@@ -21,22 +21,20 @@
   <!-- Custom Mobile Split Cyberpunk CSS -->
   <link rel="stylesheet" href="/static/css/neak_zong.css?v=8.0.0">
 
-  <!-- ⚡ CRITICAL MOBILE OVERRIDE: 2-COLUMN SIDE-BY-SIDE MOBILE GRID (NO PAGE SCROLL) -->
+  <!-- ⚡ CRITICAL MOBILE FIX: UNLOCKED VERTICAL SCROLL (SMOOTH TOUCH SCROLLING) -->
   <style>
     html, body {
       margin: 0 !important;
       padding: 0 !important;
-      width: 100vw !important;
+      width: 100% !important;
       max-width: 100% !important;
-      height: 100dvh !important;
-      max-height: 100dvh !important;
-      min-height: 100dvh !important;
-      overflow: hidden !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
+      min-height: 100vh !important;
+      height: auto !important;
+      max-height: none !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      position: relative !important;
+      -webkit-overflow-scrolling: touch !important;
     }
     header.app-header {
       height: 44px !important;
@@ -46,6 +44,8 @@
       padding: 2px 8px !important;
       z-index: 100 !important;
       box-sizing: border-box !important;
+      position: sticky !important;
+      top: 0 !important;
     }
     .brand-title {
       font-size: 0.85rem !important;
@@ -55,17 +55,20 @@
       height: 28px !important;
     }
 
-    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID (MATCH USER SCREENSHOT EXACTLY) ════ */
-    .studio-main-container {
+    /* ════ 2-COLUMN SIDE-BY-SIDE MOBILE GRID WITH FULL VERTICAL SCROLL ════ */
+    #app-container, .studio-main-container {
       display: grid !important;
       grid-template-columns: 46% 54% !important;
-      width: 100vw !important;
+      width: 100% !important;
       max-width: 100% !important;
-      height: calc(100dvh - 44px) !important;
-      max-height: calc(100dvh - 44px) !important;
+      min-height: 100vh !important;
+      height: auto !important;
+      max-height: none !important;
       margin: 0 !important;
-      padding: 3px 4px 6px 4px !important;
-      overflow: hidden !important;
+      padding: 3px 4px 60px 4px !important;
+      overflow-y: visible !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
       box-sizing: border-box !important;
       gap: 5px !important;
     }
@@ -73,8 +76,8 @@
     /* ── LEFT COLUMN (46%): VIDEO PREVIEW + PLAYBACK + 1-CLICK ACTION ── */
     .studio-stage-col {
       width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
+      height: auto !important;
+      max-height: none !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: flex-start !important;
@@ -83,14 +86,27 @@
       border: none !important;
       border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
       background: transparent !important;
-      overflow-y: auto !important;
+      overflow-y: visible !important;
       overflow-x: hidden !important;
       box-sizing: border-box !important;
       gap: 4px !important;
-      scrollbar-width: none !important;
+      position: sticky !important;
+      top: 48px !important;
+      align-self: start !important;
+      z-index: 20 !important;
     }
     .studio-stage-col::-webkit-scrollbar {
       display: none !important;
+    }
+
+    #previewVideo, #preview-video, .video-stage-viewport video {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      object-fit: contain !important;
+      display: block;
+      background: #000000;
     }
 
     .video-stage-card {
@@ -171,14 +187,14 @@
     /* ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── */
     .studio-controls-col {
       width: 100% !important;
-      height: 100% !important;
-      max-height: 100% !important;
+      height: auto !important;
+      max-height: none !important;
       display: flex !important;
       flex-direction: column !important;
-      overflow-y: auto !important;
+      overflow-y: visible !important;
       overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch !important;
-      padding: 0 2px 40px 2px !important;
+      padding: 0 2px 60px 2px !important;
       background: transparent !important;
       box-sizing: border-box !important;
       gap: 4px !important;
@@ -386,27 +402,18 @@
     </div>
 
     <div class="header-actions-row">
-      <!-- License Pill (Click to open Activation Modal) -->
-      <div class="header-license-pill" id="header-license-pill" onclick="openLicenseModal()" title="ស្ថានភាព License (ចុចដើម្បី Activate)">
-        <span class="status-dot"></span>
-        <span id="header-license-text">👑 Admin VIP</span>
+      <!-- Clean VIP Status (Permanently Unlocked Mobile App) -->
+      <div class="header-license-pill" id="header-license-pill" style="cursor: default;" title="VIP Unlimited Active">
+        <span class="status-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+        <span id="header-license-text" style="color: #34d399; font-weight: bold;">👑 VIP មួយជីវិត</span>
       </div>
-
-      <!-- Admin Key Generator Button -->
-      <button type="button" class="header-admin-btn" onclick="openAdminModal()" title="ផ្ទាំង Admin បង្កើត Key">
-        <span>🔑 Admin</span>
-      </button>
-
-      <a href="/static/NeakZong_Translate_v1.0.apk" download="NeakZong_Translate_v1.0.apk" class="btn-top-apk" title="ទាញយក APK សម្រាប់ទូរស័ព្ទ Android">
-        <span>📥 ទាញយក APK</span>
-      </a>
     </div>
   </header>
 
   <!-- ══════════════════════════════════════════════════════════
        ⚡ 2. MOBILE SPLIT SCREEN (50% LEFT / 50% RIGHT)
   ══════════════════════════════════════════════════════════ -->
-  <main class="studio-main-container">
+  <main class="studio-main-container" id="app-container">
 
     <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
     <!-- ── LEFT COLUMN (50%): 9:16 LIVE PREVIEW STAGE ────────── -->
@@ -436,7 +443,7 @@
             </div>
           </div>
 
-          <video id="previewVideo" playsinline webkit-playsinline controls preload="auto" style="display:none;"></video>
+          <video id="previewVideo" playsinline webkit-playsinline controls preload="auto" style="display:none; width: 100%; height: 100%; object-fit: contain;"></video>
 
           <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
           <div class="video-overlay-layer" id="video-overlay-layer">
@@ -1143,7 +1150,7 @@
   <!-- ══════════════════════════════════════════════════════════
        🔐 3. ACTIVATE LICENSE MODAL (FOR MOBILE CLIENT)
   ══════════════════════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="activate-license-modal" onclick="closeLicenseModal(event)">
+  <div class="modal-backdrop" id="activate-license-modal" style="display: none !important; pointer-events: none !important;" onclick="closeLicenseModal(event)">
     <div class="modal-card" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title">

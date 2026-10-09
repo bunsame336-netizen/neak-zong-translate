@@ -45,13 +45,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
   background-color: var(--bg-deep);
   color: var(--text-main);
   font-family: 'Kantumruy Pro', 'Inter', -apple-system, sans-serif;
   min-height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
+  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   background-image: 
     radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 45%),
     radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.10) 0%, transparent 45%),
@@ -308,16 +317,19 @@ header.app-header {
 /* ══════════════════════════════════════════════════════════════
    ⚡ MOBILE STUDIO LAYOUT: 2-COLUMN SIDE-BY-SIDE MOBILE GRID
 ══════════════════════════════════════════════════════════════ */
-.studio-main-container {
+#app-container, .studio-main-container {
   display: grid !important;
   grid-template-columns: 46% 54% !important;
-  width: 100vw !important;
+  width: 100% !important;
   max-width: 100% !important;
-  height: calc(100dvh - 44px) !important;
-  max-height: calc(100dvh - 44px) !important;
+  min-height: calc(100vh - 44px) !important;
+  height: auto !important;
+  max-height: none !important;
   margin: 0 !important;
-  padding: 4px 4px 6px 4px !important;
-  overflow: hidden !important;
+  padding: 4px 4px 60px 4px !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
   box-sizing: border-box !important;
   gap: 4px !important;
 }
@@ -325,8 +337,8 @@ header.app-header {
 /* LEFT COLUMN: VIDEO PREVIEW + CONTROLS + EXPORT */
 .studio-stage-col {
   width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
+  height: auto !important;
+  max-height: none !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
@@ -335,11 +347,14 @@ header.app-header {
   border: none !important;
   border-right: 1.5px solid rgba(168, 85, 247, 0.25) !important;
   background: transparent !important;
-  overflow-y: auto !important;
+  overflow-y: visible !important;
   overflow-x: hidden !important;
   box-sizing: border-box !important;
   gap: 4px !important;
-  scrollbar-width: none !important;
+  position: sticky !important;
+  top: 48px !important;
+  align-self: start !important;
+  z-index: 20 !important;
 }
 .studio-stage-col::-webkit-scrollbar {
   display: none !important;
@@ -348,17 +363,19 @@ header.app-header {
 /* RIGHT COLUMN: CONTROLS & SLIDERS BESIDE VIDEO */
 .studio-controls-col {
   width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
+  height: auto !important;
+  max-height: none !important;
   display: flex !important;
   flex-direction: column !important;
-  overflow-y: auto !important;
+  overflow-y: visible !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  padding: 0 2px 40px 2px !important;
+  padding: 0 2px 60px 2px !important;
   background: transparent !important;
   box-sizing: border-box !important;
   gap: 5px !important;
+  scrollbar-width: thin !important;
+}
   scrollbar-width: thin !important;
 }
 
@@ -429,7 +446,7 @@ header.app-header {
   color: var(--text-muted);
 }
 
-#preview-video {
+#previewVideo, #preview-video, .video-stage-viewport video {
   width: 100%;
   height: 100%;
   object-fit: contain;

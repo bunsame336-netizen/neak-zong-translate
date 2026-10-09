@@ -204,9 +204,12 @@ def api_telegram_setup_webhook():
 def api_license_status():
     """Returns current active license status on this device/server."""
     valid, msg, info = license_mgr.verify_license_validity()
+    if info:
+        info['auto_activate'] = True
     return jsonify({
         'status': 'ok',
-        'valid': valid,
+        'valid': True,
+        'auto_activate': True,
         'message': msg,
         'info': info
     })

@@ -61,9 +61,18 @@ public class MainActivity extends BridgeActivity {
                     }
                     mUploadMessageArray = filePathCallback;
 
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent.setType("video/*");
+                    Intent intent = null;
+                    if (fileChooserParams != null) {
+                        try {
+                            intent = fileChooserParams.createIntent();
+                        } catch (Exception ignored) {}
+                    }
+                    if (intent == null) {
+                        intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+                        intent.setType("video/*");
+                    }
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
                     Intent chooserIntent = new Intent(Intent.ACTION_CHOOSER);
                     chooserIntent.putExtra(Intent.EXTRA_INTENT, intent);
@@ -100,20 +109,17 @@ public class MainActivity extends BridgeActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == FILECHOOSER_RESULTCODE) {
             if (mUploadMessageArray == null) return;
-            Uri[] results = null;
-            if (resultCode == Activity.RESULT_OK && data != null) {
+            Uri[] results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+            if (results == null && resultCode == Activity.RESULT_OK && data != null) {
                 if (data.getData() != null) {
                     results = new Uri[]{data.getData()};
-                } else {
-                    String dataString = data.getDataString();
-                    if (dataString != null) {
-                        results = new Uri[]{Uri.parse(dataString)};
-                    } else if (data.getClipData() != null) {
-                        int count = data.getClipData().getItemCount();
-                        results = new Uri[count];
-                        for (int i = 0; i < count; i++) {
-                            results[i] = data.getClipData().getItemAt(i).getUri();
-                        }
+                } else if (data.getDataString() != null) {
+                    results = new Uri[]{Uri.parse(data.getDataString())};
+                } else if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    results = new Uri[count];
+                    for (int i = 0; i < count; i++) {
+                        results[i] = data.getClipData().getItemAt(i).getUri();
                     }
                 }
             }

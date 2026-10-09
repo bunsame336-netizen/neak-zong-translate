@@ -11,6 +11,7 @@ const state = {
   srtContent: null,
   translatedSrt: null,
   activeTab: 'blur',
+  auto_activate: true,
   licenseValid: true,
   adminUnlocked: true,
   licenseInfo: { key: 'ADMIN-VIP-MASTER', type: 'lifetime', remaining_text: 'Admin VIP មួយជីវិត' },
@@ -406,39 +407,47 @@ function handleVideoUpload(input) {
   if (!video) return;
 
   video.style.display = 'block';
+  video.style.width = '100%';
+  video.style.height = '100%';
+  video.style.objectFit = 'contain';
   video.playsInline = true;
-  video.controls = true;
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
-  video.setAttribute('controls', 'true');
   video.setAttribute('preload', 'auto');
 
   if (state.localVideoUrl) {
     try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
   }
 
-  // ⚡ Instant direct Object URL playback within 0.1s (Zero Latency)
+  // ⚡ URL.createObjectURL direct decode playback
   try {
     video.src = URL.createObjectURL(file);
     state.localVideoUrl = video.src;
   } catch (err) {
+    console.warn('URL.createObjectURL fallback to FileReader:', err);
     const reader = new FileReader();
     reader.onload = (e) => {
       video.src = e.target.result;
+      video.muted = false;
+      video.playsInline = true;
+      video.load();
+      video.play().catch(e2 => console.log(e2));
     };
     reader.readAsDataURL(file);
+    return;
   }
 
-  video.load();
-
-  // Try unmuted audio playback first; fallback to muted if restricted by browser policy
+  // ⚡ Direct play with unmuted sound and catch policy fallback
   video.muted = false;
-  video.onloadeddata = () => {
-    video.play().catch(() => {
-      video.muted = true;
-      video.play().catch(() => {});
-    });
-  };
+  video.playsInline = true;
+  video.load();
+  video.play().catch(e => {
+    console.log(e);
+    // If browser/device requires muted playback on first touch
+    video.muted = true;
+    video.play().catch(err2 => console.log(err2));
+  });
+
   video.onloadedmetadata = function() {
     const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);
     const vp = document.getElementById('video-viewport');
