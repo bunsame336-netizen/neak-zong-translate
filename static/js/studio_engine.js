@@ -393,7 +393,12 @@ async function revokeAdminKey(key) {
 // ══════════════════════════════════════════════════════════
 // ⚡ 2. MEDIA UPLOAD & HANDLING
 // ══════════════════════════════════════════════════════════
+let _isUploadingVideo = false;
 function handleVideoUpload(input) {
+  if (_isUploadingVideo) return;
+  _isUploadingVideo = true;
+  setTimeout(() => { _isUploadingVideo = false; }, 400);
+
   const files = input.files || (input.target && input.target.files);
   if (!files || files.length === 0) return;
   const file = files[0];
@@ -421,32 +426,54 @@ function handleVideoUpload(input) {
     try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
   }
 
-  // ⚡ Read file as DataURL (Base64) for Android WebView zero-CORS compatibility & Force Play
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    video.src = e.target.result;
-    state.localVideoUrl = e.target.result;
-    video.muted = false;
-    video.playsInline = true;
-    video.load();
-    video.play().catch(() => {
-      video.muted = true;
-      video.play().catch(err => console.log('Muted autoplay fallback:', err));
-    });
-    showToast('✓ វីដេអូចាក់លើ Live Preview ភ្លាមៗ (Instant Playback 0.1s)!');
-  };
-  reader.onerror = function(err) {
-    console.warn('FileReader error, fallback to URL.createObjectURL:', err);
-    try {
-      video.src = URL.createObjectURL(file);
-      state.localVideoUrl = video.src;
+  // ⚡ 1. PRIMARY: Instant playback via URL.createObjectURL (zero-freeze, native Chromium blob decoder)
+  let blobSuccess = false;
+  try {
+    const blobUrl = URL.createObjectURL(file);
+    if (blobUrl) {
+      video.src = blobUrl;
+      state.localVideoUrl = blobUrl;
       video.muted = false;
       video.playsInline = true;
       video.load();
-      video.play().catch(() => { video.muted = true; video.play(); });
-    } catch (e2) {}
-  };
-  reader.readAsDataURL(file);
+      const p = video.play();
+      if (p !== undefined) {
+        p.then(() => {
+          console.log('Video preview playing successfully');
+        }).catch(err => {
+          console.warn('Autoplay unmuted blocked by policy, trying muted:', err);
+          video.muted = true;
+          video.play().catch(e => console.warn('Muted play also blocked:', e));
+        });
+      }
+      blobSuccess = true;
+      showToast('✓ វីដេអូចាក់លើ Live Preview ភ្លាមៗ (Instant Playback 0.1s)!');
+    }
+  } catch (blobErr) {
+    console.warn('URL.createObjectURL failed, falling back to FileReader:', blobErr);
+  }
+
+  // ⚡ 2. FALLBACK: FileReader if URL.createObjectURL is blocked
+  if (!blobSuccess) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      video.src = e.target.result;
+      state.localVideoUrl = e.target.result;
+      video.muted = false;
+      video.playsInline = true;
+      video.load();
+      video.play().catch(() => {
+        video.muted = true;
+        video.play().catch(err => console.log('Muted fallback error:', err));
+      });
+      showToast('✓ វីដេអូចាក់លើ Live Preview ភ្លាមៗ (Instant Playback 0.1s)!');
+    };
+    reader.onerror = function(err) {
+      console.error('FileReader error:', err);
+      showToast('⚠️ មិនអាចចាក់វីដេអូបានទេ សូមព្យាយាមម្តងទៀត');
+    };
+    reader.readAsDataURL(file);
+  }
 
   video.onloadedmetadata = function() {
     const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);

@@ -39,8 +39,8 @@ public class MainActivity extends BridgeActivity {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             settings.setLoadsImagesAutomatically(true);
 
-            // ⚡ Hardware Acceleration on WebView for Video Surface Rendering
-            webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+            // ⚡ Allow standard surface rendering for HTML5 <video> without offscreen black screen
+            webView.setLayerType(View.LAYER_TYPE_NONE, null);
 
             // ⚡ WebChromeClient with Full Native File Chooser Support for <input type="file">
             webView.setWebChromeClient(new WebChromeClient() {

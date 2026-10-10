@@ -731,61 +731,89 @@ header.app-header {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
-  width: 100% !important;
-  background: rgba(14, 10, 26, 0.95) !important;
-  border: 1px solid rgba(168, 85, 247, 0.3) !important;
-  border-radius: 8px !important;
-  padding: 3px !important;
-  gap: 2px !important;
   overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
+  overflow-y: hidden !important;
   white-space: nowrap !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-x !important;
+  width: 100% !important;
+  background: rgba(14, 10, 26, 0.98) !important;
+  border: 1.5px solid rgba(168, 85, 247, 0.35) !important;
+  border-radius: 8px !important;
+  padding: 4px 6px !important;
+  gap: 6px !important;
   flex-shrink: 0 !important;
-  z-index: 10 !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
   box-sizing: border-box !important;
   scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  z-index: 90 !important;
 }
 .studio-tabs-nav::-webkit-scrollbar {
   display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .tab-nav-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-sub);
-  flex: 0 0 auto;
-  padding: 4px 6px;
-  border-radius: 6px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  transition: all 0.2s;
+  flex: 0 0 auto !important;
+  padding: 6px 14px !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #cbd5e1 !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
-
-.tab-nav-btn[data-tab="marquee"] {
-  border-color: rgba(245, 158, 11, 0.5) !important;
-  background: rgba(245, 158, 11, 0.15) !important;
-  color: #fbbf24 !important;
-  font-weight: 800 !important;
-}
-
 .tab-nav-btn.active {
-  background: linear-gradient(135deg, var(--neon-purple), #7c3aed);
-  border-color: var(--neon-purple-bright);
-  color: #ffffff;
-  box-shadow: 0 0 10px var(--neon-purple-glow);
+  background: linear-gradient(135deg, #a855f7, #7c3aed) !important;
+  border-color: #c084fc !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6) !important;
 }
-
+.tab-nav-btn[data-tab="sponsor"].active {
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6) !important;
+}
 .tab-nav-btn[data-tab="marquee"].active {
   background: linear-gradient(135deg, #d97706, #b45309) !important;
   border-color: #f59e0b !important;
   color: #ffffff !important;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5) !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
+}
+.tab-nav-btn[data-tab="voice"].active {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6) !important;
+}
+.tab-nav-btn[data-tab="logo"].active {
+  background: linear-gradient(135deg, #ec4899, #db2777) !important;
+  border-color: #f472b6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.6) !important;
+}
+.tab-nav-btn[data-tab="media"].active {
+  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  border-color: #818cf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6) !important;
 }
 
 .tab-panel-card {
