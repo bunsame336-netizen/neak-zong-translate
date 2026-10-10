@@ -151,7 +151,7 @@
       display: flex !important;
     }
     .sponsor-banner-bar {
-      max-width: 90% !important;
+      max-width: 80% !important;
       width: auto !important;
       margin: 0 auto !important;
       background: rgba(8, 6, 18, 0.88) !important;
@@ -159,32 +159,33 @@
       border-radius: 8px !important;
       backdrop-filter: blur(8px) !important;
       -webkit-backdrop-filter: blur(8px) !important;
-      padding: 4px 14px !important;
+      padding: 3px 10px !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 2px !important;
+      gap: 1px !important;
       text-align: center !important;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 12px rgba(245, 158, 11, 0.35) !important;
       box-sizing: border-box !important;
       animation: glow-pulse 2s infinite ease-in-out;
-      transform-origin: center center;
+      transform-origin: center center !important;
+      will-change: transform, opacity !important;
     }
     .sponsor-top-tag, #sponsor-top-tag {
       color: #f59e0b !important;
       font-weight: 800 !important;
-      font-size: 12px !important;
-      line-height: 1.25 !important;
-      letter-spacing: 0.3px !important;
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+      letter-spacing: 0.2px !important;
       white-space: nowrap !important;
     }
     .sponsor-bottom-tag, #sponsor-bottom-tag {
       color: #22d3ee !important;
       font-weight: 700 !important;
-      font-size: 11.5px !important;
-      line-height: 1.2 !important;
-      letter-spacing: 0.2px !important;
+      font-size: 10.5px !important;
+      line-height: 1.15 !important;
+      letter-spacing: 0.1px !important;
       white-space: nowrap !important;
     }
     @keyframes glow-pulse {
@@ -201,48 +202,38 @@
     @keyframes sponsor-unroll-open {
       0% {
         opacity: 0;
-        transform: scaleX(0.04) scaleY(0.7);
-        filter: blur(4px);
+        transform: scaleX(0);
       }
-      50% {
+      65% {
         opacity: 0.95;
-        transform: scaleX(1.04) scaleY(1.02);
-        filter: blur(0px);
+        transform: scaleX(1.03);
       }
       100% {
         opacity: 1;
-        transform: scaleX(1) scaleY(1);
-        filter: blur(0px);
+        transform: scaleX(1);
       }
     }
 
     @keyframes sponsor-rollup-close {
       0% {
         opacity: 1;
-        transform: scaleX(1) scaleY(1);
-        filter: blur(0px);
+        transform: scaleX(1);
       }
       35% {
-        opacity: 0.85;
-        transform: scaleX(0.85) scaleY(0.95);
+        opacity: 0.8;
+        transform: scaleX(0.7);
       }
       100% {
         opacity: 0;
-        transform: scaleX(0.02) scaleY(0.5);
-        filter: blur(4px);
+        transform: scaleX(0);
       }
     }
 
-    .sponsor-banner-bar {
-      transform-origin: center center !important;
-      will-change: transform, opacity !important;
-    }
-
     .sponsor-banner-bar.sponsor-entering {
-      animation: sponsor-unroll-open 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      animation: sponsor-unroll-open 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
     .sponsor-banner-bar.sponsor-exiting {
-      animation: sponsor-rollup-close 0.55s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
+      animation: sponsor-rollup-close 0.5s ease-in forwards !important;
     }
 
     .sponsor-top-tag, #sponsor-top-tag {
@@ -1064,8 +1055,8 @@
                 <span>ទទឹង (W)</span>
                 <span class="form-label-val" id="blur-w-val">140px</span>
               </div>
-              <input type="range" min="20" max="380" step="2" value="140" class="cyber-slider" id="blur-w-slider"
-                oninput="document.getElementById('blur-w-val').innerText = this.value + 'px'; updateBlurBoxFromSliders();">
+              <input type="range" min="20" max="380" step="2" value="140" class="cyber-slider" id="blurWidthSlider" data-alias="blur-w-slider"
+                oninput="const valEl = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal'); if (valEl) valEl.innerText = this.value + 'px'; updateBlurBoxFromSliders();">
             </div>
             <div class="form-row">
               <div class="form-label">
@@ -1186,9 +1177,9 @@
           <div class="form-row">
             <div class="form-label">
               <span>ទំហំអក្សរ Sponsor (Font Size)</span>
-              <span class="form-label-val" id="sponsor-size-val">12px</span>
+              <span class="form-label-val" id="sponsor-size-val">11px</span>
             </div>
-            <input type="range" min="10" max="22" step="1" value="12" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
+            <input type="range" min="9" max="18" step="1" value="11" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
           </div>
 
           <div class="form-row">

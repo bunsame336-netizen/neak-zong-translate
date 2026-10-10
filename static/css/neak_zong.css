@@ -1347,7 +1347,7 @@ header.app-header {
   top: 12px !important;
 }
 .sponsor-banner-bar {
-  max-width: 90% !important;
+  max-width: 80% !important;
   width: auto !important;
   margin: 0 auto !important;
   background: rgba(8, 6, 18, 0.88) !important;
@@ -1355,40 +1355,41 @@ header.app-header {
   border-radius: 8px !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
-  padding: 4px 14px !important;
+  padding: 3px 10px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 2px !important;
+  gap: 1px !important;
   text-align: center !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 12px rgba(245, 158, 11, 0.35) !important;
   box-sizing: border-box !important;
   animation: glow-pulse 2s infinite ease-in-out;
-  transform-origin: center center;
+  transform-origin: center center !important;
+  will-change: transform, opacity !important;
 }
 .sponsor-banner-bar.sponsor-entering {
-  animation: sponsor-popup-in 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+  animation: sponsor-unroll-open 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 .sponsor-banner-bar.sponsor-exiting {
-  animation: sponsor-slide-out 0.65s ease-in forwards !important;
+  animation: sponsor-rollup-close 0.5s ease-in forwards !important;
 }
 .sponsor-top-tag,
 .sponsor-brand-tag {
   color: #f59e0b !important;
   font-weight: 800 !important;
-  font-size: 12px !important;
-  line-height: 1.25 !important;
-  letter-spacing: 0.3px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.2px !important;
   white-space: nowrap !important;
 }
 .sponsor-bottom-tag,
 .sponsor-contact-tag {
   color: #22d3ee !important;
   font-weight: 700 !important;
-  font-size: 11.5px !important;
-  line-height: 1.2 !important;
-  letter-spacing: 0.2px !important;
+  font-size: 10.5px !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0.1px !important;
   white-space: nowrap !important;
 }
 .sponsor-ad-tag {

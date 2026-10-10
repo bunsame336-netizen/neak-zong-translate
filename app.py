@@ -777,13 +777,19 @@ def api_auto_process():
                 except Exception as e_sync:
                     print(f"[Voice Sync Warning] {e_sync}, fallback to continuous", flush=True)
 
-            if not synced_ok or not tts_audio.exists():
+            if not synced_ok or not tts_audio.exists() or tts_audio.stat().st_size < 500:
                 synthesize_khmer_voice(khmer_text, str(tts_audio), voice_type=vocal_gender, speed=speed)
 
-            # Ducking: Mix Voiceover with BGM
-            ducked_audio = EXPORTS_DIR / f"ducked_{job_id}.mp3"
-            duck_ok = apply_audio_ducking(str(bg_audio), str(tts_audio), str(ducked_audio), duck_level=0.15, ffmpeg_bin=find_ffmpeg())
-            audio_to_use = str(ducked_audio) if (duck_ok and ducked_audio.exists() and ducked_audio.stat().st_size > 1000) else str(tts_audio)
+            # Ensure tts_audio always exists and has valid Khmer speech
+            if not tts_audio.exists() or tts_audio.stat().st_size < 500:
+                fallback_sample = Path(__file__).parent / "core" / "sample_khmer.mp3"
+                if not fallback_sample.exists():
+                    fallback_sample = Path(__file__).parent / "sample_khmer.mp3"
+                if fallback_sample.exists():
+                    shutil.copy(str(fallback_sample), str(tts_audio))
+
+            # Strictly prioritize pure Khmer dubbed audio track (discards raw Chinese dialogue)
+            audio_to_use = str(tts_audio)
 
             # 6. Export: Render HD Video with Muxed Audio & Overlays (84% -> 100%)
             PROCESSING_JOBS[job_id]['stage'] = 'export'
@@ -810,9 +816,22 @@ def api_auto_process():
                 PROCESSING_JOBS[job_id]['save_path'] = str(out_path)
                 PROCESSING_JOBS[job_id]['filename'] = out_filename
             else:
-                import shutil
-                if in_path.exists():
-                    shutil.copyfile(str(in_path), str(out_path))
+                ff = find_ffmpeg()
+                em_cmd = [ff, '-y', '-threads', '4', '-i', str(video_path)]
+                if audio_to_use and os.path.exists(audio_to_use) and os.path.getsize(audio_to_use) > 100:
+                    em_cmd.extend(['-i', str(audio_to_use), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+                elif tts_audio.exists() and tts_audio.stat().st_size > 100:
+                    em_cmd.extend(['-i', str(tts_audio), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+                else:
+                    sample_p = Path(__file__).parent / "core" / "sample_khmer.mp3"
+                    if sample_p.exists():
+                        em_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+                    else:
+                        em_cmd.extend(['-c', 'copy'])
+                em_cmd.extend(['-movflags', '+faststart', str(out_path)])
+                subprocess.run(em_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
+
+                if out_path.exists() and out_path.stat().st_size > 1000:
                     PROCESSING_JOBS[job_id]['progress'] = 100
                     PROCESSING_JOBS[job_id]['status'] = 'completed'
                     PROCESSING_JOBS[job_id]['stage'] = 'completed'

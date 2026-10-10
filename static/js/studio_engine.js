@@ -96,7 +96,7 @@ const state = {
     position: 'bottom',
     yPercent: 88,
     color: '#f59e0b',
-    fontSize: 12,
+    fontSize: 11,
     duration: 15,
     bgColor: 'rgba(8, 6, 18, 0.90)'
   },
@@ -902,30 +902,34 @@ function getVideoDimensions() {
   return { w: Math.max(100, Math.floor(w)), h: Math.max(80, Math.floor(h)) };
 }
 
-// ── BLUR BOX SLIDERS (BOUNDED TO EXACT VIDEO FRAME) ──────
+// ── BLUR BOX SLIDERS (STRICT BOUNDS TO EXACT VIDEO FRAME) ──────
 function updateBlurBoxLimits() {
+  const video = document.getElementById('previewVideo') || previewVideo;
   const { w: vidW, h: vidH } = getVideoDimensions();
-  const wSlider = document.getElementById('blur-w-slider');
-  const hSlider = document.getElementById('blur-h-slider');
-  const xSlider = document.getElementById('blur-x-slider');
-  const ySlider = document.getElementById('blur-y-slider');
+  const actualVidW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
+  const actualVidH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
+
+  const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
+  const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
+  const xSlider = document.getElementById('blurXSlider') || document.getElementById('blur-x-slider');
+  const ySlider = document.getElementById('blurYSlider') || document.getElementById('blur-y-slider');
   
   if (wSlider) {
     wSlider.min = 20;
-    wSlider.max = vidW;
-    if (parseInt(wSlider.value) > vidW) {
-      wSlider.value = vidW;
-      const wVal = document.getElementById('blur-w-val');
-      if (wVal) wVal.innerText = `${vidW}px`;
+    wSlider.max = actualVidW;
+    if (parseInt(wSlider.value) > actualVidW) {
+      wSlider.value = actualVidW;
+      const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
+      if (wVal) wVal.innerText = `${actualVidW}px`;
     }
   }
   if (hSlider) {
     hSlider.min = 10;
-    hSlider.max = vidH;
-    if (parseInt(hSlider.value) > vidH) {
-      hSlider.value = vidH;
-      const hVal = document.getElementById('blur-h-val');
-      if (hVal) hVal.innerText = `${vidH}px`;
+    hSlider.max = actualVidH;
+    if (parseInt(hSlider.value) > actualVidH) {
+      hSlider.value = actualVidH;
+      const hVal = document.getElementById('blur-h-val') || document.getElementById('blurHeightVal');
+      if (hVal) hVal.innerText = `${actualVidH}px`;
     }
   }
 
@@ -934,19 +938,19 @@ function updateBlurBoxLimits() {
 
   if (xSlider) {
     xSlider.min = 0;
-    xSlider.max = Math.max(0, vidW - curW);
+    xSlider.max = Math.max(0, actualVidW - curW);
     if (parseInt(xSlider.value) > xSlider.max) {
       xSlider.value = xSlider.max;
-      const xVal = document.getElementById('blur-x-val');
+      const xVal = document.getElementById('blur-x-val') || document.getElementById('blurXVal');
       if (xVal) xVal.innerText = `${xSlider.max}px`;
     }
   }
   if (ySlider) {
     ySlider.min = 0;
-    ySlider.max = Math.max(0, vidH - curH);
+    ySlider.max = Math.max(0, actualVidH - curH);
     if (parseInt(ySlider.value) > ySlider.max) {
       ySlider.value = ySlider.max;
-      const yVal = document.getElementById('blur-y-val');
+      const yVal = document.getElementById('blur-y-val') || document.getElementById('blurYVal');
       if (yVal) yVal.innerText = `${ySlider.max}px`;
     }
   }
@@ -963,18 +967,30 @@ function updateBlurBoxFromSliders() {
     }
   }
 
+  const video = document.getElementById('previewVideo') || previewVideo;
   const { w: vidW, h: vidH } = getVideoDimensions();
+  const actualVidW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
+  const actualVidH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
 
-  let w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
-  let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
-  let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
-  let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+  const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
+  const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
+  const xSlider = document.getElementById('blurXSlider') || document.getElementById('blur-x-slider');
+  const ySlider = document.getElementById('blurYSlider') || document.getElementById('blur-y-slider');
+
+  // Hard clamp slider max to actual video frame
+  if (wSlider) wSlider.max = actualVidW;
+  if (hSlider) hSlider.max = actualVidH;
+
+  let w = parseInt(wSlider?.value || 140);
+  let h = parseInt(hSlider?.value || 45);
+  let x = parseInt(xSlider?.value || 15);
+  let y = parseInt(ySlider?.value || 15);
 
   // Clamp strictly within video bounds (Never spill outside video frame)
-  w = Math.max(20, Math.min(vidW, w));
-  h = Math.max(10, Math.min(vidH, h));
-  x = Math.max(0, Math.min(vidW - w, x));
-  y = Math.max(0, Math.min(vidH - h, y));
+  w = Math.max(20, Math.min(actualVidW, w));
+  h = Math.max(10, Math.min(actualVidH, h));
+  x = Math.max(0, Math.min(actualVidW - w, x));
+  y = Math.max(0, Math.min(actualVidH - h, y));
 
   state.blurMask.x = x;
   state.blurMask.y = y;
@@ -986,14 +1002,15 @@ function updateBlurBoxFromSliders() {
     blurBox.style.top = `${y}px`;
     blurBox.style.width = `${w}px`;
     blurBox.style.height = `${h}px`;
-    blurBox.style.maxWidth = `${vidW}px`;
-    blurBox.style.maxHeight = `${vidH}px`;
+    blurBox.style.maxWidth = `${actualVidW}px`;
+    blurBox.style.maxHeight = `${actualVidH}px`;
+    blurBox.style.boxSizing = 'border-box';
   }
 
-  const wVal = document.getElementById('blur-w-val');
-  const hVal = document.getElementById('blur-h-val');
-  const xVal = document.getElementById('blur-x-val');
-  const yVal = document.getElementById('blur-y-val');
+  const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
+  const hVal = document.getElementById('blur-h-val') || document.getElementById('blurHeightVal');
+  const xVal = document.getElementById('blur-x-val') || document.getElementById('blurXVal');
+  const yVal = document.getElementById('blur-y-val') || document.getElementById('blurYVal');
   if (wVal) wVal.innerText = `${w}px`;
   if (hVal) hVal.innerText = `${h}px`;
   if (xVal) xVal.innerText = `${x}px`;
@@ -1175,7 +1192,7 @@ function updateSponsorContent() {
   const topText = (document.getElementById('sponsor-top-input')?.value || document.getElementById('sponsor-brand-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
   const bottomText = (document.getElementById('sponsor-bottom-input')?.value || document.getElementById('sponsor-contact-input')?.value || '📱 088 9 111 400 | Telegram').trim();
   const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
-  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 12);
+  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 11);
   const yPercent = parseInt(document.getElementById('sponsor-y-slider')?.value || 88);
   const bg = document.getElementById('sponsor-bg-select')?.value || 'rgba(8, 6, 18, 0.90)';
 
@@ -1714,24 +1731,41 @@ async function triggerAutoProcessPipeline() {
 }
 
 function playExportedVideo() {
-  if (!state.lastExportUrl) {
-    showToast('⚠️ មិនទាន់មានវីដេអូបកប្រែរួចនៅឡើយ');
-    return;
-  }
   const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || previewVideo;
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
+
   if (video) {
     video.style.display = 'block';
-    video.src = state.lastExportUrl;
+    const dubbedUrl = "http://127.0.0.1:8080/exports/NeakZong_Dubbed.mp4?t=" + Date.now();
+    video.src = dubbedUrl;
+    video.removeAttribute('poster');
     video.controls = true;
     video.muted = false;
     video.load();
-    video.play().catch(() => {
-      video.muted = true;
-      video.play().catch(() => {});
-    });
+
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.warn("Autoplay with sound prevented, retrying muted:", err);
+        video.muted = true;
+        video.play().catch(() => {});
+      });
+    }
+
+    video.onerror = function() {
+      if (video.src && video.src.includes('127.0.0.1:8080')) {
+        console.warn("Local streaming 8080 unavailable, falling back to export url");
+        const fallbackUrl = state.lastExportUrl || ("https://neak-zong-translate.onrender.com/exports/NeakZong_Dubbed.mp4?t=" + Date.now());
+        video.src = fallbackUrl;
+        video.load();
+        video.play().catch(() => {});
+      }
+    };
+
     showToast('✓ កំពុងចាក់វីដេអូដែលបកប្រែរួច (Dubbed Video Playing)!');
+  } else {
+    showToast('⚠️ រកមិនឃើញកញ្ចក់វីដេអូ Preview ឡើយ');
   }
 }
 

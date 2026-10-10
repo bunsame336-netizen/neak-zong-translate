@@ -248,14 +248,64 @@ public class LocalVideoServer {
                 return;
             }
 
-            // Video streaming endpoint (default for GET)
-            File videoFile = currentVideoFile;
+            // Video streaming endpoint (handles /local_video.mp4 and /exports/NeakZong_Dubbed.mp4)
+            File videoFile = null;
+
+            if (path.contains("exports") || path.contains("Dubbed")) {
+                if (appContext != null) {
+                    File dubbedCache = new File(appContext.getCacheDir(), "NeakZong_Dubbed.mp4");
+                    // Fetch latest dubbed video with Khmer audio from cloud server only if needed
+                    boolean needsFetch = !dubbedCache.exists() || (System.currentTimeMillis() - dubbedCache.lastModified() > 20000);
+                    if (needsFetch) {
+                        String cleanPath = path.contains("?") ? path.substring(0, path.indexOf("?")) : path;
+                        if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
+                        String cloudUrl = "https://neak-zong-translate.onrender.com" + cleanPath;
+                        try {
+                            URL u = new URL(cloudUrl);
+                            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+                            conn.setConnectTimeout(8000);
+                            conn.setReadTimeout(20000);
+                            if (conn.getResponseCode() == 200) {
+                                File tmpFile = new File(appContext.getCacheDir(), "dubbed_download.tmp");
+                                try (InputStream in = conn.getInputStream(); FileOutputStream fos = new FileOutputStream(tmpFile)) {
+                                    byte[] bbuf = new byte[65536];
+                                    int bread;
+                                    while ((bread = in.read(bbuf)) != -1) {
+                                        fos.write(bbuf, 0, bread);
+                                    }
+                                    fos.flush();
+                                }
+                                if (tmpFile.exists() && tmpFile.length() > 1000) {
+                                    if (dubbedCache.exists()) dubbedCache.delete();
+                                    tmpFile.renameTo(dubbedCache);
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.w(TAG, "Cloud dubbed fetch note: " + e.getMessage());
+                        }
+                    }
+
+                    if (dubbedCache.exists() && dubbedCache.length() > 1000) {
+                        videoFile = dubbedCache;
+                    }
+                }
+            }
+
+            if (videoFile == null) {
+                videoFile = currentVideoFile;
+            }
+
             if (videoFile == null || !videoFile.exists() || videoFile.length() == 0) {
                 if (appContext != null) {
-                    File check = new File(appContext.getCacheDir(), "local_video.mp4");
-                    if (check.exists() && check.length() > 0) {
-                        currentVideoFile = check;
-                        videoFile = check;
+                    File checkDubbed = new File(appContext.getCacheDir(), "NeakZong_Dubbed.mp4");
+                    if (checkDubbed.exists() && checkDubbed.length() > 0) {
+                        videoFile = checkDubbed;
+                    } else {
+                        File check = new File(appContext.getCacheDir(), "local_video.mp4");
+                        if (check.exists() && check.length() > 0) {
+                            currentVideoFile = check;
+                            videoFile = check;
+                        }
                     }
                 }
             }

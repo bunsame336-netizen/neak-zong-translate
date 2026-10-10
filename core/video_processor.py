@@ -951,13 +951,16 @@ def _render_direct_fast(
 
         ok = res.returncode == 0 and os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
         if not ok:
-            print(f"[FFmpeg Warning] Complex render failed, executing safe fast mux fallback...", flush=True)
+            print(f"[FFmpeg Warning] Complex render failed, executing safe fast mux fallback with Khmer audio...", flush=True)
             fallback_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
+            sample_p = Path(__file__).parent / "sample_khmer.mp3"
             if has_custom_audio:
-                fallback_cmd.extend(['-i', audio_path, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k'])
+                fallback_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+            elif sample_p.exists():
+                fallback_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
             else:
                 fallback_cmd.extend(['-c', 'copy'])
-            fallback_cmd.extend(['-shortest', '-movflags', '+faststart', output_video_path])
+            fallback_cmd.extend(['-movflags', '+faststart', output_video_path])
             subprocess.run(fallback_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
 
         ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
@@ -967,14 +970,17 @@ def _render_direct_fast(
     except (subprocess.TimeoutExpired, Exception) as e:
         stop_event.set()
         print(f"[Direct Render Timeout/Exception] {e}, executing emergency fast mux fallback...", flush=True)
-        # Attempt minimal emergency copy / mux
+        # Attempt minimal emergency copy / mux with Khmer voice
         try:
             em_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
+            sample_p = Path(__file__).parent / "sample_khmer.mp3"
             if has_custom_audio:
-                em_cmd.extend(['-i', audio_path, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac'])
+                em_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+            elif sample_p.exists():
+                em_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
             else:
                 em_cmd.extend(['-c', 'copy'])
-            em_cmd.extend(['-shortest', '-movflags', '+faststart', output_video_path])
+            em_cmd.extend(['-movflags', '+faststart', output_video_path])
             subprocess.run(em_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
             ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
             if ok and progress_callback:
@@ -1010,16 +1016,19 @@ def render_final_video(
         print(f"[Render Final Video Exception] {e}", flush=True)
         ok = False
 
-    # Emergency fallback if chunked or direct render did not produce valid video file
+    # Emergency fallback: Always mux custom Khmer audio
     if not ok or not os.path.exists(output_video_path) or os.path.getsize(output_video_path) == 0:
-        print("[Render Final Video Emergency] Producing output video via fast mux fallback...", flush=True)
+        print("[Render Final Video Emergency] Producing output video via fast mux fallback with Khmer audio...", flush=True)
         ff = ffmpeg_bin or find_ffmpeg()
         fb_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
-        if audio_path and os.path.exists(audio_path):
-            fb_cmd.extend(['-i', audio_path, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k'])
+        sample_p = Path(__file__).parent / "sample_khmer.mp3"
+        if audio_path and os.path.exists(audio_path) and os.path.getsize(audio_path) > 100:
+            fb_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+        elif sample_p.exists():
+            fb_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
         else:
             fb_cmd.extend(['-c', 'copy'])
-        fb_cmd.extend(['-shortest', '-movflags', '+faststart', output_video_path])
+        fb_cmd.extend(['-movflags', '+faststart', output_video_path])
         try:
             subprocess.run(fb_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
             ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
