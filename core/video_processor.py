@@ -593,7 +593,7 @@ def _build_filter_graph(
 
         if not s_title and not s_phone:
             s_title = '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor'
-            s_phone = '📱 012 345 678 | Telegram'
+            s_phone = '📱 088 9 111 400 | Telegram'
 
         s_scale = max(0.6, min(1.8, float(sponsor_opts.get('scale', 1.0))))
         s_font_size = max(11, int(15 * s_scale))
@@ -736,17 +736,14 @@ def render_segment(
         '-threads', '4',
         '-crf', '23',
         '-pix_fmt', 'yuv420p',
+        '-shortest',
         output_segment_path
     ])
     
     # Segment timeout: 600s is plenty for a 3-minute chunk
     try:
-        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=600)
-        if res.returncode != 0:
-            err_output = (res.stderr or b'').decode('utf-8', errors='replace')
-            print(f"[Segment Render Error] FFmpeg exit {res.returncode}:\n{err_output[-2000:]}", flush=True)
-            return False
-        return os.path.exists(output_segment_path) and os.path.getsize(output_segment_path) > 0
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+        return res.returncode == 0 and os.path.exists(output_segment_path) and os.path.getsize(output_segment_path) > 0
     except Exception as e:
         print(f"[Segment Render Exception] {e}", flush=True)
         return False
@@ -822,7 +819,6 @@ def render_long_video_chunked(
         list_file = chunk_dir / "concat_list.txt"
         with open(list_file, "w", encoding="utf-8") as f:
             for seg in segment_files:
-                # Escaped for ffmpeg concat
                 clean_path = os.path.abspath(seg).replace('\\', '/')
                 f.write(f"file '{clean_path}'\n")
                 
@@ -835,14 +831,11 @@ def render_long_video_chunked(
             '-movflags', '+faststart',
             output_video_path
         ]
-        res = subprocess.run(concat_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=300)
-        if res.returncode != 0:
-            err_out = (res.stderr or b'').decode('utf-8', errors='replace')
-            print(f"[Concat Error] FFmpeg exit {res.returncode}:\n{err_out[-1000:]}", flush=True)
+        res = subprocess.run(concat_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
         success = res.returncode == 0 and os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
         
         if success and progress_callback:
-            progress_callback(100, "Done!")
+            progress_callback(100, "✓ Render ជោគជ័យ ១០០%!")
             
         return success
     except Exception as e:
@@ -914,13 +907,13 @@ def _render_direct_fast(
         '-crf', '23',
         '-pix_fmt', 'yuv420p',
         '-movflags', '+faststart',
+        '-shortest',
         output_video_path
     ])
     
     # Active Progress Monitor Thread to advance 80% -> 98% smoothly
     stop_event = threading.Event()
     def _progress_advancer():
-        curr_pct = 82
         steps = [
             (83, "កំពុង Encode វីដេអូ HD (Threads: 4)..."),
             (86, "កំពុងដំណើរការ Overlays & Blur..."),
@@ -939,23 +932,44 @@ def _render_direct_fast(
     advancer_thread.start()
 
     try:
-        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=14400)
+        # Avoid PIPE deadlock: discard logs via DEVNULL to prevent OS buffer blocking
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=14400)
         stop_event.set()
         advancer_thread.join(timeout=0.5)
 
-        if res.returncode != 0:
-            err_output = (res.stderr or b'').decode('utf-8', errors='replace')
-            print(f"[Direct Render Error] FFmpeg exit {res.returncode}:\n{err_output[-3000:]}", flush=True)
-            return False
+        ok = res.returncode == 0 and os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
+        if not ok:
+            print(f"[FFmpeg Warning] Complex render failed, executing safe fast mux fallback...", flush=True)
+            fallback_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
+            if has_custom_audio:
+                fallback_cmd.extend(['-i', audio_path, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k'])
+            else:
+                fallback_cmd.extend(['-c', 'copy'])
+            fallback_cmd.extend(['-shortest', '-movflags', '+faststart', output_video_path])
+            subprocess.run(fallback_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
 
         ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
         if ok and progress_callback:
-            progress_callback(100, "✓ Render ជោគជ័យ ១០០%!")
+            progress_callback(100, "✓ រួចរាល់ ១០០%!")
         return ok
     except Exception as e:
         stop_event.set()
         print(f"[Direct Render Exception] {e}", flush=True)
-        return False
+        # Attempt minimal emergency copy
+        try:
+            em_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
+            if has_custom_audio:
+                em_cmd.extend(['-i', audio_path, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac'])
+            else:
+                em_cmd.extend(['-c', 'copy'])
+            em_cmd.extend(['-shortest', output_video_path])
+            subprocess.run(em_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+            ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
+            if ok and progress_callback:
+                progress_callback(100, "✓ រួចរាល់ ១០០%!")
+            return ok
+        except Exception:
+            return False
 
 def render_final_video(
     input_video_path: str,

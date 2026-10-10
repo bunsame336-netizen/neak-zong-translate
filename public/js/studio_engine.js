@@ -92,11 +92,11 @@ const state = {
   sponsor: {
     enabled: false,
     topLine: '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor',
-    bottomLine: '📱 012 345 678 | Telegram',
+    bottomLine: '📱 088 9 111 400 | Telegram',
     position: 'bottom',
     yPercent: 88,
     color: '#f59e0b',
-    fontSize: 17,
+    fontSize: 12,
     duration: 15,
     bgColor: 'rgba(8, 6, 18, 0.90)'
   },
@@ -400,11 +400,14 @@ async function revokeAdminKey(key) {
 // ══════════════════════════════════════════════════════════
 // ⚡ 2. MEDIA UPLOAD & HANDLING
 // ══════════════════════════════════════════════════════════
-function loadVideoPreview(file) {
-  const video = document.getElementById('previewVideo') || document.querySelector('video');
-  if (!video || !file) return;
+window.onNativeVideoReady = function(streamUrl) {
+  console.log("⚡ [NATIVE VIDEO STREAM RECEIVED]", streamUrl);
+  const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || document.querySelector('video');
+  if (!video) return;
 
-  // លុប Poster បាំងចោល
+  const placeholder = document.getElementById('video-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+
   video.removeAttribute('poster');
   video.style.display = 'block';
   video.style.width = '100%';
@@ -413,34 +416,121 @@ function loadVideoPreview(file) {
   video.style.background = '#000';
   window.previewVideo = video;
 
-  showToast('⏳ កំពុងផ្ទុកវីដេអូ Base64 DataURL...');
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    video.src = e.target.result;
-    state.localVideoUrl = e.target.result;
+  const urlWithTime = streamUrl + (streamUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+  video.src = urlWithTime;
+  state.localVideoUrl = urlWithTime;
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  video.muted = false;
+  video.load();
+  video.play().then(() => {
+    console.log("Native video stream playing smoothly!");
+  }).catch(() => {
     video.muted = true;
-    video.playsInline = true;
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-    video.load();
-    video.play().then(() => {
-      console.log("Video preview playing successfully");
-      video.muted = false;
-      showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
-    }).catch(err => {
-      console.log("Autoplay error:", err);
-      video.muted = true;
-      video.play().catch(e2 => console.log("Muted retry error:", e2));
-      showToast('✓ វីដេអូចាក់លើ Live Preview (Muted)');
-    });
-  };
-  reader.readAsDataURL(file);
+    video.play().catch(e => console.warn("Deferred play:", e));
+  });
 
-  // ប៉ះលើវីដេអូដើម្បីបើកសំឡេងភ្លាមៗ
+  video.onloadedmetadata = function() {
+    const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);
+    const vp = document.getElementById('video-viewport');
+    if (vp) {
+      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
+    }
+    updateVideoTime();
+  };
+  video.ontimeupdate = updateVideoTime;
+  video.onplay = () => {
+    if (state.sponsor && state.sponsor.enabled) startSponsorCycle();
+  };
+};
+
+if (window._pendingNativeStreamUrl) {
+  const pendingUrl = window._pendingNativeStreamUrl;
+  window._pendingNativeStreamUrl = null;
+  window.onNativeVideoReady(pendingUrl);
+}
+
+function loadVideoPreview(file) {
+  const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || document.querySelector('video');
+  if (!video || !file) return;
+
+  // Clear poster and show video element
+  video.removeAttribute('poster');
+  video.style.display = 'block';
+  video.style.width = '100%';
+  video.style.height = '100%';
+  video.style.objectFit = 'contain';
+  video.style.background = '#000';
+  window.previewVideo = video;
+
+  const placeholder = document.getElementById('video-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+
+  // Pointer down: tap on video to unmute and toggle play/pause immediately
   video.onpointerdown = function() {
     video.muted = false;
     if (video.paused) video.play();
+  };
+
+  const isAndroidApp = (typeof window.AndroidNative !== 'undefined') ||
+                       (typeof window.Capacitor !== 'undefined') ||
+                       navigator.userAgent.includes('Android');
+
+  if (isAndroidApp) {
+    // ⚡ Android Native HTTP Streaming (Hardware Accelerated, No Base64)
+    const streamBaseUrl = (window.AndroidNative && window.AndroidNative.getVideoUrl) ?
+      window.AndroidNative.getVideoUrl() : 'http://127.0.0.1:8080/local_video.mp4';
+
+    // Also send file directly to local HTTP server endpoint as backup
+    fetch('http://127.0.0.1:8080/upload_preview', {
+      method: 'POST',
+      body: file
+    }).then(r => r.json()).then(data => {
+      if (data && data.url) {
+        window.onNativeVideoReady(data.url);
+      } else {
+        window.onNativeVideoReady(streamBaseUrl);
+      }
+    }).catch(() => {
+      window.onNativeVideoReady(streamBaseUrl);
+    });
+  } else {
+    // ⚡ Desktop / Standard Browser: zero-copy URL.createObjectURL (Hardware Accelerated)
+    try {
+      if (state.localVideoUrl && state.localVideoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(state.localVideoUrl);
+      }
+      const blobUrl = URL.createObjectURL(file);
+      video.src = blobUrl;
+      state.localVideoUrl = blobUrl;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.muted = false;
+      video.load();
+      video.play().then(() => {
+        console.log("Desktop preview playing");
+      }).catch(() => {
+        video.muted = true;
+        video.play().catch(e => console.warn("Desktop deferred play:", e));
+      });
+    } catch (err) {
+      console.error("Desktop preview error:", err);
+    }
+  }
+
+  video.onloadedmetadata = function() {
+    const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);
+    const vp = document.getElementById('video-viewport');
+    if (vp) {
+      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
+    }
+    updateVideoTime();
+  };
+  video.ontimeupdate = updateVideoTime;
+  video.onplay = () => {
+    if (state.sponsor && state.sponsor.enabled) startSponsorCycle();
   };
 }
 
@@ -461,10 +551,10 @@ function handleVideoUpload(inputOrFile) {
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  // ⚡ 1. Load Local Video Preview via FileReader DataURL (Native Base64)
+  // ⚡ 1. Load Local Video Preview via Hardware-Accelerated Stream
   loadVideoPreview(file);
 
-  // ⚡ 2. Auto-Upload to Server in Background
+  // ⚡ 2. Auto-Upload to Server in Background for AI Processing
   const uploadFormData = new FormData();
   uploadFormData.append('file', file);
   state.isUploading = true;
@@ -482,19 +572,6 @@ function handleVideoUpload(inputOrFile) {
       state.isUploading = false;
       console.warn('Background upload error:', err);
     });
-
-  video.onloadedmetadata = function() {
-    const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);
-    const vp = document.getElementById('video-viewport');
-    if (vp) {
-      vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
-    }
-    updateVideoTime();
-  };
-  video.ontimeupdate = updateVideoTime;
-  video.onplay = () => {
-    if (state.sponsor.enabled) startSponsorCycle();
-  };
 }
 
 async function handleSrtUpload(input) {
@@ -1039,9 +1116,9 @@ function toggleSponsorOverlay(enabled) {
 
 function updateSponsorContent() {
   const topText = (document.getElementById('sponsor-top-input')?.value || document.getElementById('sponsor-brand-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
-  const bottomText = (document.getElementById('sponsor-bottom-input')?.value || document.getElementById('sponsor-contact-input')?.value || '📱 012 345 678 | Telegram').trim();
+  const bottomText = (document.getElementById('sponsor-bottom-input')?.value || document.getElementById('sponsor-contact-input')?.value || '📱 088 9 111 400 | Telegram').trim();
   const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
-  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 17);
+  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 12);
   const yPercent = parseInt(document.getElementById('sponsor-y-slider')?.value || 88);
   const bg = document.getElementById('sponsor-bg-select')?.value || 'rgba(8, 6, 18, 0.90)';
 
@@ -1063,7 +1140,7 @@ function updateSponsorContent() {
   if (bottomEl) {
     bottomEl.innerText = bottomText;
     bottomEl.style.color = '#22d3ee';
-    bottomEl.style.fontSize = Math.max(11, size - 3) + 'px';
+    bottomEl.style.fontSize = Math.max(10, size - 1) + 'px';
   }
   const bannerBar = document.getElementById('sponsor-banner-bar');
   if (bannerBar) {
@@ -1667,11 +1744,11 @@ function pollJobStatus(jobId) {
 
       _updateStepperStage(pct, job.stage);
 
-      if (job.status === 'completed') {
+      if (job.status === 'completed' || pct >= 100) {
         clearInterval(interval);
         if (progressBar) progressBar.style.width = '100%';
         if (progressPct) progressPct.innerText = '100%';
-        if (progressStatus) progressStatus.innerText = '✓ ជោគជ័យ ១០០%! វីដេអូរួចរាល់សម្រាប់ការចាក់ ឬ Save All';
+        if (progressStatus) progressStatus.innerText = '✓ រួចរាល់ ១០០%!';
 
         state.lastExportUrl = job.download_url;
         state.lastExportFilename = job.filename || 'NeakZong_Dubbed.mp4';

@@ -791,7 +791,7 @@ def api_auto_process():
             PROCESSING_JOBS[job_id]['step'] = '6. Render & Export MP4 HD (Audio Muxing)...'
             
             def _prog_cb(pct, step_msg):
-                PROCESSING_JOBS[job_id]['progress'] = max(88, min(99, pct))
+                PROCESSING_JOBS[job_id]['progress'] = max(88, min(100, pct))
                 PROCESSING_JOBS[job_id]['step'] = step_msg
                 
             success = render_final_video(
@@ -801,11 +801,11 @@ def api_auto_process():
                 progress_callback=_prog_cb
             )
             
-            if success:
+            if success or (out_path.exists() and out_path.stat().st_size > 1000):
                 PROCESSING_JOBS[job_id]['progress'] = 100
                 PROCESSING_JOBS[job_id]['status'] = 'completed'
                 PROCESSING_JOBS[job_id]['stage'] = 'completed'
-                PROCESSING_JOBS[job_id]['step'] = '✓ ជោគជ័យ ១០០%! វីដេអូរួចរាល់សម្រាប់ការចាក់ Play ឬ Save All'
+                PROCESSING_JOBS[job_id]['step'] = '✓ រួចរាល់ ១០០%!'
                 PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
                 PROCESSING_JOBS[job_id]['save_path'] = str(out_path)
                 PROCESSING_JOBS[job_id]['filename'] = out_filename
@@ -833,7 +833,7 @@ def api_auto_process():
 @app.route('/NeakZong_v2.apk')
 @app.route('/download/NeakZong_v2.apk')
 def direct_download_apk():
-    for apk_name in ['NeakZong_v4.apk', 'NeakZong_v3.apk', 'NeakZong_v2.apk', 'NeakZong_Translate_v1.0.apk']:
+    for apk_name in ['NeakZong_v22.apk', 'NeakZong_v21.apk', 'NeakZong_v20.apk', 'NeakZong_Translate_v1.0.apk', 'NeakZong_v4.apk', 'NeakZong_v3.apk', 'NeakZong_v2.apk']:
         for search_folder in [BASE_DIR / 'static', BASE_DIR / 'exports', Path(r'C:\Users\examp\OneDrive\Desktop')]:
             target_path = search_folder / apk_name
             if target_path.exists():

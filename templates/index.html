@@ -19,7 +19,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Battambang:wght@400;700&family=Siemreap&family=Bokor&family=Koulen&display=swap" rel="stylesheet">
 
   <!-- Custom Mobile Split Cyberpunk CSS -->
-  <link rel="stylesheet" href="/static/css/neak_zong.css?v=9.0.0">
+  <link rel="stylesheet" href="/static/css/neak_zong.css?v=10.2.0">
+
+  <!-- Early Native Stream Buffer -->
+  <script>
+    window.onNativeVideoReady = function(url) {
+      window._pendingNativeStreamUrl = url;
+    };
+  </script>
 
   <!-- ⚡ CRITICAL MOBILE FIX: LOGO 42PX & 1-COLUMN VERTICAL FLOW (SMOOTH TOUCH SCROLLING) -->
   <style>
@@ -28,25 +35,25 @@
       padding: 0 !important;
       width: 100% !important;
       max-width: 100% !important;
-      min-height: 100vh !important;
-      height: auto !important;
-      max-height: none !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-      position: relative !important;
+      height: 100% !important;
+      height: 100dvh !important;
+      max-height: 100vh !important;
+      overflow: hidden !important;
+      position: fixed !important;
+      inset: 0 !important;
       -webkit-overflow-scrolling: touch !important;
     }
     header.app-header {
-      height: 52px !important;
-      min-height: 52px !important;
-      max-height: 52px !important;
-      flex: 0 0 52px !important;
-      padding: 5px 12px !important;
-      z-index: 50 !important;
+      height: 48px !important;
+      min-height: 48px !important;
+      max-height: 48px !important;
+      flex: 0 0 48px !important;
+      padding: 4px 10px !important;
+      z-index: 10000 !important;
       box-sizing: border-box !important;
       position: relative !important;
       top: 0 !important;
-      background: rgba(7, 8, 13, 0.95) !important;
+      background: rgba(7, 8, 13, 0.98) !important;
       backdrop-filter: blur(12px) !important;
       border-bottom: 1px solid rgba(168, 85, 247, 0.25) !important;
       display: flex !important;
@@ -85,74 +92,119 @@
       font-size: 0.92rem !important;
     }
 
-    /* ════ 1-COLUMN MOBILE VERTICAL FLOW (STACKED CLEANLY) ════ */
+    /* ════ 1-COLUMN MOBILE VERTICAL FLOW (LOCKED VIEWPORT) ════ */
     #app-container, .studio-main-container {
       display: flex !important;
       flex-direction: column !important;
       width: 100% !important;
       max-width: 100% !important;
-      min-height: calc(100vh - 52px) !important;
-      height: auto !important;
-      max-height: none !important;
+      height: calc(100vh - 48px) !important;
+      height: calc(100dvh - 48px) !important;
+      max-height: calc(100vh - 48px) !important;
       margin: 0 !important;
-      padding: 8px 10px 80px 10px !important;
-      overflow-y: visible !important;
-      overflow-x: hidden !important;
-      -webkit-overflow-scrolling: touch !important;
+      padding: 0 !important;
+      overflow: hidden !important;
       box-sizing: border-box !important;
-      gap: 12px !important;
+      gap: 0 !important;
     }
 
     /* ── 1. STICKY PREVIEW CONTAINER: PINNED AT TOP 0px WITH ZERO SHAKING ── */
-    .video-preview-wrapper, #video-container, .studio-stage-col {
+    .video-preview-wrapper, #video-stage-container, #video-container, .studio-stage-col {
       position: sticky !important;
+      position: -webkit-sticky !important;
       top: 0px !important;
-      z-index: 100 !important;
+      z-index: 9999 !important;
       background: #000000 !important;
       width: 100% !important;
       max-width: 100% !important;
-      height: auto !important;
-      max-height: none !important;
+      flex: 0 0 auto !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-items: stretch !important;
-      padding: 0 0 4px 0 !important;
-      border: none !important;
-      overflow: visible !important;
-      overflow-x: hidden !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.9) !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .tools-scroll-container, .settings-body, .studio-controls-col {
+      flex: 1 1 auto !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      height: calc(100vh - 270px) !important;
+      max-height: calc(100vh - 270px) !important;
+      padding: 8px 10px 100px 10px !important;
       box-sizing: border-box !important;
-      gap: 4px !important;
-    }
-    .video-stage-card {
-      position: relative !important;
-      top: 0 !important;
-    }
-    .studio-stage-col::-webkit-scrollbar {
-      display: none !important;
     }
 
-    /* ⚡ DYNAMIC SPONSOR ANIMATIONS (POP-UP ZOOM, FADE-SLIDE & NEON PULSE) */
+    /* ⚡ REFINED SPONSOR (MAX-WIDTH 90%, FONT 11px-13px, SMOOTH POP-UP & SLIDE-DOWN) */
+    #sponsor-overlay-element {
+      position: absolute !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 12px !important;
+      width: 100% !important;
+      display: none;
+      justify-content: center !important;
+      align-items: center !important;
+      pointer-events: none !important;
+      z-index: 25 !important;
+    }
+    #sponsor-overlay-element.active-visible {
+      display: flex !important;
+    }
+    .sponsor-banner-bar {
+      max-width: 90% !important;
+      width: auto !important;
+      margin: 0 auto !important;
+      background: rgba(8, 6, 18, 0.88) !important;
+      border: 1.5px solid #f59e0b !important;
+      border-radius: 8px !important;
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+      padding: 4px 14px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 2px !important;
+      text-align: center !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75), 0 0 12px rgba(245, 158, 11, 0.35) !important;
+      box-sizing: border-box !important;
+      animation: glow-pulse 2s infinite ease-in-out;
+      transform-origin: center center;
+    }
+    .sponsor-top-tag, #sponsor-top-tag {
+      color: #f59e0b !important;
+      font-weight: 800 !important;
+      font-size: 12px !important;
+      line-height: 1.25 !important;
+      letter-spacing: 0.3px !important;
+      white-space: nowrap !important;
+    }
+    .sponsor-bottom-tag, #sponsor-bottom-tag {
+      color: #22d3ee !important;
+      font-weight: 700 !important;
+      font-size: 11.5px !important;
+      line-height: 1.2 !important;
+      letter-spacing: 0.2px !important;
+      white-space: nowrap !important;
+    }
     @keyframes glow-pulse {
       0%, 100% {
         box-shadow: 0 0 10px rgba(245, 158, 11, 0.45), inset 0 0 8px rgba(168, 85, 247, 0.25);
         border-color: #f59e0b;
-        text-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
       }
       50% {
-        box-shadow: 0 0 25px rgba(245, 158, 11, 0.95), 0 0 35px rgba(34, 211, 238, 0.8), inset 0 0 16px rgba(245, 158, 11, 0.4);
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.85), 0 0 25px rgba(34, 211, 238, 0.6), inset 0 0 12px rgba(245, 158, 11, 0.35);
         border-color: #38bdf8;
-        text-shadow: 0 0 16px rgba(34, 211, 238, 0.95), 0 0 22px rgba(245, 158, 11, 0.9);
       }
     }
     @keyframes sponsor-popup-in {
       0% {
         opacity: 0;
-        transform: scale(0.6) translateY(24px);
+        transform: scale(0.60) translateY(18px);
       }
-      65% {
-        opacity: 1;
-        transform: scale(1.06) translateY(-4px);
+      60% {
+        opacity: 0.95;
+        transform: scale(1.05) translateY(-2px);
       }
       100% {
         opacity: 1;
@@ -170,19 +222,14 @@
       }
       100% {
         opacity: 0;
-        transform: scale(0.7) translateY(28px);
+        transform: scale(0.75) translateY(26px);
       }
     }
-    .sponsor-banner-bar {
-      border-radius: 8px;
-      animation: glow-pulse 2s infinite ease-in-out;
-      transform-origin: center center;
-    }
     .sponsor-banner-bar.sponsor-entering {
-      animation: sponsor-popup-in 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, glow-pulse 2s infinite ease-in-out !important;
+      animation: sponsor-popup-in 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
     }
     .sponsor-banner-bar.sponsor-exiting {
-      animation: sponsor-slide-out 0.6s ease-in forwards !important;
+      animation: sponsor-slide-out 0.65s ease-in forwards !important;
     }
 
     /* ⚡ GLOW BUTTON & DUAL-TONE STYLES */
@@ -598,7 +645,7 @@
   <main class="studio-main-container" id="app-container">
 
     <!-- ── 9:16 LIVE PREVIEW STAGE (STICKY TOP PREVIEW) ────────── -->
-    <div class="studio-stage-col video-preview-wrapper" id="video-container">
+    <div class="studio-stage-col video-preview-wrapper" id="video-stage-container">
 
       <!-- ⚡ QUICK ACTION CONTROL BAR: VIDEO 2 STYLE -->
       <div class="video-main-actions-bar" style="display: flex; gap: 6px; width: 100%; margin-bottom: 4px;">
@@ -664,7 +711,7 @@
             <div class="interactive-overlay" id="sponsor-overlay-element">
               <div class="sponsor-banner-bar" id="sponsor-banner-bar">
                 <div class="sponsor-top-tag" id="sponsor-top-tag">📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor</div>
-                <div class="sponsor-bottom-tag" id="sponsor-bottom-tag">📱 012 345 678 | Telegram</div>
+                <div class="sponsor-bottom-tag" id="sponsor-bottom-tag">📱 088 9 111 400 | Telegram</div>
               </div>
             </div>
 
@@ -723,7 +770,7 @@
     </div>
 
     <!-- ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── -->
-    <div class="studio-controls-col">
+    <div class="studio-controls-col tools-scroll-container settings-body" id="tools-scroll-container">
       <!-- ⚡ RESTORE ALL TABS: TEXT, BLUR, SPONSOR, MARQUEE, សំឡេង, LOGO, MEDIA -->
       <nav class="studio-tabs-nav" id="studio-tabs-nav">
         <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
@@ -1101,7 +1148,7 @@
 
         <div class="form-row">
           <label class="form-label">ជួរក្រោម (Bottom Line) — លេខទាក់ទង ឬ Telegram</label>
-          <input type="text" id="sponsor-bottom-input" class="cyber-input" value="📱 012 345 678 | Telegram" placeholder="លេខទូរសព្ទ / Telegram..." oninput="updateSponsorContent()">
+          <input type="text" id="sponsor-bottom-input" class="cyber-input" value="📱 088 9 111 400 | Telegram" placeholder="លេខទូរសព្ទ / Telegram..." oninput="updateSponsorContent()">
         </div>
 
         <!-- Sponsor Slider Box -->
@@ -1111,9 +1158,9 @@
           <div class="form-row">
             <div class="form-label">
               <span>ទំហំអក្សរ Sponsor (Font Size)</span>
-              <span class="form-label-val" id="sponsor-size-val">17px</span>
+              <span class="form-label-val" id="sponsor-size-val">12px</span>
             </div>
-            <input type="range" min="12" max="28" step="1" value="17" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
+            <input type="range" min="10" max="22" step="1" value="12" class="cyber-slider" id="sponsor-size-slider" oninput="document.getElementById('sponsor-size-val').innerText = this.value + 'px'; updateSponsorContent();">
           </div>
 
           <div class="form-row">
@@ -1489,6 +1536,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=9.9.0"></script>
+  <script src="/static/js/studio_engine.js?v=10.2.0"></script>
 </body>
 </html>

@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -18,8 +20,32 @@ import com.getcapacitor.BridgeWebViewClient;
 
 public class MainActivity extends BridgeActivity {
 
+    private static final String TAG = "MainActivity";
     private ValueCallback<Uri[]> mUploadMessageArray;
     private final static int FILECHOOSER_RESULTCODE = 1001;
+
+    public class NativeVideoBridge {
+        @JavascriptInterface
+        public String getVideoUrl() {
+            return LocalVideoServer.getVideoUrl();
+        }
+
+        @JavascriptInterface
+        public boolean isNative() {
+            return true;
+        }
+
+        @JavascriptInterface
+        public void openFileChooser() {
+            runOnUiThread(() -> {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("video/*");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivityForResult(intent, FILECHOOSER_RESULTCODE);
+            });
+        }
+    }
 
     private void configureWebView() {
         Bridge bridge = getBridge();
@@ -43,11 +69,13 @@ public class MainActivity extends BridgeActivity {
             // ⚡ Enable full Hardware Acceleration for smooth HTML5 video decoding
             webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
+            // ⚡ Register AndroidNative JavascriptInterface
+            webView.addJavascriptInterface(new NativeVideoBridge(), "AndroidNative");
+
             // ⚡ WebChromeClient with Full Native File Chooser Support for <input type="file">
             webView.setWebChromeClient(new WebChromeClient() {
                 @Override
                 public Bitmap getDefaultVideoPoster() {
-                    // បំបាត់រូបសញ្ញា Play Icon ពណ៌ប្រផេះដែល Android បង្កើតស្វ័យប្រវត្តិ
                     return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
                 }
 
@@ -97,7 +125,6 @@ public class MainActivity extends BridgeActivity {
             });
 
             // Handle ALL URLs inside the App: shouldOverrideUrlLoading return false
-            // Strictly forbid pushing out to external Chrome browser!
             webView.setWebViewClient(new BridgeWebViewClient(bridge) {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -116,7 +143,6 @@ public class MainActivity extends BridgeActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == FILECHOOSER_RESULTCODE) {
-            if (mUploadMessageArray == null) return;
             Uri[] results = null;
             try {
                 if (resultCode == Activity.RESULT_OK && data != null) {
@@ -133,8 +159,35 @@ public class MainActivity extends BridgeActivity {
                     }
                 }
             } catch (Exception ignored) {}
-            mUploadMessageArray.onReceiveValue(results);
-            mUploadMessageArray = null;
+
+            // Pass results to standard WebChromeClient file chooser
+            if (mUploadMessageArray != null) {
+                mUploadMessageArray.onReceiveValue(results);
+                mUploadMessageArray = null;
+            }
+
+            // ⚡ Copy chosen video into local streaming storage and notify WebView immediately
+            if (results != null && results.length > 0 && results[0] != null) {
+                final Uri chosenUri = results[0];
+                new Thread(() -> {
+                    try {
+                        Log.i(TAG, "Saving chosen video to local streaming server: " + chosenUri);
+                        LocalVideoServer.saveVideoUri(MainActivity.this, chosenUri);
+                        final String streamUrl = LocalVideoServer.getVideoUrl();
+                        Log.i(TAG, "Stream URL ready: " + streamUrl);
+
+                        runOnUiThread(() -> {
+                            Bridge bridge = getBridge();
+                            if (bridge != null && bridge.getWebView() != null) {
+                                String js = "if (window.onNativeVideoReady) { window.onNativeVideoReady('" + streamUrl + "'); }";
+                                bridge.getWebView().evaluateJavascript(js, null);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e(TAG, "Failed to save local video stream", e);
+                    }
+                }, "LocalVideo-SaveThread").start();
+            }
         }
     }
 
@@ -167,6 +220,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        LocalVideoServer.start(this);
         requestMediaPermissions();
         configureWebView();
         if (getBridge() != null && getBridge().getWebView() != null) {
@@ -184,5 +238,11 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         configureWebView();
+    }
+
+    @Override
+    public void onDestroy() {
+        LocalVideoServer.stop();
+        super.onDestroy();
     }
 }
