@@ -7,7 +7,9 @@
 const state = {
   videoFile: null,
   videoFilename: null,
+  videoUploaded: false,
   videoUrl: null,
+  localVideoUrl: null,
   srtContent: null,
   translatedSrt: null,
   activeTab: 'blur',
@@ -52,7 +54,9 @@ const state = {
     size: 26,
     x: 15,
     y: 30,
-    transparentMode: false
+    transparentMode: false,
+    motion: 'none', // 'none' | 'up' | 'down'
+    speedSec: 8.0
   },
   textPart1: {
     enabled: true,
@@ -93,6 +97,7 @@ const state = {
     yPercent: 88,
     color: '#f59e0b',
     fontSize: 17,
+    duration: 15,
     bgColor: 'rgba(8, 6, 18, 0.90)'
   },
 
@@ -400,6 +405,7 @@ function handleVideoUpload(input) {
   const file = files[0];
   state.videoFile = file;
   state.videoFilename = file.name;
+  state.videoUploaded = false;
 
   const placeholder = document.getElementById('video-placeholder');
   const video = document.getElementById('previewVideo') || document.querySelector('video') || document.getElementById('preview-video');
@@ -411,44 +417,72 @@ function handleVideoUpload(input) {
     try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
   }
 
-  // ⚡ 1. PRIMARY: FileReader DataURL for 100% reliable Android WebView video decoding
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    if (placeholder) placeholder.style.display = 'none';
-    video.style.display = 'block';
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.objectFit = 'contain';
-    video.playsInline = true;
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-    video.src = e.target.result;
-    state.localVideoUrl = e.target.result;
-    window.previewVideo = video;
-    video.muted = false;
-    video.load();
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(err => {
-        console.warn('Autoplay unmuted blocked, playing muted:', err);
-        video.muted = true;
-        video.play().catch(e2 => console.warn('Muted play also blocked:', e2));
-      });
+  if (placeholder) placeholder.style.display = 'none';
+  video.style.display = 'block';
+  video.style.width = '100%';
+  video.style.height = '100%';
+  video.style.objectFit = 'contain';
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  window.previewVideo = video;
+
+  // ⚡ 1. PRIMARY: Instant HTML5 File Object URL (Hardware Decoded, 0 RAM latency)
+  let playedViaBlob = false;
+  try {
+    const objUrl = URL.createObjectURL(file);
+    if (objUrl) {
+      video.src = objUrl;
+      state.localVideoUrl = objUrl;
+      video.muted = false;
+      video.load();
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.warn('Autoplay unmuted blocked, playing muted:', err);
+          video.muted = true;
+          video.play().catch(e2 => console.warn('Muted play also blocked:', e2));
+        });
+      }
+      playedViaBlob = true;
+      showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
     }
-    showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
-  };
-  reader.onerror = (err) => {
-    console.warn('FileReader error, falling back to Blob URL:', err);
-    try {
-      if (placeholder) placeholder.style.display = 'none';
-      video.style.display = 'block';
-      video.src = URL.createObjectURL(file);
-      state.localVideoUrl = video.src;
+  } catch (err) {
+    console.warn('URL.createObjectURL failed, falling back to FileReader:', err);
+  }
+
+  // Fallback to FileReader ONLY if URL.createObjectURL threw an exception
+  if (!playedViaBlob) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      video.src = e.target.result;
+      state.localVideoUrl = e.target.result;
+      video.muted = false;
       video.load();
       video.play().catch(() => { video.muted = true; video.play(); });
-    } catch (e) {}
-  };
-  reader.readAsDataURL(file);
+      showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ⚡ 2. Auto-Upload to Server in Background so Server Has the Video Ready
+  const uploadFormData = new FormData();
+  uploadFormData.append('file', file);
+  state.isUploading = true;
+  fetch('/api/upload', { method: 'POST', body: uploadFormData })
+    .then(r => r.json())
+    .then(data => {
+      state.isUploading = false;
+      if (data.status === 'ok') {
+        state.videoFilename = data.filename;
+        state.videoUploaded = true;
+        console.log('Background upload completed:', data.filename);
+      }
+    })
+    .catch(e => {
+      state.isUploading = false;
+      console.warn('Background upload failed, will upload on render:', e);
+    });
 
   video.onloadedmetadata = function() {
     const isLandscape = (video.videoWidth || 9) > (video.videoHeight || 16);
@@ -459,6 +493,9 @@ function handleVideoUpload(input) {
     updateVideoTime();
   };
   video.ontimeupdate = updateVideoTime;
+  video.onplay = () => {
+    if (state.sponsor.enabled) startSponsorCycle();
+  };
 }
 
 async function handleSrtUpload(input) {
@@ -656,6 +693,49 @@ function updateTextPosition() {
   if (textElement) {
     textElement.style.left = `${x}px`;
     textElement.style.top = `${y}px`;
+  }
+}
+
+// ── TEXT MOTION CONTROLS (UP / DOWN / NONE + 60FPS SPEED) ──
+function setTextMotion(mode) {
+  state.textOverlay.motion = mode;
+  ['none', 'up', 'down'].forEach(m => {
+    const btn = document.getElementById(`text-motion-${m}`);
+    if (btn) btn.classList.toggle('active', m === mode);
+  });
+  applyTextMotionStyles();
+  showToast(mode === 'none' ? 'អក្សរនៅមួយកន្លែង (Static)' : (mode === 'up' ? '⬆️ អក្សររត់ពីក្រោមឡើងលើ' : '⬇️ អក្សររត់ពីលើចុះក្រោម'));
+}
+
+function setTextSpeedSeconds(sec) {
+  const val = parseFloat(sec) || 8.0;
+  state.textOverlay.speedSec = val;
+  const valEl = document.getElementById('text-speed-val');
+  if (valEl) valEl.innerText = `${val}s`;
+  const slider = document.getElementById('text-speed-slider');
+  if (slider && parseFloat(slider.value) !== val) slider.value = val;
+  applyTextMotionStyles();
+}
+
+function applyTextMotionStyles() {
+  const textEl = document.getElementById('text-overlay-element');
+  if (!textEl) return;
+  const motion = state.textOverlay.motion || 'none';
+  const speed = state.textOverlay.speedSec || 8.0;
+
+  textEl.classList.remove('text-scroll-up', 'text-scroll-down');
+  textEl.style.animation = 'none';
+
+  if (motion === 'up') {
+    textEl.style.setProperty('--text-speed', `${speed}s`);
+    void textEl.offsetHeight;
+    textEl.classList.add('text-scroll-up');
+  } else if (motion === 'down') {
+    textEl.style.setProperty('--text-speed', `${speed}s`);
+    void textEl.offsetHeight;
+    textEl.classList.add('text-scroll-down');
+  } else {
+    updateTextPosition();
   }
 }
 
@@ -905,9 +985,19 @@ function startSponsorCycle() {
     bar.classList.remove('sponsor-entering');
     bar.classList.add('sponsor-exiting');
 
-    // Wait for exit animation to complete (600ms) then pause 5s before next cycle
+    // Wait for exit animation to complete (600ms) then hide completely
+    setTimeout(() => {
+      if (bar.classList.contains('sponsor-exiting')) {
+        if (sponsorElement) {
+          sponsorElement.style.display = 'none';
+          sponsorElement.classList.remove('active-visible');
+        }
+        bar.classList.remove('sponsor-exiting');
+      }
+    }, 600);
+
+    // Pause 5.6s before next cycle
     sponsorCycleTimer = setTimeout(() => {
-      bar.classList.remove('sponsor-exiting');
       if (state.sponsor.enabled) {
         startSponsorCycle();
       }
@@ -1362,7 +1452,9 @@ function _buildRenderOptions() {
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
       size: state.textOverlay.size,
-      transparent_mode: state.textOverlay.transparentMode || false
+      transparent_mode: state.textOverlay.transparentMode || false,
+      motion: state.textOverlay.motion || 'none',
+      speed_sec: state.textOverlay.speedSec || 8.0
     },
     text_part1: {
       enabled: state.textOverlay.enabled && state.textPart1.text.length > 0,
@@ -1373,7 +1465,9 @@ function _buildRenderOptions() {
       outline_w: state.textPart1.outlineW,
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
-      size: state.textOverlay.size
+      size: state.textOverlay.size,
+      motion: state.textOverlay.motion || 'none',
+      speed_sec: state.textOverlay.speedSec || 8.0
     },
     text_part2: {
       enabled: state.textOverlay.enabled && state.textPart2.text.length > 0,
@@ -1384,9 +1478,11 @@ function _buildRenderOptions() {
       outline_w: state.textPart2.outlineW,
       x: textElement.offsetLeft,
       y: textElement.offsetTop,
-      size: state.textOverlay.size
+      size: state.textOverlay.size,
+      motion: state.textOverlay.motion || 'none',
+      speed_sec: state.textOverlay.speedSec || 8.0
     },
-    // Custom sponsor branding (2 concise lines + position)
+    // Custom sponsor branding (2 concise lines + position + duration)
     sponsor: {
       enabled: state.sponsor.enabled,
       top_line: state.sponsor.topLine,
@@ -1396,6 +1492,7 @@ function _buildRenderOptions() {
       color: _hexToFFmpegColor(state.sponsor.color),
       font_size: state.sponsor.fontSize,
       bg_color: state.sponsor.bgColor,
+      duration: state.sponsor.duration || 15,
       font: 'kantumruy'
     }
   };
@@ -1434,7 +1531,7 @@ async function triggerAutoProcessPipeline() {
   if (progressStatus) progressStatus.innerText = '1. កំពុង Upload វីដេអូទៅ Server...';
   _updateStepperStage(10, 'upload');
 
-  if (!state.videoFilename && state.videoFile) {
+  if ((!state.videoUploaded || !state.videoFilename) && state.videoFile) {
     const formData = new FormData();
     formData.append('file', state.videoFile);
     try {
@@ -1442,14 +1539,14 @@ async function triggerAutoProcessPipeline() {
       const data = await res.json();
       if (data.status === 'ok') {
         state.videoFilename = data.filename;
+        state.videoUploaded = true;
       } else {
-        throw new Error('Upload failed');
+        throw new Error(data.error || 'Upload failed');
       }
     } catch (e) {
-      showToast('⚠️ បរាជ័យក្នុងការ Upload វីដេអូទៅ Server');
+      showToast('⚠️ បរាជ័យក្នុងការ Upload វីដេអូទៅ Server: ' + e.message);
       if (progressWrap) progressWrap.style.display = 'none';
       return;
-    }
   }
 
   if (progressBar) progressBar.style.width = '20%';

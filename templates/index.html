@@ -850,6 +850,31 @@
           </div>
         </div>
 
+        <!-- ⚡ MOTION CONTROL FOR DUAL-TONE TEXT (BOTTOM TO TOP / TOP TO BOTTOM / SPEED SLIDER 60FPS) -->
+        <div class="slider-group-box" style="margin-top: 3px; border: 1.5px solid rgba(168, 85, 247, 0.45); background: rgba(168, 85, 247, 0.08);">
+          <div class="slider-group-title" style="color: #c084fc; display: flex; justify-content: space-between; align-items: center;">
+            <span>↕️ ចលនារត់អក្សរ (Text Motion 60fps)</span>
+            <span class="form-label-val" id="text-speed-val" style="color: #c084fc; font-weight: 800;">8s</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin: 3px 0;">
+            <button type="button" id="text-motion-none" class="btn-ctrl active" style="justify-content: center; font-size: 0.62rem; height: 30px; padding: 0 2px;" onclick="setTextMotion('none')">
+              🛑 ស្ងៀម
+            </button>
+            <button type="button" id="text-motion-up" class="btn-ctrl" style="justify-content: center; font-size: 0.62rem; height: 30px; padding: 0 2px;" onclick="setTextMotion('up')">
+              ⬆️ ក្រោមឡើងលើ
+            </button>
+            <button type="button" id="text-motion-down" class="btn-ctrl" style="justify-content: center; font-size: 0.62rem; height: 30px; padding: 0 2px;" onclick="setTextMotion('down')">
+              ⬇️ លើចុះក្រោម
+            </button>
+          </div>
+          <div class="form-row" style="margin-top: 2px;">
+            <div class="form-label" style="font-size: 0.60rem; color: var(--text-muted);">
+              <span>⚡ ល្បឿនរត់ (Speed Slider)</span>
+            </div>
+            <input type="range" min="3" max="25" step="1" value="8" class="cyber-slider" id="text-speed-slider" oninput="setTextSpeedSeconds(this.value)">
+          </div>
+        </div>
+
         <!-- Text Position Sliders (2 Columns: X and Y) -->
         <div class="slider-group-box" style="margin-top: 3px;">
           <div class="slider-group-title">📐 ទីតាំងអក្សរ (X, Y)</div>

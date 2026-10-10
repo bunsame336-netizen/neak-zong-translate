@@ -527,9 +527,18 @@ def _build_filter_graph(
         current_pad = out
 
     elif (tp1 and tp1.get('enabled') and t1_text) or (tp2 and tp2.get('enabled') and t2_text):
-        # ── STATIC DUAL-TONE TITLE ──
-        ty = text_opts.get('y', 30)
+        # ── DUAL-TONE TITLE (STATIC OR VERTICAL MOTION) ──
+        motion = (text_opts.get('motion') or 'none').lower()
+        speed_sec = float(text_opts.get('speed_sec') or 8.0)
         font_size = text_opts.get('size', 26)
+        t_expr = f"(t+{time_offset:.3f})" if time_offset > 0 else "t"
+
+        if motion == 'up':
+            ty = f"h-mod({t_expr}*((h+{font_size})/{speed_sec:.2f})\\,h+{font_size})"
+        elif motion == 'down':
+            ty = f"-{font_size}+mod({t_expr}*((h+{font_size})/{speed_sec:.2f})\\,h+{font_size})"
+        else:
+            ty = str(text_opts.get('y', 30))
         if tp1 and tp1.get('enabled') and t1_text:
             tx1 = text_opts.get('x', 15)
             out = next_pad()
@@ -612,6 +621,9 @@ def _build_filter_graph(
             else:
                 base_y = f"h-{total_h + 24}"
 
+        s_dur = float(sponsor_opts.get('duration') or 15.0)
+        enable_arg = f":enable='between(t\\,0\\,{s_dur:.2f})'"
+
         out = next_pad()
         sub_filters = []
         curr_y_offset = 0
@@ -622,7 +634,7 @@ def _build_filter_graph(
                 f"drawtext={s_font_arg}textfile='{tf_line_path}':fontcolor={l['color']}:fontsize={l['size']}:"
                 f"box=1:boxcolor=0x0C0A18@0.85:boxborderw=4:"
                 f"borderw=1:bordercolor=black@0.9:shadowcolor=black@0.9:shadowx=2:shadowy=2:"
-                f"x=(w-text_w)/2:y={y_calc}"
+                f"x=(w-text_w)/2:y={y_calc}{enable_arg}"
             )
             curr_y_offset += l['size'] + line_gap
 
