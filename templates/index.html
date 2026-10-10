@@ -393,6 +393,12 @@
       color: #ffffff !important;
       box-shadow: 0 0 10px rgba(168, 85, 247, 0.6) !important;
     }
+    .tab-nav-btn[data-tab="blur"].active {
+      background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+      border-color: #22d3ee !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.6) !important;
+    }
     .tab-nav-btn[data-tab="sponsor"].active {
       background: linear-gradient(135deg, #0284c7, #0369a1) !important;
       border-color: #38bdf8 !important;
@@ -623,8 +629,8 @@
           <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
           <div class="video-overlay-layer" id="video-overlay-layer">
 
-            <!-- 1. Blur Mask Box (Hidden by Directive) -->
-            <div class="interactive-overlay" id="blur-overlay-box" style="display:none !important;">
+            <!-- 1. Blur Mask Box -->
+            <div class="interactive-overlay" id="blur-overlay-box">
               <div class="resizer-handle nw"></div>
               <div class="resizer-handle ne"></div>
               <div class="resizer-handle sw"></div>
@@ -718,10 +724,13 @@
 
     <!-- ── RIGHT COLUMN (54%): CONTROLS & SLIDERS BESIDE VIDEO ── -->
     <div class="studio-controls-col">
-      <!-- ⚡ RESTORE ALL 6 TABS: TEXT, SPONSOR, MARQUEE, សំឡេង, LOGO, MEDIA -->
+      <!-- ⚡ RESTORE ALL TABS: TEXT, BLUR, SPONSOR, MARQUEE, សំឡេង, LOGO, MEDIA -->
       <nav class="studio-tabs-nav" id="studio-tabs-nav">
         <button type="button" class="tab-nav-btn active" data-tab="text" onclick="switchStudioTab('text')">
           📝 Text
+        </button>
+        <button type="button" class="tab-nav-btn" data-tab="blur" onclick="switchStudioTab('blur')">
+          🌫️ ព្រាល Blur
         </button>
         <button type="button" class="tab-nav-btn" data-tab="sponsor" onclick="switchStudioTab('sponsor')">
           🤝 Sponsor
@@ -923,8 +932,8 @@
         </div>
       </div>
 
-      <!-- ── TAB 3: BLUR MASK (Hidden by Directive) ────────── -->
-      <div class="tab-panel-card" id="tab-panel-blur" style="display:none !important;">
+      <!-- ── TAB: BLUR MASK ─────────────────────────────── -->
+      <div class="tab-panel-card" id="tab-panel-blur">
         <div class="panel-section-title">
           <span>🌫️ ផ្ទាំងព្រិលបាំង Watermark / Logo ចាស់</span>
         </div>

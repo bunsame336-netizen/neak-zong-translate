@@ -159,6 +159,9 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         requestMediaPermissions();
         configureWebView();
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().post(this::configureWebView);
+        }
     }
 
     @Override

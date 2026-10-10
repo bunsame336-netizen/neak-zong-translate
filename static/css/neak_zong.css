@@ -785,6 +785,12 @@ header.app-header {
   color: #ffffff !important;
   box-shadow: 0 0 10px rgba(168, 85, 247, 0.6) !important;
 }
+.tab-nav-btn[data-tab="blur"].active {
+  background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+  border-color: #22d3ee !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.6) !important;
+}
 .tab-nav-btn[data-tab="sponsor"].active {
   background: linear-gradient(135deg, #0284c7, #0369a1) !important;
   border-color: #38bdf8 !important;
