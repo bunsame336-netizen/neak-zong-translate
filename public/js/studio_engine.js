@@ -400,6 +400,50 @@ async function revokeAdminKey(key) {
 // ══════════════════════════════════════════════════════════
 // ⚡ 2. MEDIA UPLOAD & HANDLING
 // ══════════════════════════════════════════════════════════
+function loadVideoPreview(file) {
+  const video = document.getElementById('previewVideo') || document.querySelector('video');
+  if (!video || !file) return;
+
+  // លុប Poster បាំងចោល
+  video.removeAttribute('poster');
+  video.style.display = 'block';
+  video.style.width = '100%';
+  video.style.height = '100%';
+  video.style.objectFit = 'contain';
+  video.style.background = '#000';
+  window.previewVideo = video;
+
+  showToast('⏳ កំពុងផ្ទុកវីដេអូ Base64 DataURL...');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    video.src = e.target.result;
+    state.localVideoUrl = e.target.result;
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.load();
+    video.play().then(() => {
+      console.log("Video preview playing successfully");
+      video.muted = false;
+      showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
+    }).catch(err => {
+      console.log("Autoplay error:", err);
+      video.muted = true;
+      video.play().catch(e2 => console.log("Muted retry error:", e2));
+      showToast('✓ វីដេអូចាក់លើ Live Preview (Muted)');
+    });
+  };
+  reader.readAsDataURL(file);
+
+  // ប៉ះលើវីដេអូដើម្បីបើកសំឡេងភ្លាមៗ
+  video.onpointerdown = function() {
+    video.muted = false;
+    if (video.paused) video.play();
+  };
+}
+
 let _isUploadingVideo = false;
 function handleVideoUpload(inputOrFile) {
   let file = inputOrFile;
@@ -417,52 +461,10 @@ function handleVideoUpload(inputOrFile) {
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
-  const video = document.getElementById('previewVideo') || document.querySelector('video') || document.getElementById('preview-video');
-  if (!video) return;
+  // ⚡ 1. Load Local Video Preview via FileReader DataURL (Native Base64)
+  loadVideoPreview(file);
 
-  // ១. បំបាត់ផ្ទាំង Poster Play Icon ចោល
-  video.removeAttribute('poster');
-  video.style.display = 'block';
-  video.style.width = '100%';
-  video.style.height = '100%';
-  video.style.objectFit = 'contain';
-  video.style.background = '#000';
-  window.previewVideo = video;
-
-  if (state.localVideoUrl && state.localVideoUrl.startsWith('blob:')) {
-    try { URL.revokeObjectURL(state.localVideoUrl); } catch (e) {}
-  }
-
-  // ២. បង្កើត Blob ស្អាតបាត
-  const blobURL = URL.createObjectURL(file);
-  video.src = blobURL;
-  state.localVideoUrl = blobURL;
-  video.muted = true; // ត្រូវ Muted សិនទើប Android អនុញ្ញាតឱ្យ AutoPlay
-  video.playsInline = true;
-  video.setAttribute('playsinline', '');
-  video.setAttribute('webkit-playsinline', '');
-
-  video.onloadeddata = function() {
-    video.play().then(() => {
-      // ពេលដើរហើយ ទើបបើកសំឡេងឡើងវិញ
-      video.muted = false;
-      showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
-    }).catch(err => {
-      console.log("Play failed, retrying muted:", err);
-      video.muted = true;
-      video.play();
-      showToast('✓ វីដេអូចាក់លើ Live Preview (Muted)');
-    });
-  };
-  video.load();
-
-  // ៣. ប៉ះលើវីដេអូដើម្បីបើកសំឡេងភ្លាមៗ
-  video.onpointerdown = function() {
-    video.muted = false;
-    if (video.paused) video.play();
-  };
-
-  // ៤. Auto-Upload to Server in Background
+  // ⚡ 2. Auto-Upload to Server in Background
   const uploadFormData = new FormData();
   uploadFormData.append('file', file);
   state.isUploading = true;
@@ -1801,3 +1803,4 @@ window.submitAdminGenerateKey = submitAdminGenerateKey;
 window.copyCreatedKey = copyCreatedKey;
 window.loadAdminLicenseList = loadAdminLicenseList;
 window.revokeAdminKey = revokeAdminKey;
+window.loadVideoPreview = loadVideoPreview;

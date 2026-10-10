@@ -46,6 +46,12 @@ public class MainActivity extends BridgeActivity {
             // ⚡ WebChromeClient with Full Native File Chooser Support for <input type="file">
             webView.setWebChromeClient(new WebChromeClient() {
                 @Override
+                public Bitmap getDefaultVideoPoster() {
+                    // បំបាត់រូបសញ្ញា Play Icon ពណ៌ប្រផេះដែល Android បង្កើតស្វ័យប្រវត្តិ
+                    return Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888);
+                }
+
+                @Override
                 public void onPermissionRequest(final PermissionRequest request) {
                     request.grant(request.getResources());
                 }
