@@ -1547,6 +1547,7 @@ async function triggerAutoProcessPipeline() {
       showToast('⚠️ បរាជ័យក្នុងការ Upload វីដេអូទៅ Server: ' + e.message);
       if (progressWrap) progressWrap.style.display = 'none';
       return;
+    }
   }
 
   if (progressBar) progressBar.style.width = '20%';
@@ -1741,15 +1742,20 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Set default marquee animation
-  updateMarqueeAnimation();
+  try { updateMarqueeAnimation(); } catch(e) {}
 
   // Video Time Update listener
-  previewVideo.addEventListener('timeupdate', updateVideoTime);
+  const vEl = document.getElementById('previewVideo') || document.getElementById('preview-video') || previewVideo;
+  if (vEl) {
+    vEl.addEventListener('timeupdate', updateVideoTime);
+    window.previewVideo = vEl;
+  }
 
   // Effect button watcher: Part1 effect change
   document.getElementById('text-part1-effect')?.addEventListener('change', () => {
     updateDualTonePreview();
   });
+
   // Video Input Listener
   const vInput = document.getElementById('videoInput');
   if (vInput) {
@@ -1758,3 +1764,35 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+// ⚡ Export all functions to window for 100% reliable HTML onclick/onchange triggers
+window.switchStudioTab = switchStudioTab;
+window.handleVideoUpload = handleVideoUpload;
+window.handleSrtUpload = handleSrtUpload;
+window.setQuickTextColor = setQuickTextColor;
+window.setTextPartColor = setTextPartColor;
+window.updateDualTonePreview = updateDualTonePreview;
+window.updateTextPosition = updateTextPosition;
+window.setTextMotion = setTextMotion;
+window.setTextSpeedSeconds = setTextSpeedSeconds;
+window.applyTextMotionStyles = applyTextMotionStyles;
+window.toggleTextOverlay = toggleTextOverlay;
+window.toggleTextTransparentMode = toggleTextTransparentMode;
+window.toggleBlurOverlay = toggleBlurOverlay;
+window.setBlurPreset = setBlurPreset;
+window.updateBlurIntensity = updateBlurIntensity;
+window.updateBlurTint = updateBlurTint;
+window.setBlurCorner = setBlurCorner;
+window.toggleLogoOverlay = toggleLogoOverlay;
+window.toggleMarqueeOverlay = toggleMarqueeOverlay;
+window.setMarqueeDirection = setMarqueeDirection;
+window.setMarqueeSpeed = setMarqueeSpeed;
+window.setMarqueeSpeedSeconds = setMarqueeSpeedSeconds;
+window.setMarqueeEffect = setMarqueeEffect;
+window.applyMarqueeStyles = applyMarqueeStyles;
+window.toggleSponsorOverlay = toggleSponsorOverlay;
+window.setSponsorDuration = setSponsorDuration;
+window.setSponsorPosition = setSponsorPosition;
+window.updateSponsorContent = updateSponsorContent;
+window.triggerAutoProcessPipeline = triggerAutoProcessPipeline;
+window.playExportedVideo = playExportedVideo;

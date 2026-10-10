@@ -62,11 +62,12 @@ public class MainActivity extends BridgeActivity {
                     mUploadMessageArray = filePathCallback;
 
                     Intent intent = null;
-                    if (fileChooserParams != null) {
-                        try {
+                    try {
+                        if (fileChooserParams != null) {
                             intent = fileChooserParams.createIntent();
-                        } catch (Exception ignored) {}
-                    }
+                        }
+                    } catch (Exception ignored) {}
+
                     if (intent == null) {
                         intent = new Intent(Intent.ACTION_GET_CONTENT);
                         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -74,16 +75,21 @@ public class MainActivity extends BridgeActivity {
                     }
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-                    Intent chooserIntent = new Intent(Intent.ACTION_CHOOSER);
-                    chooserIntent.putExtra(Intent.EXTRA_INTENT, intent);
-                    chooserIntent.putExtra(Intent.EXTRA_TITLE, "ជ្រើសរើសវីដេអូ (Select Video)");
-
                     try {
-                        startActivityForResult(chooserIntent, FILECHOOSER_RESULTCODE);
+                        startActivityForResult(intent, FILECHOOSER_RESULTCODE);
                         return true;
-                    } catch (Exception e) {
-                        mUploadMessageArray = null;
-                        return false;
+                    } catch (Exception e1) {
+                        try {
+                            Intent chooser = Intent.createChooser(intent, "ជ្រើសរើសវីដេអូ (Select Video)");
+                            startActivityForResult(chooser, FILECHOOSER_RESULTCODE);
+                            return true;
+                        } catch (Exception e2) {
+                            if (mUploadMessageArray != null) {
+                                mUploadMessageArray.onReceiveValue(null);
+                                mUploadMessageArray = null;
+                            }
+                            return false;
+                        }
                     }
                 }
             });
@@ -109,20 +115,22 @@ public class MainActivity extends BridgeActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == FILECHOOSER_RESULTCODE) {
             if (mUploadMessageArray == null) return;
-            Uri[] results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
-            if (results == null && resultCode == Activity.RESULT_OK && data != null) {
-                if (data.getData() != null) {
-                    results = new Uri[]{data.getData()};
-                } else if (data.getDataString() != null) {
-                    results = new Uri[]{Uri.parse(data.getDataString())};
-                } else if (data.getClipData() != null) {
-                    int count = data.getClipData().getItemCount();
-                    results = new Uri[count];
-                    for (int i = 0; i < count; i++) {
-                        results[i] = data.getClipData().getItemAt(i).getUri();
+            Uri[] results = null;
+            try {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    if (data.getData() != null) {
+                        results = new Uri[]{data.getData()};
+                    } else if (data.getClipData() != null) {
+                        int count = data.getClipData().getItemCount();
+                        results = new Uri[count];
+                        for (int i = 0; i < count; i++) {
+                            results[i] = data.getClipData().getItemAt(i).getUri();
+                        }
+                    } else {
+                        results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
                     }
                 }
-            }
+            } catch (Exception ignored) {}
             mUploadMessageArray.onReceiveValue(results);
             mUploadMessageArray = null;
         }
