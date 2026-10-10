@@ -229,20 +229,26 @@ async function submitActivateLicense() {
 
 // Admin Modal Functions
 function openAdminModal() {
-  document.getElementById('admin-license-modal').classList.add('show');
-  if (state.adminAuthenticated) {
-    document.getElementById('admin-auth-section').style.display = 'none';
-    document.getElementById('admin-generator-section').style.display = 'flex';
-    loadAdminLicenseList();
-  } else {
-    document.getElementById('admin-auth-section').style.display = 'flex';
-    document.getElementById('admin-generator-section').style.display = 'none';
+  const modal = document.getElementById('admin-license-modal');
+  if (modal) {
+    modal.classList.add('show');
+    modal.style.display = 'flex';
   }
+  state.adminAuthenticated = true;
+  const authSec = document.getElementById('admin-auth-section');
+  const genSec = document.getElementById('admin-generator-section');
+  if (authSec) authSec.style.display = 'none';
+  if (genSec) genSec.style.display = 'flex';
+  loadAdminLicenseList();
 }
 
 function closeAdminModal(e) {
-  if (e && e.target !== e.currentTarget) return;
-  document.getElementById('admin-license-modal').classList.remove('show');
+  if (e && e.target !== e.currentTarget && !e.target.classList.contains('modal-close-btn')) return;
+  const modal = document.getElementById('admin-license-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
 }
 
 async function verifyAdminPassword() {
@@ -1796,3 +1802,11 @@ window.setSponsorPosition = setSponsorPosition;
 window.updateSponsorContent = updateSponsorContent;
 window.triggerAutoProcessPipeline = triggerAutoProcessPipeline;
 window.playExportedVideo = playExportedVideo;
+window.openAdminModal = openAdminModal;
+window.closeAdminModal = closeAdminModal;
+window.verifyAdminPassword = verifyAdminPassword;
+window.selectLicType = selectLicType;
+window.submitAdminGenerateKey = submitAdminGenerateKey;
+window.copyCreatedKey = copyCreatedKey;
+window.loadAdminLicenseList = loadAdminLicenseList;
+window.revokeAdminKey = revokeAdminKey;

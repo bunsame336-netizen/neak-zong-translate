@@ -584,11 +584,11 @@
     </div>
 
     <div class="header-actions-row">
-      <!-- Clean VIP Status (Permanently Unlocked Mobile App) -->
-      <div class="header-license-pill" id="header-license-pill" style="cursor: default;" title="VIP Unlimited Active">
+      <!-- Clean VIP Status & Admin Generator Trigger -->
+      <button type="button" class="header-license-pill" id="header-license-pill" onclick="openAdminModal()" style="cursor: pointer; background: rgba(245, 158, 11, 0.15); border: 1.5px solid #f59e0b; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(245, 158, 11, 0.35);" title="🔑 ចុចទីនេះដើម្បីបើកផ្ទាំង Admin បង្កើត Key ជូនភ្ញៀវ">
         <span class="status-dot" style="background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
-        <span id="header-license-text" style="color: #34d399; font-weight: bold;">👑 VIP មួយជីវិត</span>
-      </div>
+        <span id="header-license-text" style="color: #fbbf24; font-weight: 800; font-size: 0.76rem;">👑 VIP មួយជីវិត (Admin 🔑)</span>
+      </button>
     </div>
   </header>
 
@@ -624,7 +624,7 @@
             </div>
           </div>
 
-          <video id="previewVideo" playsinline webkit-playsinline controls preload="auto" style="display:none; width: 100%; height: 100%; object-fit: contain;"></video>
+          <video id="previewVideo" playsinline webkit-playsinline controls preload="auto" onclick="this.paused ? this.play() : this.pause()" style="display:none; width: 100%; height: 100%; object-fit: contain; cursor: pointer;"></video>
 
           <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
           <div class="video-overlay-layer" id="video-overlay-layer">
@@ -1489,6 +1489,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=9.5.0"></script>
+  <script src="/static/js/studio_engine.js?v=9.6.0"></script>
 </body>
 </html>

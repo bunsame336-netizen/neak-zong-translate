@@ -39,19 +39,14 @@ public class MainActivity extends BridgeActivity {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             settings.setLoadsImagesAutomatically(true);
 
-            // ⚡ Allow standard surface rendering for HTML5 <video> without offscreen black screen
-            webView.setLayerType(View.LAYER_TYPE_NONE, null);
+            // ⚡ Enable full Hardware Acceleration for smooth HTML5 video decoding
+            webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
             // ⚡ WebChromeClient with Full Native File Chooser Support for <input type="file">
             webView.setWebChromeClient(new WebChromeClient() {
                 @Override
                 public void onPermissionRequest(final PermissionRequest request) {
                     request.grant(request.getResources());
-                }
-
-                @Override
-                public Bitmap getDefaultVideoPoster() {
-                    return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
                 }
 
                 @Override
