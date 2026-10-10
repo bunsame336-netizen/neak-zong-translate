@@ -119,6 +119,7 @@ class ChineseSpeechRecognizer:
                 target_audio,
                 language=language,
                 beam_size=1,
+                word_timestamps=True,
                 vad_filter=True,
                 vad_parameters=dict(min_silence_duration_ms=350)
             )
@@ -132,10 +133,15 @@ class ChineseSpeechRecognizer:
                     break
                 txt = seg.text.strip()
                 if txt:
+                    seg_start = seg.start
+                    seg_end = seg.end
+                    if hasattr(seg, 'words') and seg.words:
+                        seg_start = seg.words[0].start
+                        seg_end = seg.words[-1].end
                     cues_list.append({
                         "index": idx,
-                        "start": round(seg.start, 2),
-                        "end": round(min(actual_duration, seg.end), 2),
+                        "start": round(seg_start, 2),
+                        "end": round(min(actual_duration, seg_end), 2),
                         "text": txt
                     })
                     idx += 1

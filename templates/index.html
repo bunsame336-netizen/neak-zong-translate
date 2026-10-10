@@ -624,7 +624,7 @@
             </div>
           </div>
 
-          <video id="previewVideo" playsinline webkit-playsinline controls preload="auto" onclick="this.paused ? this.play() : this.pause()" style="display:none; width: 100%; height: 100%; object-fit: contain; cursor: pointer;"></video>
+          <video id="previewVideo" playsinline webkit-playsinline controls preload="auto" style="display:none; width: 100%; height: 100%; object-fit: contain; background: #000;"></video>
 
           <!-- LIVE INTERACTIVE OVERLAYS LAYER -->
           <div class="video-overlay-layer" id="video-overlay-layer">
@@ -674,7 +674,7 @@
         <!-- Playback Bar below Video -->
         <div class="video-toolbar">
           <div class="playback-controls">
-            <button type="button" class="btn-ctrl" onclick="previewVideo.paused ? previewVideo.play() : previewVideo.pause()">
+            <button type="button" class="btn-ctrl" onclick="const v = document.getElementById('previewVideo'); if (v) { v.muted = false; if (v.paused) v.play(); else v.pause(); }">
               ⏯ ចាក់
             </button>
             <button type="button" class="btn-ctrl" onclick="previewVideo.currentTime = 0">
@@ -1489,6 +1489,6 @@
   <div id="toast-notification"></div>
 
   <!-- Studio Engine JS -->
-  <script src="/static/js/studio_engine.js?v=9.6.0"></script>
+  <script src="/static/js/studio_engine.js?v=9.7.0"></script>
 </body>
 </html>

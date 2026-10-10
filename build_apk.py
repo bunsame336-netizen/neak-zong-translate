@@ -106,6 +106,7 @@ print(f"\n[✓] Successfully built Zero-Warning Release APK: {built_apk.name} ({
 # 4. Copy to targets
 targets = [
     Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_Translate_v1.0.apk"),
+    Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v20.apk"),
     Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v19.apk"),
     Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v18.apk"),
     Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_v17.apk"),
@@ -113,6 +114,8 @@ targets = [
     BASE_DIR.parent / "NeakZong_Translate_v1.0.apk",
     BASE_DIR / "static" / "NeakZong_Translate_v1.0.apk",
     BASE_DIR / "exports" / "NeakZong_Translate_v1.0.apk",
+    BASE_DIR / "static" / "NeakZong_v20.apk",
+    BASE_DIR / "exports" / "NeakZong_v20.apk",
     BASE_DIR / "static" / "NeakZong_v19.apk",
     BASE_DIR / "exports" / "NeakZong_v19.apk",
     BASE_DIR / "static" / "NeakZong_v18.apk",

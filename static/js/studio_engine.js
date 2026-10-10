@@ -431,41 +431,70 @@ function handleVideoUpload(input) {
   video.playsInline = true;
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
+  video.removeAttribute('poster');
   window.previewVideo = video;
 
-  // ⚡ 1. PRIMARY: Instant HTML5 File Object URL (Hardware Decoded, 0 RAM latency)
-  let playedViaBlob = false;
+  // Touch on video un-mutes and ensures immediate playback
+  video.onpointerdown = () => {
+    if (video.muted) video.muted = false;
+    if (video.paused) video.play();
+  };
+
+  const playWithSoundFallback = () => {
+    video.removeAttribute('poster');
+    video.muted = false;
+    const p = video.play();
+    if (p !== undefined) {
+      p.catch(() => {
+        video.muted = true;
+        video.play().catch(e => console.warn('Muted play fallback:', e));
+      });
+    }
+  };
+
+  // ⚡ 1. Primary: Instant Blob URL
+  let loadedViaBlob = false;
   try {
     const objUrl = URL.createObjectURL(file);
     if (objUrl) {
       video.src = objUrl;
       state.localVideoUrl = objUrl;
-      video.muted = false;
+      video.removeAttribute('poster');
       video.load();
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(err => {
-          console.warn('Autoplay unmuted blocked, playing muted:', err);
-          video.muted = true;
-          video.play().catch(e2 => console.warn('Muted play also blocked:', e2));
-        });
-      }
-      playedViaBlob = true;
-      showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
+      video.onloadeddata = () => {
+        playWithSoundFallback();
+        showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
+      };
+      playWithSoundFallback();
+      loadedViaBlob = true;
     }
   } catch (err) {
-    console.warn('URL.createObjectURL failed, falling back to FileReader:', err);
+    console.warn('URL.createObjectURL failed:', err);
   }
 
-  // Fallback to FileReader ONLY if URL.createObjectURL threw an exception
-  if (!playedViaBlob) {
+  // ⚡ 2. Automatic FileReader DataURL fallback if Blob URL triggers error
+  video.onerror = () => {
+    console.warn('Blob URL decoding blocked in WebView, fallback to FileReader DataURL...');
     const reader = new FileReader();
     reader.onload = (e) => {
       video.src = e.target.result;
       state.localVideoUrl = e.target.result;
-      video.muted = false;
+      video.removeAttribute('poster');
       video.load();
-      video.play().catch(() => { video.muted = true; video.play(); });
+      playWithSoundFallback();
+      showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  if (!loadedViaBlob) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      video.src = e.target.result;
+      state.localVideoUrl = e.target.result;
+      video.removeAttribute('poster');
+      video.load();
+      playWithSoundFallback();
       showToast('✓ វីដេអូចាក់លើ Live Preview ជោគជ័យ!');
     };
     reader.readAsDataURL(file);
