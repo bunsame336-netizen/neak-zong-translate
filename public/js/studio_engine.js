@@ -527,9 +527,12 @@ function loadVideoPreview(file) {
       vp.style.aspectRatio = isLandscape ? '16 / 9' : '9 / 16';
     }
     updateVideoTime();
+    updateBlurBoxLimits();
+    updateBlurBoxFromSliders();
   };
   video.ontimeupdate = updateVideoTime;
   video.onplay = () => {
+    updateBlurBoxLimits();
     if (state.sponsor && state.sponsor.enabled) startSponsorCycle();
   };
 }
@@ -884,24 +887,69 @@ function _applyEffectToSpan(span, effect, color, outlineColor) {
 }
 
 
-// ── BLUR BOX SLIDERS (HORIZONTAL RECTANGLE: W: 50-280px, H: 20-80px) ──────
+function getVideoDimensions() {
+  const v = document.getElementById('previewVideo') || previewVideo;
+  const vp = document.getElementById('video-viewport') || videoViewport;
+  let w = 280;
+  let h = 320;
+  if (v && v.style.display !== 'none' && v.clientWidth > 0 && v.clientHeight > 0) {
+    w = v.clientWidth;
+    h = v.clientHeight;
+  } else if (vp && vp.clientWidth > 0 && vp.clientHeight > 0) {
+    w = vp.clientWidth;
+    h = vp.clientHeight;
+  }
+  return { w: Math.max(100, Math.floor(w)), h: Math.max(80, Math.floor(h)) };
+}
+
+// ── BLUR BOX SLIDERS (BOUNDED TO EXACT VIDEO FRAME) ──────
 function updateBlurBoxLimits() {
-  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
+  const { w: vidW, h: vidH } = getVideoDimensions();
   const wSlider = document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blur-h-slider');
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
+  
   if (wSlider) {
-    wSlider.min = 50;
-    wSlider.max = 280;
+    wSlider.min = 20;
+    wSlider.max = vidW;
+    if (parseInt(wSlider.value) > vidW) {
+      wSlider.value = vidW;
+      const wVal = document.getElementById('blur-w-val');
+      if (wVal) wVal.innerText = `${vidW}px`;
+    }
   }
   if (hSlider) {
-    hSlider.min = 20;
-    hSlider.max = 80;
+    hSlider.min = 10;
+    hSlider.max = vidH;
+    if (parseInt(hSlider.value) > vidH) {
+      hSlider.value = vidH;
+      const hVal = document.getElementById('blur-h-val');
+      if (hVal) hVal.innerText = `${vidH}px`;
+    }
   }
-  if (xSlider) xSlider.max = Math.max(0, vpW - (state.blurMask.w || 140));
-  if (ySlider) ySlider.max = Math.max(0, vpH - (state.blurMask.h || 45));
+
+  const curW = parseInt(wSlider?.value || state.blurMask.w || 140);
+  const curH = parseInt(hSlider?.value || state.blurMask.h || 45);
+
+  if (xSlider) {
+    xSlider.min = 0;
+    xSlider.max = Math.max(0, vidW - curW);
+    if (parseInt(xSlider.value) > xSlider.max) {
+      xSlider.value = xSlider.max;
+      const xVal = document.getElementById('blur-x-val');
+      if (xVal) xVal.innerText = `${xSlider.max}px`;
+    }
+  }
+  if (ySlider) {
+    ySlider.min = 0;
+    ySlider.max = Math.max(0, vidH - curH);
+    if (parseInt(ySlider.value) > ySlider.max) {
+      ySlider.value = ySlider.max;
+      const yVal = document.getElementById('blur-y-val');
+      if (yVal) yVal.innerText = `${ySlider.max}px`;
+    }
+  }
 }
 
 function updateBlurBoxFromSliders() {
@@ -915,10 +963,18 @@ function updateBlurBoxFromSliders() {
     }
   }
 
-  const w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
-  const h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
-  const x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
-  const y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+  const { w: vidW, h: vidH } = getVideoDimensions();
+
+  let w = parseInt(document.getElementById('blur-w-slider')?.value || 140);
+  let h = parseInt(document.getElementById('blur-h-slider')?.value || 45);
+  let x = parseInt(document.getElementById('blur-x-slider')?.value || 15);
+  let y = parseInt(document.getElementById('blur-y-slider')?.value || 15);
+
+  // Clamp strictly within video bounds (Never spill outside video frame)
+  w = Math.max(20, Math.min(vidW, w));
+  h = Math.max(10, Math.min(vidH, h));
+  x = Math.max(0, Math.min(vidW - w, x));
+  y = Math.max(0, Math.min(vidH - h, y));
 
   state.blurMask.x = x;
   state.blurMask.y = y;
@@ -930,6 +986,8 @@ function updateBlurBoxFromSliders() {
     blurBox.style.top = `${y}px`;
     blurBox.style.width = `${w}px`;
     blurBox.style.height = `${h}px`;
+    blurBox.style.maxWidth = `${vidW}px`;
+    blurBox.style.maxHeight = `${vidH}px`;
   }
 
   const wVal = document.getElementById('blur-w-val');
@@ -1002,15 +1060,14 @@ function updateBlurTint(val) {
 }
 
 function setBlurCorner(corner) {
-  const vpW = (videoViewport && videoViewport.clientWidth) || 280;
-  const vpH = (videoViewport && videoViewport.clientHeight) || 320;
-  const w = state.blurMask.w || 140;
-  const h = state.blurMask.h || 45;
-  let x = 15, y = 15;
+  const { w: vidW, h: vidH } = getVideoDimensions();
+  const w = Math.min(vidW, state.blurMask.w || 140);
+  const h = Math.min(vidH, state.blurMask.h || 45);
+  let x = 10, y = 10;
   if (corner === 'top-left') { x = 10; y = 10; }
-  else if (corner === 'top-right') { x = Math.max(0, vpW - w - 10); y = 10; }
-  else if (corner === 'bottom-left') { x = 10; y = Math.max(0, vpH - h - 10); }
-  else if (corner === 'bottom-right') { x = Math.max(0, vpW - w - 10); y = Math.max(0, vpH - h - 10); }
+  else if (corner === 'top-right') { x = Math.max(0, vidW - w - 10); y = 10; }
+  else if (corner === 'bottom-left') { x = 10; y = Math.max(0, vidH - h - 10); }
+  else if (corner === 'bottom-right') { x = Math.max(0, vidW - w - 10); y = Math.max(0, vidH - h - 10); }
 
   const xSlider = document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blur-y-slider');
@@ -1047,21 +1104,21 @@ function startSponsorCycle() {
   const bar = document.getElementById('sponsor-banner-bar');
   if (!bar || !sponsorElement) return;
 
-  sponsorElement.style.display = 'block';
+  sponsorElement.style.display = 'flex';
   sponsorElement.classList.add('active-visible');
 
-  // Trigger Pop-up Scale-in entry with bounce
+  // Trigger Dynamic Unroll Open animation (Scale-X Expand & Glow)
   bar.classList.remove('sponsor-exiting');
   bar.classList.add('sponsor-entering');
 
   const durationMs = (state.sponsor.duration || 15) * 1000;
 
-  // After duration ends -> Trigger Exit Animation (Smooth Slide-down / Fade-out)
+  // After duration ends -> Trigger Roll-Up Close animation (Scale-X Collapse & Fade)
   sponsorExitTimer = setTimeout(() => {
     bar.classList.remove('sponsor-entering');
     bar.classList.add('sponsor-exiting');
 
-    // Wait for exit animation to complete (600ms) then hide completely
+    // Wait for roll-up animation to complete (550ms) then hide completely
     setTimeout(() => {
       if (bar.classList.contains('sponsor-exiting')) {
         if (sponsorElement) {
@@ -1070,14 +1127,14 @@ function startSponsorCycle() {
         }
         bar.classList.remove('sponsor-exiting');
       }
-    }, 600);
+    }, 550);
 
-    // Pause 5.6s before next cycle
+    // Pause 4.5s before next unroll cycle
     sponsorCycleTimer = setTimeout(() => {
       if (state.sponsor.enabled) {
         startSponsorCycle();
       }
-    }, 5600);
+    }, 4500);
   }, durationMs);
 }
 
@@ -1743,6 +1800,36 @@ function pollJobStatus(jobId) {
       if (job.step && progressStatus) progressStatus.innerText = job.step;
 
       _updateStepperStage(pct, job.stage);
+
+      // ⚡ Anti-98% Hang Watchdog: Force complete if progress reaches 98% for > 4 seconds
+      if (pct >= 98 && job.status !== 'completed') {
+        if (!window._pct98Timer) {
+          window._pct98Timer = Date.now();
+        } else if (Date.now() - window._pct98Timer > 4000) {
+          clearInterval(interval);
+          if (progressBar) progressBar.style.width = '100%';
+          if (progressPct) progressPct.innerText = '100%';
+          if (progressStatus) progressStatus.innerText = '✓ រួចរាល់ ១០០%!';
+
+          state.lastExportUrl = job.download_url || `/exports/${job.filename || 'NeakZong_Dubbed.mp4'}`;
+          state.lastExportFilename = job.filename || 'NeakZong_Dubbed.mp4';
+
+          if (successRow) successRow.style.display = 'flex';
+          if (downloadBtn) {
+            downloadBtn.href = state.lastExportUrl;
+            downloadBtn.setAttribute('download', state.lastExportFilename);
+          }
+          if (savePathInfo) {
+            savePathInfo.style.display = 'block';
+            savePathInfo.innerHTML = `📁 <b>ទីតាំងរក្សាទុក:</b> ${job.save_path || ('/exports/' + state.lastExportFilename)}`;
+          }
+
+          showToast('🎉 បកប្រែ និង Dubbing សំឡេងខ្មែរចប់សព្វគ្រប់ ១០០%!');
+          return;
+        }
+      } else {
+        window._pct98Timer = null;
+      }
 
       if (job.status === 'completed' || pct >= 100) {
         clearInterval(interval);

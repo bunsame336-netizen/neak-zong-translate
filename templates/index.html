@@ -197,39 +197,65 @@
         border-color: #38bdf8;
       }
     }
-    @keyframes sponsor-popup-in {
+    /* ⚡ DYNAMIC UNROLL & ROLL-UP SPONSOR ANIMATION WITH TEXT GLOW */
+    @keyframes sponsor-unroll-open {
       0% {
         opacity: 0;
-        transform: scale(0.60) translateY(18px);
+        transform: scaleX(0.04) scaleY(0.7);
+        filter: blur(4px);
       }
-      60% {
+      50% {
         opacity: 0.95;
-        transform: scale(1.05) translateY(-2px);
+        transform: scaleX(1.04) scaleY(1.02);
+        filter: blur(0px);
       }
       100% {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: scaleX(1) scaleY(1);
+        filter: blur(0px);
       }
     }
-    @keyframes sponsor-slide-out {
+
+    @keyframes sponsor-rollup-close {
       0% {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: scaleX(1) scaleY(1);
+        filter: blur(0px);
       }
-      30% {
-        opacity: 0.9;
-        transform: scale(0.98) translateY(2px);
+      35% {
+        opacity: 0.85;
+        transform: scaleX(0.85) scaleY(0.95);
       }
       100% {
         opacity: 0;
-        transform: scale(0.75) translateY(26px);
+        transform: scaleX(0.02) scaleY(0.5);
+        filter: blur(4px);
       }
     }
+
+    .sponsor-banner-bar {
+      transform-origin: center center !important;
+      will-change: transform, opacity !important;
+    }
+
     .sponsor-banner-bar.sponsor-entering {
-      animation: sponsor-popup-in 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+      animation: sponsor-unroll-open 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
     .sponsor-banner-bar.sponsor-exiting {
-      animation: sponsor-slide-out 0.65s ease-in forwards !important;
+      animation: sponsor-rollup-close 0.55s cubic-bezier(0.7, 0, 0.84, 0) forwards !important;
+    }
+
+    .sponsor-top-tag, #sponsor-top-tag {
+      animation: text-glow-pulse 2s infinite ease-in-out !important;
+    }
+
+    @keyframes text-glow-pulse {
+      0%, 100% {
+        text-shadow: 0 0 6px rgba(245, 158, 11, 0.6), 0 0 12px rgba(245, 158, 11, 0.3);
+      }
+      50% {
+        text-shadow: 0 0 14px rgba(245, 158, 11, 0.95), 0 0 22px rgba(251, 191, 36, 0.85), 0 0 30px rgba(34, 211, 238, 0.55);
+      }
     }
 
     /* ⚡ GLOW BUTTON & DUAL-TONE STYLES */
@@ -577,12 +603,14 @@
       transform: scale(0.92) !important;
     }
 
-    /* Pure Blur Box without text */
-    #blur-overlay-box {
+    /* Pure Blur Box without text (Strictly bounded to Video Frame) */
+    #blur-overlay-box, .blur-mask, #blur-box {
       border: 1.5px dashed var(--neon-cyan-bright) !important;
-      /* backdrop-filter removed for Android */
-      /* -webkit-backdrop-filter removed */
       background: rgba(0, 0, 0, 0.4) !important;
+      max-width: 100% !important;
+      max-height: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
     }
     .blur-watermark-label {
       display: none !important;

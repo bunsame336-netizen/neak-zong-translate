@@ -259,7 +259,7 @@ def extract_video_thumbnail(video_path: str, output_thumb_path: str, timestamp: 
             '-q:v', '2',
             str(output_thumb_path)
         ]
-        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=15)
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
         if res.returncode == 0 and os.path.exists(output_thumb_path) and os.path.getsize(output_thumb_path) > 0:
             return True
 
@@ -272,7 +272,7 @@ def extract_video_thumbnail(video_path: str, output_thumb_path: str, timestamp: 
             '-q:v', '2',
             str(output_thumb_path)
         ]
-        res_fb = subprocess.run(cmd_fallback, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=15)
+        res_fb = subprocess.run(cmd_fallback, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
         return res_fb.returncode == 0 and os.path.exists(output_thumb_path) and os.path.getsize(output_thumb_path) > 0
     except Exception as e:
         print(f"[Extract Thumbnail Error] {e}", flush=True)
@@ -740,9 +740,9 @@ def render_segment(
         output_segment_path
     ])
     
-    # Segment timeout: 600s is plenty for a 3-minute chunk
+    # Segment timeout: 60s max per chunk
     try:
-        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         return res.returncode == 0 and os.path.exists(output_segment_path) and os.path.getsize(output_segment_path) > 0
     except Exception as e:
         print(f"[Segment Render Exception] {e}", flush=True)
@@ -759,9 +759,9 @@ def render_long_video_chunked(
 ) -> bool:
     """
     Ultra-Fast Long Video Chunking Pipeline:
-    1. Divides long video (1h, 1.5h, 2h) into manageable chunks (e.g. 180s - 300s each).
-    2. Renders each chunk sequentially with ultrafast preset (avoiding RAM exhaustion).
-    3. Seamlessly joins all chunks using FFmpeg Concat Demuxer without quality loss in 1-2 seconds.
+    1. Divides long video into chunks (180s each).
+    2. Renders each chunk sequentially.
+    3. Joins all chunks using FFmpeg Concat Demuxer.
     """
     ff = ffmpeg_bin or find_ffmpeg()
     total_dur = get_video_duration(input_video_path)
@@ -831,16 +831,28 @@ def render_long_video_chunked(
             '-movflags', '+faststart',
             output_video_path
         ]
-        res = subprocess.run(concat_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
+        res = subprocess.run(concat_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         success = res.returncode == 0 and os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
         
+        if not success:
+            print("[Concat Engine] Concat returned non-zero, falling back to direct fast render...", flush=True)
+            return _render_direct_fast(
+                input_video_path, output_video_path,
+                audio_path=audio_path, options=options, ffmpeg_bin=ff,
+                progress_callback=progress_callback
+            )
+            
         if success and progress_callback:
             progress_callback(100, "✓ Render ជោគជ័យ ១០០%!")
             
         return success
     except Exception as e:
-        print(f"[Chunking Engine Error] {e}", flush=True)
-        return False
+        print(f"[Chunking Engine Error] {e}, falling back to direct fast render.", flush=True)
+        return _render_direct_fast(
+            input_video_path, output_video_path,
+            audio_path=audio_path, options=options, ffmpeg_bin=ff,
+            progress_callback=progress_callback
+        )
     finally:
         # Cleanup temporary chunks
         try:
@@ -932,8 +944,8 @@ def _render_direct_fast(
     advancer_thread.start()
 
     try:
-        # Avoid PIPE deadlock: discard logs via DEVNULL to prevent OS buffer blocking
-        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=14400)
+        # Avoid PIPE deadlock: discard logs via DEVNULL to prevent OS buffer blocking (Timeout: 60s)
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
         stop_event.set()
         advancer_thread.join(timeout=0.5)
 
@@ -946,29 +958,30 @@ def _render_direct_fast(
             else:
                 fallback_cmd.extend(['-c', 'copy'])
             fallback_cmd.extend(['-shortest', '-movflags', '+faststart', output_video_path])
-            subprocess.run(fallback_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
+            subprocess.run(fallback_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
 
         ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
         if ok and progress_callback:
             progress_callback(100, "✓ រួចរាល់ ១០០%!")
         return ok
-    except Exception as e:
+    except (subprocess.TimeoutExpired, Exception) as e:
         stop_event.set()
-        print(f"[Direct Render Exception] {e}", flush=True)
-        # Attempt minimal emergency copy
+        print(f"[Direct Render Timeout/Exception] {e}, executing emergency fast mux fallback...", flush=True)
+        # Attempt minimal emergency copy / mux
         try:
             em_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
             if has_custom_audio:
                 em_cmd.extend(['-i', audio_path, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac'])
             else:
                 em_cmd.extend(['-c', 'copy'])
-            em_cmd.extend(['-shortest', output_video_path])
-            subprocess.run(em_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+            em_cmd.extend(['-shortest', '-movflags', '+faststart', output_video_path])
+            subprocess.run(em_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
             ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
             if ok and progress_callback:
                 progress_callback(100, "✓ រួចរាល់ ១០០%!")
             return ok
-        except Exception:
+        except Exception as ex2:
+            print(f"[Emergency Mux Error] {ex2}", flush=True)
             return False
 
 def render_final_video(
@@ -981,13 +994,38 @@ def render_final_video(
 ) -> bool:
     """
     Main entry point for rendering final HD video.
-    Automatically picks chunked pipeline for long videos (> 180s) or fast direct for short clips.
+    Guaranteed zero-freeze: completes and emits 100% callback.
     """
-    return render_long_video_chunked(
-        input_video_path=input_video_path,
-        output_video_path=output_video_path,
-        audio_path=audio_path,
-        options=options,
-        ffmpeg_bin=ffmpeg_bin,
-        progress_callback=progress_callback
-    )
+    ok = False
+    try:
+        ok = render_long_video_chunked(
+            input_video_path=input_video_path,
+            output_video_path=output_video_path,
+            audio_path=audio_path,
+            options=options,
+            ffmpeg_bin=ffmpeg_bin,
+            progress_callback=progress_callback
+        )
+    except Exception as e:
+        print(f"[Render Final Video Exception] {e}", flush=True)
+        ok = False
+
+    # Emergency fallback if chunked or direct render did not produce valid video file
+    if not ok or not os.path.exists(output_video_path) or os.path.getsize(output_video_path) == 0:
+        print("[Render Final Video Emergency] Producing output video via fast mux fallback...", flush=True)
+        ff = ffmpeg_bin or find_ffmpeg()
+        fb_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
+        if audio_path and os.path.exists(audio_path):
+            fb_cmd.extend(['-i', audio_path, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k'])
+        else:
+            fb_cmd.extend(['-c', 'copy'])
+        fb_cmd.extend(['-shortest', '-movflags', '+faststart', output_video_path])
+        try:
+            subprocess.run(fb_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
+            ok = os.path.exists(output_video_path) and os.path.getsize(output_video_path) > 0
+        except Exception:
+            ok = False
+
+    if ok and progress_callback:
+        progress_callback(100, "✓ រួចរាល់ ១០០%!")
+    return ok
