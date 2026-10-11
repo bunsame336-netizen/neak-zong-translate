@@ -40,6 +40,9 @@ if old_dash.exists():
 shutil.copytree(BASE_DIR / "public", assets_public, dirs_exist_ok=True)
 # Ensure capacitor.config.json in assets has cloud server url
 shutil.copyfile(BASE_DIR / "capacitor.config.json", assets_dir / "capacitor.config.json")
+if (BASE_DIR / "exports" / "NeakZong_Dubbed.mp4").exists():
+    shutil.copyfile(BASE_DIR / "exports" / "NeakZong_Dubbed.mp4", assets_dir / "NeakZong_Dubbed.mp4")
+    print("  ✓ Bundled NeakZong_Dubbed.mp4 to Android assets!")
 print("  ✓ Assets and capacitor.config.json synchronized successfully!")
 
 # 2. Clean & Assemble Release APK

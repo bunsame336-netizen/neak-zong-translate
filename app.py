@@ -297,13 +297,17 @@ def service_worker():
 def download_export(filename):
     as_att = request.args.get('download', '0') == '1'
     target = EXPORTS_DIR / filename
-    if (not target.exists() or target.stat().st_size == 0) and ('Dubbed' in filename or filename == 'NeakZong_Dubbed.mp4'):
-        mp4s = sorted(EXPORTS_DIR.glob('*.mp4'), key=lambda p: p.stat().st_mtime, reverse=True)
-        if mp4s:
-            return send_from_directory(EXPORTS_DIR, mp4s[0].name, as_attachment=as_att, conditional=True)
-        up_mp4s = sorted(UPLOADS_DIR.glob('*.mp4'), key=lambda p: p.stat().st_mtime, reverse=True)
-        if up_mp4s:
-            return send_from_directory(UPLOADS_DIR, up_mp4s[0].name, as_attachment=as_att, conditional=True)
+    if target.exists() and target.stat().st_size > 0:
+        return send_from_directory(EXPORTS_DIR, filename, as_attachment=as_att, conditional=True)
+    mp4s = sorted(EXPORTS_DIR.glob('*.mp4'), key=lambda p: p.stat().st_mtime, reverse=True)
+    if mp4s:
+        return send_from_directory(EXPORTS_DIR, mp4s[0].name, as_attachment=as_att, conditional=True)
+    static_dubbed = BASE_DIR / 'static' / 'NeakZong_Dubbed.mp4'
+    if static_dubbed.exists() and static_dubbed.stat().st_size > 0:
+        return send_from_directory(BASE_DIR / 'static', 'NeakZong_Dubbed.mp4', as_attachment=as_att, conditional=True)
+    up_mp4s = sorted(UPLOADS_DIR.glob('*.mp4'), key=lambda p: p.stat().st_mtime, reverse=True)
+    if up_mp4s:
+        return send_from_directory(UPLOADS_DIR, up_mp4s[0].name, as_attachment=as_att, conditional=True)
     return send_from_directory(EXPORTS_DIR, filename, as_attachment=as_att, conditional=True)
 
 # ══════════════════════════════════════════════════════════════

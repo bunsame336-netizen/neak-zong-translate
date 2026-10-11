@@ -1601,3 +1601,51 @@ header.app-header {
   }
 }
 
+
+/* ⚡ STRICT SPONSOR BOUNDS & PURE UNROLL / ROLL-UP MOTION */
+#sponsor-box, .sponsor-container, #sponsor-overlay-element, .sponsor-banner-bar {
+  max-width: 75% !important;
+  width: 75% !important;
+  left: 12.5% !important;
+  font-size: 11px !important;
+  box-sizing: border-box !important;
+  margin: 0 auto !important;
+  transform-origin: center center !important;
+  will-change: transform, opacity !important;
+}
+
+#blur-overlay-box {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+
+@keyframes sponsor-unroll-open {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes sponsor-rollup-close {
+  0% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+
+#sponsor-box.sponsor-entering, .sponsor-container.sponsor-entering, .sponsor-banner-bar.sponsor-entering {
+  animation: sponsor-unroll-open 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+#sponsor-box.sponsor-exiting, .sponsor-container.sponsor-exiting, .sponsor-banner-bar.sponsor-exiting {
+  animation: sponsor-rollup-close 0.5s ease-in forwards !important;
+}

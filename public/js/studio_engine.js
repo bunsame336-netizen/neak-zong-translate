@@ -796,20 +796,7 @@ function setTextMotion(mode) {
   showToast(mode === 'none' ? 'អក្សរនៅមួយកន្លែង (Static)' : (mode === 'up' ? '⬆️ អក្សររត់ពីក្រោមឡើងលើ' : '⬇️ អក្សររត់ពីលើចុះក្រោម'));
 }
 
-function handleTextSpeedSlider(val) {
-  const duration = 28 - parseInt(val);
-  setTextSpeedSeconds(duration);
-}
 
-function setTextSpeedSeconds(sec) {
-  const val = Math.max(3, Math.min(25, parseFloat(sec) || 8.0));
-  state.textOverlay.speedSec = val;
-  const valEl = document.getElementById('text-speed-val');
-  if (valEl) valEl.innerText = `${val}s`;
-  const slider = document.getElementById('text-speed-slider');
-  if (slider) slider.value = 28 - val;
-  applyTextMotionStyles();
-}
 
 function applyTextMotionStyles() {
   const textEl = document.getElementById('text-overlay-element');
@@ -978,123 +965,79 @@ function centerBlurBox() {
 }
 
 // ── BLUR BOX SLIDERS (STRICT BOUNDS TO EXACT VIDEO FRAME) ──────
-function updateBlurBoxLimits() {
-  const video = document.getElementById('previewVideo') || previewVideo;
-  const { w: vidW, h: vidH } = getVideoDimensions();
-  const maxW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
-  const maxH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
+function updateBlurBox() {
+  const video = document.getElementById('previewVideo');
+  const blurBox = document.getElementById('blur-overlay-box');
+  if (!video || !blurBox) return;
+
+  const vidW = (video.clientWidth > 0) ? video.clientWidth : 300;
+  const vidH = (video.clientHeight > 0) ? video.clientHeight : 400;
 
   const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
   const xSlider = document.getElementById('blurXSlider') || document.getElementById('blur-x-slider');
   const ySlider = document.getElementById('blurYSlider') || document.getElementById('blur-y-slider');
-  
+
   if (wSlider) {
-    wSlider.min = 20;
-    wSlider.max = maxW;
-    if (parseInt(wSlider.value) > maxW) {
-      wSlider.value = maxW;
-      const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
-      if (wVal) wVal.innerText = `${maxW}px`;
-    }
-  }
-  const blurOverlayBox = document.getElementById('blur-overlay-box') || blurBox;
-  if (blurOverlayBox) {
-    blurOverlayBox.style.maxWidth = maxW + 'px';
+    wSlider.max = vidW;
+    if (parseInt(wSlider.value) > vidW) wSlider.value = vidW;
   }
   if (hSlider) {
-    hSlider.min = 10;
-    hSlider.max = maxH;
-    if (parseInt(hSlider.value) > maxH) {
-      hSlider.value = maxH;
-      const hVal = document.getElementById('blur-h-val') || document.getElementById('blurHeightVal');
-      if (hVal) hVal.innerText = `${maxH}px`;
-    }
+    hSlider.max = vidH;
+    if (parseInt(hSlider.value) > vidH) hSlider.value = vidH;
   }
-
-  const curW = Math.min(maxW, parseInt(wSlider?.value || state.blurMask.w || 140));
-  const curH = Math.min(maxH, parseInt(hSlider?.value || state.blurMask.h || 45));
-
-  if (xSlider) {
-    xSlider.min = 0;
-    xSlider.max = Math.max(0, maxW - curW);
-    if (parseInt(xSlider.value) > xSlider.max) {
-      xSlider.value = xSlider.max;
-      const xVal = document.getElementById('blur-x-val') || document.getElementById('blurXVal');
-      if (xVal) xVal.innerText = `${xSlider.max}px`;
-    }
-  }
-  if (ySlider) {
-    ySlider.min = 0;
-    ySlider.max = Math.max(0, maxH - curH);
-    if (parseInt(ySlider.value) > ySlider.max) {
-      ySlider.value = ySlider.max;
-      const yVal = document.getElementById('blur-y-val') || document.getElementById('blurYVal');
-      if (yVal) yVal.innerText = `${ySlider.max}px`;
-    }
-  }
-}
-
-function updateBlurBoxFromSliders() {
-  if (!state.blurMask.enabled) {
-    state.blurMask.enabled = true;
-    const toggle = document.getElementById('toggle-blur');
-    if (toggle) toggle.checked = true;
-    if (blurBox) {
-      blurBox.classList.add('active-visible');
-      blurBox.style.display = 'block';
-    }
-  }
-
-  const video = document.getElementById('previewVideo') || previewVideo;
-  const { w: vidW, h: vidH } = getVideoDimensions();
-  const maxW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
-  const maxH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
-
-  const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
-  const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
-  const xSlider = document.getElementById('blurXSlider') || document.getElementById('blur-x-slider');
-  const ySlider = document.getElementById('blurYSlider') || document.getElementById('blur-y-slider');
-
-  // Hard clamp slider max to actual video frame
-  if (wSlider) wSlider.max = maxW;
-  if (hSlider) hSlider.max = maxH;
 
   let w = parseInt(wSlider?.value || 140);
   let h = parseInt(hSlider?.value || 45);
-  let x = parseInt(xSlider?.value || 15);
-  let y = parseInt(ySlider?.value || 15);
 
-  // Clamp strictly within video bounds (Never spill outside video frame)
-  w = Math.max(20, Math.min(maxW, w));
-  h = Math.max(10, Math.min(maxH, h));
-  x = Math.max(0, Math.min(maxW - w, x));
-  y = Math.max(0, Math.min(maxH - h, y));
+  w = Math.min(w, vidW);
+  h = Math.min(h, vidH);
 
-  state.blurMask.x = x;
-  state.blurMask.y = y;
+  if (xSlider) {
+    const maxX = Math.max(0, vidW - w);
+    xSlider.max = maxX;
+    if (parseInt(xSlider.value) > maxX) xSlider.value = maxX;
+  }
+  if (ySlider) {
+    const maxY = Math.max(0, vidH - h);
+    ySlider.max = maxY;
+    if (parseInt(ySlider.value) > maxY) ySlider.value = maxY;
+  }
+
+  let x = parseInt(xSlider?.value || 0);
+  let y = parseInt(ySlider?.value || 0);
+  x = Math.max(0, Math.min(x, vidW - w));
+  y = Math.max(0, Math.min(y, vidH - h));
+
+  // បង្ខំទំហំប្រអប់ Blur:
+  blurBox.style.maxWidth = vidW + 'px';
+  blurBox.style.maxHeight = vidH + 'px';
+  blurBox.style.width = Math.min(w, vidW) + 'px';
+  blurBox.style.height = Math.min(h, vidH) + 'px';
+  blurBox.style.left = x + 'px';
+  blurBox.style.top = y + 'px';
+
   state.blurMask.w = w;
   state.blurMask.h = h;
-
-  const blurOverlayBox = document.getElementById('blur-overlay-box') || blurBox;
-  if (blurOverlayBox) {
-    blurOverlayBox.style.left = `${x}px`;
-    blurOverlayBox.style.top = `${y}px`;
-    blurOverlayBox.style.width = `${w}px`;
-    blurOverlayBox.style.height = `${h}px`;
-    blurOverlayBox.style.maxWidth = `${maxW}px`;
-    blurOverlayBox.style.maxHeight = `${maxH}px`;
-    blurOverlayBox.style.boxSizing = 'border-box';
-  }
+  state.blurMask.x = x;
+  state.blurMask.y = y;
 
   const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
   const hVal = document.getElementById('blur-h-val') || document.getElementById('blurHeightVal');
   const xVal = document.getElementById('blur-x-val') || document.getElementById('blurXVal');
   const yVal = document.getElementById('blur-y-val') || document.getElementById('blurYVal');
-  if (wVal) wVal.innerText = `${w}px`;
-  if (hVal) hVal.innerText = `${h}px`;
-  if (xVal) xVal.innerText = `${x}px`;
-  if (yVal) yVal.innerText = `${y}px`;
+  if (wVal) wVal.innerText = w + 'px';
+  if (hVal) hVal.innerText = h + 'px';
+  if (xVal) xVal.innerText = x + 'px';
+  if (yVal) yVal.innerText = y + 'px';
+}
+
+function updateBlurBoxFromSliders() {
+  updateBlurBox();
+}
+
+function updateBlurBoxLimits() {
+  updateBlurBox();
 }
 
 function updateBlurIntensity(val) {
@@ -1367,37 +1310,7 @@ function setMarqueeDirection(dir) {
   updateMarqueeAnimation();
 }
 
-function handleMarqueeSpeedSlider(val) {
-  const duration = 28 - parseInt(val);
-  setMarqueeSpeedSeconds(duration);
-}
 
-function setMarqueeSpeed(preset) {
-  let sec = 8;
-  if (preset === 'slow') sec = 15;
-  if (preset === 'normal') sec = 8;
-  if (preset === 'fast') sec = 4;
-  setMarqueeSpeedSeconds(sec);
-}
-
-function setMarqueeSpeedSeconds(sec) {
-  const val = Math.max(3, Math.min(25, parseInt(sec) || 8));
-  state.marquee.speedSec = val;
-  const valEl = document.getElementById('marquee-speed-val');
-  if (valEl) valEl.innerText = `${val}s`;
-  const slider = document.getElementById('marquee-speed-slider');
-  if (slider) slider.value = 28 - val;
-
-  ['slow', 'normal', 'fast'].forEach(p => {
-    const btn = document.getElementById(`btn-speed-${p}`);
-    if (btn) btn.classList.remove('active');
-  });
-  if (val >= 14) document.getElementById('btn-speed-slow')?.classList.add('active');
-  else if (val <= 5) document.getElementById('btn-speed-fast')?.classList.add('active');
-  else document.getElementById('btn-speed-normal')?.classList.add('active');
-
-  updateMarqueeAnimation();
-}
 
 function setMarqueeEffect(effect) {
   state.marquee.effect = effect;
@@ -1819,34 +1732,32 @@ async function triggerAutoProcessPipeline() {
 
 function playExportedVideo() {
   const video = document.getElementById('previewVideo');
-  const placeholder = document.getElementById('video-placeholder');
-  if (placeholder) placeholder.style.display = 'none';
-
   if (video) {
+    const placeholder = document.getElementById('video-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
     video.style.display = 'block';
+    video.pause();
     video.removeAttribute('poster');
-    video.src = "http://127.0.0.1:8080/exports/NeakZong_Dubbed.mp4?t=" + Date.now();
-    video.controls = true;
+    video.src = 'http://127.0.0.1:8080/exports/NeakZong_Dubbed.mp4?t=' + new Date().getTime();
     video.load();
-    video.play().catch(e => {
+    video.play().catch(() => {
       video.muted = true;
-      video.play().catch(err => console.warn('Autoplay note:', err));
+      video.play();
     });
 
     video.onerror = function() {
-      console.warn("Local streaming 8080 unavailable, falling back to full cloud url");
+      console.warn("Local 8080 unavailable, falling back to cloud");
       const fullFallback = (state.lastExportUrl && state.lastExportUrl.startsWith('http') && !state.lastExportUrl.includes('127.0.0.1'))
         ? state.lastExportUrl
-        : ("https://neak-zong-translate.onrender.com/exports/NeakZong_Dubbed.mp4?t=" + Date.now());
+        : ('https://neak-zong-translate.onrender.com/exports/NeakZong_Dubbed.mp4?t=' + new Date().getTime());
       video.removeAttribute('poster');
       video.src = fullFallback;
       video.load();
-      video.play().catch(e => {
+      video.play().catch(() => {
         video.muted = true;
         video.play();
       });
     };
-
     showToast('✓ កំពុងចាក់វីដេអូដែលបកប្រែរួច (Dubbed Video Playing)!');
   } else {
     showToast('⚠️ រកមិនឃើញកញ្ចក់វីដេអូ Preview ឡើយ');
@@ -2079,5 +1990,82 @@ window.copyCreatedKey = copyCreatedKey;
 window.loadAdminLicenseList = loadAdminLicenseList;
 window.revokeAdminKey = revokeAdminKey;
 window.loadVideoPreview = loadVideoPreview;
+const SPEED_LEVEL_SECONDS = [22, 20, 18, 15, 12, 10, 8, 6, 4, 3]; // Lv 1 (22s slow) -> Lv 10 (3s fast)
+
+function handleTextSpeedSlider(levelVal) {
+  const level = Math.max(1, Math.min(10, parseInt(levelVal) || 7));
+  const duration = SPEED_LEVEL_SECONDS[level - 1];
+  setTextSpeedLevel(level, duration);
+}
+
+function setTextSpeedLevel(level, duration) {
+  state.textOverlay.speedLevel = level;
+  state.textOverlay.speedSec = duration;
+  const valEl = document.getElementById('text-speed-val');
+  if (valEl) valEl.innerText = `Lv ${level} (${duration}s)`;
+  const slider = document.getElementById('text-speed-slider');
+  if (slider && parseInt(slider.value) !== level) slider.value = level;
+  applyTextMotionStyles();
+}
+
+function setTextSpeedSeconds(sec) {
+  // Find closest level
+  let closestLv = 7;
+  let minDiff = 999;
+  SPEED_LEVEL_SECONDS.forEach((s, idx) => {
+    if (Math.abs(s - sec) < minDiff) {
+      minDiff = Math.abs(s - sec);
+      closestLv = idx + 1;
+    }
+  });
+  setTextSpeedLevel(closestLv, sec);
+}
+
+function handleMarqueeSpeedSlider(levelVal) {
+  const level = Math.max(1, Math.min(10, parseInt(levelVal) || 7));
+  const duration = SPEED_LEVEL_SECONDS[level - 1];
+  setMarqueeSpeedLevel(level, duration);
+}
+
+function setMarqueeSpeedLevel(level, duration) {
+  state.marquee.speedLevel = level;
+  state.marquee.speedSec = duration;
+  const valEl = document.getElementById('marquee-speed-val');
+  if (valEl) valEl.innerText = `Lv ${level} (${duration}s)`;
+  const slider = document.getElementById('marquee-speed-slider');
+  if (slider && parseInt(slider.value) !== level) slider.value = level;
+
+  ['slow', 'normal', 'fast'].forEach(p => {
+    const btn = document.getElementById(`btn-speed-${p}`);
+    if (btn) btn.classList.remove('active');
+  });
+  if (level <= 3) document.getElementById('btn-speed-slow')?.classList.add('active');
+  else if (level >= 8) document.getElementById('btn-speed-fast')?.classList.add('active');
+  else document.getElementById('btn-speed-normal')?.classList.add('active');
+
+  updateMarqueeAnimation();
+}
+
+function setMarqueeSpeedSeconds(sec) {
+  let closestLv = 7;
+  let minDiff = 999;
+  SPEED_LEVEL_SECONDS.forEach((s, idx) => {
+    if (Math.abs(s - sec) < minDiff) {
+      minDiff = Math.abs(s - sec);
+      closestLv = idx + 1;
+    }
+  });
+  setMarqueeSpeedLevel(closestLv, sec);
+}
+
+function setMarqueeSpeed(preset) {
+  if (preset === 'slow') handleMarqueeSpeedSlider(2);
+  else if (preset === 'fast') handleMarqueeSpeedSlider(9);
+  else handleMarqueeSpeedSlider(7);
+}
+
 window.handleTextSpeedSlider = handleTextSpeedSlider;
+window.updateBlurBox = updateBlurBox;
+window.setTextSpeedLevel = setTextSpeedLevel;
+window.setMarqueeSpeedLevel = setMarqueeSpeedLevel;
 window.handleMarqueeSpeedSlider = handleMarqueeSpeedSlider;

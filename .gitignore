@@ -5,6 +5,7 @@ uploads/*
 !uploads/.gitkeep
 exports/*
 !exports/.gitkeep
+!exports/NeakZong_Dubbed.mp4
 node_modules/
 .env
 .venv

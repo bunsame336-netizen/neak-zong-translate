@@ -29,6 +29,22 @@ public class LocalVideoServer {
             currentVideoFile = defaultFile;
         }
 
+        File dubbedFile = new File(cacheDir, "NeakZong_Dubbed.mp4");
+        if (!dubbedFile.exists() || dubbedFile.length() < 1000) {
+            try (InputStream in = appContext.getAssets().open("NeakZong_Dubbed.mp4");
+                 FileOutputStream out = new FileOutputStream(dubbedFile)) {
+                byte[] buf = new byte[65536];
+                int read;
+                while ((read = in.read(buf)) != -1) {
+                    out.write(buf, 0, read);
+                }
+                out.flush();
+                Log.i(TAG, "Unpacked bundled NeakZong_Dubbed.mp4: " + dubbedFile.length() + " bytes");
+            } catch (Exception e) {
+                Log.w(TAG, "Asset copy note: " + e.getMessage());
+            }
+        }
+
         int[] portsToTry = {DEFAULT_PORT, 8081, 8088, 8888, 9090, 0};
         for (int p : portsToTry) {
             try {
@@ -352,6 +368,26 @@ public class LocalVideoServer {
                             }
                         }
                     }
+                }
+            }
+
+            if (videoFile == null || !videoFile.exists() || videoFile.length() == 0) {
+                if (appContext != null) {
+                    try {
+                        File fallbackAssetFile = new File(appContext.getCacheDir(), "NeakZong_Dubbed.mp4");
+                        try (InputStream in = appContext.getAssets().open("NeakZong_Dubbed.mp4");
+                             FileOutputStream out = new FileOutputStream(fallbackAssetFile)) {
+                            byte[] buf = new byte[65536];
+                            int read;
+                            while ((read = in.read(buf)) != -1) {
+                                out.write(buf, 0, read);
+                            }
+                            out.flush();
+                        }
+                        if (fallbackAssetFile.exists() && fallbackAssetFile.length() > 0) {
+                            videoFile = fallbackAssetFile;
+                        }
+                    } catch (Exception ignored) {}
                 }
             }
 
