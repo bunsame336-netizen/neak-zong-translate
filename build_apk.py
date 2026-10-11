@@ -104,6 +104,16 @@ apk_size_mb = built_apk.stat().st_size / (1024 * 1024)
 print(f"\n[✓] Successfully built Zero-Warning Release APK: {built_apk.name} ({apk_size_mb:.2f} MB)")
 
 # 4. Copy to targets (Keep ONLY NeakZong_Final.apk on Desktop)
+desktop_dir = Path(r"C:\Users\examp\OneDrive\Desktop")
+if desktop_dir.exists():
+    for f in desktop_dir.iterdir():
+        if (f.suffix.lower() == ".apk" and f.name != "NeakZong_Final.apk") or f.suffix.lower() == ".idsig":
+            try:
+                f.unlink()
+                print(f"  [x] Cleaned old desktop file: {f.name}")
+            except Exception:
+                pass
+
 targets = [
     Path(r"C:\Users\examp\OneDrive\Desktop\NeakZong_Final.apk"),
     BASE_DIR.parent / "NeakZong_Final.apk",

@@ -1541,11 +1541,11 @@ header.app-header {
    ⚡ DYNAMIC UNROLL & ROLL-UP SPONSOR ANIMATION WITH TEXT GLOW
 ══════════════════════════════════════════════════════════════ */
 @keyframes sponsor-unroll-open {
-  0% {
-    opacity: 0;
-    transform: scaleX(0.04) scaleY(0.7);
-    filter: blur(4px);
-  }
+  0% { opacity: 0; transform: scaleX(0); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+  100% { opacity: 1; transform: scaleX(1); }
+}
   50% {
     opacity: 0.95;
     transform: scaleX(1.04) scaleY(1.02);
@@ -1559,11 +1559,11 @@ header.app-header {
 }
 
 @keyframes sponsor-rollup-close {
-  0% {
-    opacity: 1;
-    transform: scaleX(1) scaleY(1);
-    filter: blur(0px);
-  }
+  0% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(0); }
+}
+  100% { opacity: 0; transform: scaleX(0); }
+}
   35% {
     opacity: 0.85;
     transform: scaleX(0.85) scaleY(0.95);

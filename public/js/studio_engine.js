@@ -702,8 +702,18 @@ async function triggerKhmerTts() {
 // ══════════════════════════════════════════════════════════
 function toggleBlurOverlay(enabled) {
   state.blurMask.enabled = enabled;
-  blurBox.classList.toggle('active-visible', enabled);
-  showToast(enabled ? '✓ បានបើកផ្ទាំងព្រិល (Blur Mask)' : 'បានបិទផ្ទាំងព្រិល');
+  if (blurBox) {
+    blurBox.classList.toggle('active-visible', enabled);
+    blurBox.style.display = enabled ? 'block' : 'none';
+  }
+  const toggle = document.getElementById('toggle-blur');
+  if (toggle && toggle.checked !== enabled) toggle.checked = enabled;
+
+  if (enabled) {
+    centerBlurBox();
+    updateBlurBoxLimits();
+  }
+  showToast(enabled ? '✓ បានបើកផ្ទាំងព្រិលចំកណ្តាលវីដេអូ (Center Blur Mask)' : 'បានបិទផ្ទាំងព្រិល');
 }
 
 function toggleLogoOverlay(enabled) {
@@ -905,6 +915,66 @@ function getVideoDimensions() {
     h = vp.clientHeight;
   }
   return { w: Math.max(100, Math.floor(w)), h: Math.max(80, Math.floor(h)) };
+}
+
+// ── CENTER BLUR BOX IN VIDEO FRAME ──────
+function centerBlurBox() {
+  const video = document.getElementById('previewVideo') || previewVideo;
+  const { w: vidW, h: vidH } = getVideoDimensions();
+  const maxW = (video && video.clientWidth > 0) ? video.clientWidth : (vidW || 320);
+  const maxH = (video && video.clientHeight > 0) ? video.clientHeight : (vidH || 450);
+
+  const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
+  const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
+  const xSlider = document.getElementById('blurXSlider') || document.getElementById('blur-x-slider');
+  const ySlider = document.getElementById('blurYSlider') || document.getElementById('blur-y-slider');
+
+  const w = Math.min(maxW, parseInt(wSlider?.value || state.blurMask.w || 140));
+  const h = Math.min(maxH, parseInt(hSlider?.value || state.blurMask.h || 45));
+
+  const centerX = Math.max(0, Math.floor((maxW - w) / 2));
+  const centerY = Math.max(0, Math.floor((maxH - h) / 2));
+
+  state.blurMask.w = w;
+  state.blurMask.h = h;
+  state.blurMask.x = centerX;
+  state.blurMask.y = centerY;
+
+  if (wSlider) {
+    wSlider.max = maxW;
+    wSlider.value = w;
+  }
+  if (hSlider) {
+    hSlider.max = maxH;
+    hSlider.value = h;
+  }
+  if (xSlider) {
+    xSlider.max = Math.max(0, maxW - w);
+    xSlider.value = centerX;
+  }
+  if (ySlider) {
+    ySlider.max = Math.max(0, maxH - h);
+    ySlider.value = centerY;
+  }
+
+  const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
+  const hVal = document.getElementById('blur-h-val') || document.getElementById('blurHeightVal');
+  const xVal = document.getElementById('blur-x-val') || document.getElementById('blurXVal');
+  const yVal = document.getElementById('blur-y-val') || document.getElementById('blurYVal');
+  if (wVal) wVal.innerText = `${w}px`;
+  if (hVal) hVal.innerText = `${h}px`;
+  if (xVal) xVal.innerText = `${centerX}px`;
+  if (yVal) yVal.innerText = `${centerY}px`;
+
+  const blurOverlayBox = document.getElementById('blur-overlay-box') || blurBox;
+  if (blurOverlayBox) {
+    blurOverlayBox.style.left = `${centerX}px`;
+    blurOverlayBox.style.top = `${centerY}px`;
+    blurOverlayBox.style.width = `${w}px`;
+    blurOverlayBox.style.height = `${h}px`;
+    blurOverlayBox.style.maxWidth = `${maxW}px`;
+    blurOverlayBox.style.maxHeight = `${maxH}px`;
+  }
 }
 
 // ── BLUR BOX SLIDERS (STRICT BOUNDS TO EXACT VIDEO FRAME) ──────
@@ -1185,7 +1255,7 @@ function toggleSponsorOverlay(enabled) {
   if (toggle && toggle.checked !== enabled) toggle.checked = enabled;
   if (sponsorElement) {
     sponsorElement.classList.toggle('active-visible', enabled);
-    sponsorElement.style.display = enabled ? 'block' : 'none';
+    sponsorElement.style.display = enabled ? 'flex' : 'none';
   }
   updateSponsorContent();
   if (enabled) {
@@ -1748,19 +1818,19 @@ async function triggerAutoProcessPipeline() {
 }
 
 function playExportedVideo() {
-  const video = document.getElementById('previewVideo') || document.getElementById('preview-video') || previewVideo;
+  const video = document.getElementById('previewVideo');
   const placeholder = document.getElementById('video-placeholder');
   if (placeholder) placeholder.style.display = 'none';
 
   if (video) {
     video.style.display = 'block';
-    video.src = "http://127.0.0.1:8080/exports/NeakZong_Dubbed.mp4?t=" + Date.now();
     video.removeAttribute('poster');
+    video.src = "http://127.0.0.1:8080/exports/NeakZong_Dubbed.mp4?t=" + Date.now();
     video.controls = true;
     video.load();
     video.play().catch(e => {
       video.muted = true;
-      video.play();
+      video.play().catch(err => console.warn('Autoplay note:', err));
     });
 
     video.onerror = function() {
@@ -1768,8 +1838,8 @@ function playExportedVideo() {
       const fullFallback = (state.lastExportUrl && state.lastExportUrl.startsWith('http') && !state.lastExportUrl.includes('127.0.0.1'))
         ? state.lastExportUrl
         : ("https://neak-zong-translate.onrender.com/exports/NeakZong_Dubbed.mp4?t=" + Date.now());
-      video.src = fullFallback;
       video.removeAttribute('poster');
+      video.src = fullFallback;
       video.load();
       video.play().catch(e => {
         video.muted = true;
@@ -1903,8 +1973,6 @@ function pollJobStatus(jobId) {
           savePathInfo.style.display = 'block';
           savePathInfo.innerHTML = `📁 <b>ទីតាំងរក្សាទុក:</b> ${job.save_path || ('/exports/' + state.lastExportFilename)}`;
         }
-          savePathInfo.innerHTML = `📁 <b>ទីតាំងរក្សាទុក:</b> ${job.save_path || ('/exports/' + state.lastExportFilename)}`;
-        }
 
         showToast('🎉 បកប្រែ និង Dubbing សំឡេងខ្មែរចប់សព្វគ្រប់ ១០០%!');
       } else if (job.status === 'failed') {
@@ -1940,21 +2008,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateSponsorContent();
 
   // Initialize and clamp blur box limits & default horizontal shape
-  if (blurBox) {
-    blurBox.style.width = '140px';
-    blurBox.style.height = '45px';
-    blurBox.style.left = '15px';
-    blurBox.style.top = '15px';
-  }
-  const initWSlider = document.getElementById('blur-w-slider');
-  const initHSlider = document.getElementById('blur-h-slider');
-  if (initWSlider) initWSlider.value = 140;
-  if (initHSlider) initHSlider.value = 45;
-  const initWVal = document.getElementById('blur-w-val');
-  const initHVal = document.getElementById('blur-h-val');
-  if (initWVal) initWVal.innerText = '140px';
-  if (initHVal) initHVal.innerText = '45px';
-
+  centerBlurBox();
   updateBlurBoxLimits();
   window.addEventListener('resize', () => {
     updateBlurBoxLimits();
@@ -1997,6 +2051,7 @@ window.setTextSpeedSeconds = setTextSpeedSeconds;
 window.applyTextMotionStyles = applyTextMotionStyles;
 window.toggleTextOverlay = toggleTextOverlay;
 window.toggleTextTransparentMode = toggleTextTransparentMode;
+window.centerBlurBox = centerBlurBox;
 window.toggleBlurOverlay = toggleBlurOverlay;
 window.setBlurPreset = setBlurPreset;
 window.updateBlurIntensity = updateBlurIntensity;
