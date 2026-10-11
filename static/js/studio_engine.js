@@ -1,3 +1,8 @@
+// ⚡ DYNAMIC API BASE URL (Points to Render Cloud when running inside local Mobile APK)
+const API_BASE = (window.location.origin.includes('localhost') || window.location.origin.startsWith('capacitor:') || window.location.origin.startsWith('file:'))
+  ? 'https://neak-zong-translate.onrender.com'
+  : '';
+
 /**
  * «នាគហ្សង បកប្រែ» (Neak Zong Translate AI)
  * Mobile Studio Engine v2.1.0 — Dual-Tone Text, Blur/Logo Sliders, Marquee 4-Dir, Khmer Effects
@@ -162,7 +167,7 @@ function showToast(text, duration = 3000) {
 
 async function checkLicenseStatus() {
   try {
-    const res = await fetch('/api/license/status');
+    const res = await fetch(API_BASE + '/api/license/status');
     const data = await res.json();
     const pill = document.getElementById('header-license-pill');
     const txt = document.getElementById('header-license-text');
@@ -209,7 +214,7 @@ async function submitActivateLicense() {
 
   showToast('🔄 កំពុងផ្ទៀងផ្ទាត់ Key...');
   try {
-    const res = await fetch('/api/license/activate', {
+    const res = await fetch(API_BASE + '/api/license/activate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: keyVal })
@@ -254,7 +259,7 @@ function closeAdminModal(e) {
 async function verifyAdminPassword() {
   const pwd = document.getElementById('admin-password-input').value.trim();
   try {
-    const res = await fetch(`/api/admin/license/list?password=${encodeURIComponent(pwd)}`);
+    const res = await fetch(API_BASE + `/api/admin/license/list?password=${encodeURIComponent(pwd)}`);
     const data = await res.json();
     if (data.status === 'ok') {
       state.adminAuthenticated = true;
@@ -300,7 +305,7 @@ async function submitAdminGenerateKey() {
   const note = document.getElementById('admin-note-input').value.trim();
 
   try {
-    const res = await fetch('/api/admin/license/generate', {
+    const res = await fetch(API_BASE + '/api/admin/license/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -339,7 +344,7 @@ function copyCreatedKey() {
 async function loadAdminLicenseList() {
   const pwd = document.getElementById('admin-password-input').value.trim();
   try {
-    const res = await fetch(`/api/admin/license/list?password=${encodeURIComponent(pwd)}`);
+    const res = await fetch(API_BASE + `/api/admin/license/list?password=${encodeURIComponent(pwd)}`);
     const data = await res.json();
     if (data.status === 'ok') {
       renderAdminLicenseList(data.licenses);
@@ -383,7 +388,7 @@ async function revokeAdminKey(key) {
   if (!confirm(`តើអ្នកពិតជាចង់ Revoke Key ${key} នេះមែនទេ?`)) return;
   const pwd = document.getElementById('admin-password-input').value.trim();
   try {
-    const res = await fetch('/api/admin/license/revoke', {
+    const res = await fetch(API_BASE + '/api/admin/license/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pwd, key: key })
@@ -561,7 +566,7 @@ function handleVideoUpload(inputOrFile) {
   const uploadFormData = new FormData();
   uploadFormData.append('file', file);
   state.isUploading = true;
-  fetch('/api/upload', { method: 'POST', body: uploadFormData })
+  fetch(API_BASE + '/api/upload', { method: 'POST', body: uploadFormData })
     .then(r => r.json())
     .then(data => {
       state.isUploading = false;
@@ -640,7 +645,7 @@ async function triggerAiTranslation() {
       payload.text = '皇上驾到，万岁万万岁！微臣参见陛下。';
     }
 
-    const res = await fetch('/api/translate', {
+    const res = await fetch(API_BASE + '/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -674,7 +679,7 @@ async function triggerKhmerTts() {
 
   showToast('🎙️ កំពុងបង្កើតសំឡេងអានខ្មែរ AI...');
   try {
-    const res = await fetch('/api/tts', {
+    const res = await fetch(API_BASE + '/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1685,7 +1690,7 @@ async function triggerAutoProcessPipeline() {
     const formData = new FormData();
     formData.append('file', state.videoFile);
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await fetch(API_BASE + '/api/upload', { method: 'POST', body: formData });
       const data = await res.json();
       if (data.status === 'ok') {
         state.videoFilename = data.filename;
@@ -1706,7 +1711,7 @@ async function triggerAutoProcessPipeline() {
   _updateStepperStage(20, 'transcript');
 
   try {
-    const res = await fetch('/api/auto-process', {
+    const res = await fetch(API_BASE + '/api/auto-process', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1820,7 +1825,7 @@ function pollJobStatus(jobId) {
 
   const interval = setInterval(async () => {
     try {
-      const res = await fetch(`/api/job/${jobId}`);
+      const res = await fetch(API_BASE + `/api/job/${jobId}`);
       const job = await res.json();
 
       const pct = job.progress || 30;

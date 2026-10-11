@@ -54,6 +54,7 @@ public class MainActivity extends BridgeActivity {
             WebSettings settings = webView.getSettings();
             
             // ⚡ Essential Android WebView Media & Storage Settings
+            webView.clearCache(true);
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
             settings.setDatabaseEnabled(true);
