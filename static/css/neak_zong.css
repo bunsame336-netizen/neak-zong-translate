@@ -1604,9 +1604,10 @@ header.app-header {
 
 /* ⚡ STRICT SPONSOR BOUNDS & PURE UNROLL / ROLL-UP MOTION */
 #sponsor-box, .sponsor-container, #sponsor-overlay-element, .sponsor-banner-bar {
-  max-width: 75% !important;
-  width: 75% !important;
-  left: 12.5% !important;
+  max-width: 65% !important;
+  width: 65% !important;
+  left: 17.5% !important;
+  right: 17.5% !important;
   font-size: 11px !important;
   box-sizing: border-box !important;
   margin: 0 auto !important;

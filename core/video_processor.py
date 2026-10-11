@@ -736,7 +736,6 @@ def render_segment(
         '-threads', '4',
         '-crf', '23',
         '-pix_fmt', 'yuv420p',
-        '-shortest',
         output_segment_path
     ])
     
@@ -896,7 +895,7 @@ def _render_direct_fast(
     # Audio handling: When custom audio (Khmer TTS / ducked soundtrack) is present, map it directly
     has_audio_out = False
     if has_custom_audio:
-        audio_mix = f"[{audio_input_idx}:a]volume=1.3[aout]"
+        audio_mix = f"[{audio_input_idx}:a]volume=1.6,apad[aout]"
         filter_complex = f"{filter_complex};{audio_mix}" if filter_complex else f"[0:v]null[vout];{audio_mix}"
         if not out_pad or out_pad == '[0:v]':
             out_pad = '[vout]'
@@ -919,7 +918,6 @@ def _render_direct_fast(
         '-crf', '23',
         '-pix_fmt', 'yuv420p',
         '-movflags', '+faststart',
-        '-shortest',
         output_video_path
     ])
     
@@ -944,8 +942,8 @@ def _render_direct_fast(
     advancer_thread.start()
 
     try:
-        # Avoid PIPE deadlock: discard logs via DEVNULL to prevent OS buffer blocking (Timeout: 60s)
-        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60)
+        # Avoid PIPE deadlock: discard logs via DEVNULL to prevent OS buffer blocking (Timeout: 300s)
+        res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=300)
         stop_event.set()
         advancer_thread.join(timeout=0.5)
 
@@ -953,11 +951,8 @@ def _render_direct_fast(
         if not ok:
             print(f"[FFmpeg Warning] Complex render failed, executing safe fast mux fallback with Khmer audio...", flush=True)
             fallback_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
-            sample_p = Path(__file__).parent / "sample_khmer.mp3"
             if has_custom_audio:
-                fallback_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
-            elif sample_p.exists():
-                fallback_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+                fallback_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k'])
             else:
                 fallback_cmd.extend(['-c', 'copy'])
             fallback_cmd.extend(['-movflags', '+faststart', output_video_path])
@@ -973,11 +968,8 @@ def _render_direct_fast(
         # Attempt minimal emergency copy / mux with Khmer voice
         try:
             em_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
-            sample_p = Path(__file__).parent / "sample_khmer.mp3"
             if has_custom_audio:
-                em_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
-            elif sample_p.exists():
-                em_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+                em_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k'])
             else:
                 em_cmd.extend(['-c', 'copy'])
             em_cmd.extend(['-movflags', '+faststart', output_video_path])
@@ -1021,11 +1013,8 @@ def render_final_video(
         print("[Render Final Video Emergency] Producing output video via fast mux fallback with Khmer audio...", flush=True)
         ff = ffmpeg_bin or find_ffmpeg()
         fb_cmd = [ff, '-y', '-threads', '4', '-i', input_video_path]
-        sample_p = Path(__file__).parent / "sample_khmer.mp3"
         if audio_path and os.path.exists(audio_path) and os.path.getsize(audio_path) > 100:
-            fb_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
-        elif sample_p.exists():
-            fb_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+            fb_cmd.extend(['-i', audio_path, '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k'])
         else:
             fb_cmd.extend(['-c', 'copy'])
         fb_cmd.extend(['-movflags', '+faststart', output_video_path])

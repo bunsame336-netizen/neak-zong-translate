@@ -973,10 +973,14 @@ function centerBlurBox() {
 function updateBlurBox() {
   const video = document.getElementById('previewVideo');
   const blurBox = document.getElementById('blur-overlay-box');
-  if (!video || !blurBox) return;
+  if (!blurBox) return;
 
-  const vidW = (video.clientWidth > 0) ? video.clientWidth : 300;
-  const vidH = (video.clientHeight > 0) ? video.clientHeight : 400;
+  const vidW = (video && video.clientWidth > 0) ? video.clientWidth : (blurBox.parentElement ? blurBox.parentElement.clientWidth : 300);
+  const vidH = (video && video.clientHeight > 0) ? video.clientHeight : (blurBox.parentElement ? blurBox.parentElement.clientHeight : 400);
+
+  // Strict bounds requested:
+  blurBox.style.maxWidth = vidW + 'px';
+  blurBox.style.maxHeight = vidH + 'px';
 
   const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
@@ -986,6 +990,9 @@ function updateBlurBox() {
   if (wSlider) {
     wSlider.max = vidW;
     if (parseInt(wSlider.value) > vidW) wSlider.value = vidW;
+  }
+  if (document.getElementById('blurWidthSlider')) {
+    document.getElementById('blurWidthSlider').max = vidW;
   }
   if (hSlider) {
     hSlider.max = vidH;
@@ -1015,8 +1022,6 @@ function updateBlurBox() {
   y = Math.max(0, Math.min(y, vidH - h));
 
   // បង្ខំទំហំប្រអប់ Blur:
-  blurBox.style.maxWidth = vidW + 'px';
-  blurBox.style.maxHeight = vidH + 'px';
   blurBox.style.width = Math.min(w, vidW) + 'px';
   blurBox.style.height = Math.min(h, vidH) + 'px';
   blurBox.style.left = x + 'px';
@@ -1244,13 +1249,18 @@ function updateSponsorContent() {
     bottomEl.style.color = '#22d3ee';
     bottomEl.style.fontSize = '11px';
   }
-  const bannerBar = document.getElementById('sponsor-banner-bar');
+  const bannerBar = document.getElementById('sponsor-banner-bar') || document.getElementById('sponsor-box');
   if (bannerBar) {
     bannerBar.style.backgroundColor = bg;
-    bannerBar.style.maxWidth = '70%';
+    bannerBar.style.maxWidth = '65%';
+    bannerBar.style.width = '100%';
     bannerBar.style.fontSize = '11px';
   }
   if (sponsorElement) {
+    sponsorElement.style.maxWidth = '65%';
+    sponsorElement.style.width = '65%';
+    sponsorElement.style.left = '17.5%';
+    sponsorElement.style.right = '17.5%';
     sponsorElement.style.bottom = 'auto';
     sponsorElement.style.top = `${yPercent}%`;
   }
@@ -1481,13 +1491,17 @@ function makeDraggable(element) {
     element.style.top = `${newTop}px`;
 
     // Sync back to state & sliders
-    if (element === blurBox) {
+    if (element === blurBox || element.id === 'blur-overlay-box') {
       state.blurMask.x = newLeft;
       state.blurMask.y = newTop;
+      _syncSlider('blurXSlider', newLeft);
       _syncSlider('blur-x-slider', newLeft);
+      _syncSlider('blurYSlider', newTop);
       _syncSlider('blur-y-slider', newTop);
-      document.getElementById('blur-x-val').innerText = Math.round(newLeft) + 'px';
-      document.getElementById('blur-y-val').innerText = Math.round(newTop) + 'px';
+      const xVal = document.getElementById('blur-x-val') || document.getElementById('blurXVal');
+      const yVal = document.getElementById('blur-y-val') || document.getElementById('blurYVal');
+      if (xVal) xVal.innerText = Math.round(newLeft) + 'px';
+      if (yVal) yVal.innerText = Math.round(newTop) + 'px';
     } else if (element === logoElement) {
       state.logoOverlay.x = newLeft;
       state.logoOverlay.y = newTop;
@@ -1542,19 +1556,29 @@ function makeResizable(element) {
     if (!isResizing) return;
     const dw = e.clientX - startX;
     const dh = e.clientY - startY;
-    const newW = Math.max(50, Math.min(280, startW + dw));
-    const newH = Math.max(20, Math.min(80, startH + dh));
+
+    const video = document.getElementById('previewVideo');
+    const parent = element.parentElement;
+    const maxW = (video && video.clientWidth > 0) ? video.clientWidth : (parent ? parent.clientWidth : 300);
+    const maxH = (video && video.clientHeight > 0) ? video.clientHeight : (parent ? parent.clientHeight : 450);
+
+    const newW = Math.max(30, Math.min(maxW, startW + dw));
+    const newH = Math.max(15, Math.min(maxH, startH + dh));
     element.style.width = `${newW}px`;
     element.style.height = `${newH}px`;
 
     // Sync back to blur sliders
-    if (element === blurBox) {
+    if (element === blurBox || element.id === 'blur-overlay-box') {
       state.blurMask.w = newW;
       state.blurMask.h = newH;
+      _syncSlider('blurWidthSlider', newW);
       _syncSlider('blur-w-slider', newW);
+      _syncSlider('blurHeightSlider', newH);
       _syncSlider('blur-h-slider', newH);
-      document.getElementById('blur-w-val').innerText = Math.round(newW) + 'px';
-      document.getElementById('blur-h-val').innerText = Math.round(newH) + 'px';
+      const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
+      const hVal = document.getElementById('blur-h-val') || document.getElementById('blurHeightVal');
+      if (wVal) wVal.innerText = Math.round(newW) + 'px';
+      if (hVal) hVal.innerText = Math.round(newH) + 'px';
     }
   });
 

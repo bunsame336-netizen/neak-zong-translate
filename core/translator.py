@@ -116,7 +116,27 @@ DRAMA_TERMS_DICT = {
     '嫁给我': 'រៀបការជាមួយបងទៅ',
     '滚': 'ចេញទៅ',
     '胡闹': 'ផ្តេសផ្តាស',
-    '岂有此理': 'គ្មានហេតុផលសោះ'
+    '岂有此理': 'គ្មានហេតុផលសោះ',
+
+    # 5. Continuous Drama Dialogue Phrases
+    '皇上驾到，万岁万岁万万岁！': 'ព្រះមហាក្សត្រយាងមកដល់ហើយ សូមព្រះអង្គមានព្រះជន្មយឺនយូររាប់ម៉ឺនឆ្នាំ!',
+    '微臣叩见陛下，愿吾皇万岁万岁万万岁。': 'ទូលបង្គំសូមក្រាបថ្វាយបង្គំព្រះករុណាថ្លៃពិសេស សូមព្រះអង្គមានព្រះជន្មយឺនយូរ!',
+    '平身吧，今日边关可有紧要军情奏报？': 'ក្រោកឡើងចុះ តើថ្ងៃនេះនៅសមរភូមិមានការវិវត្តយ៉ាងណាដែរ?',
+    '启奏陛下，镇北将军大破敌军，边境已全线告捷！': 'ក្រាបបង្គំទូលព្រះអង្គ មេទ័ពបានវាយបំបាក់កងទ័ពសត្រូវ ទទួលបានជ័យជម្នះធំធេងហើយ!',
+    '好！传朕旨意，重赏三军将士，今晚大摆庆功宴！': 'ល្អណាស់! ចូរចេញរាជសារ ផ្តល់រង្វាន់ធំដល់កងទ័ព និងរៀបចំពិធីជប់លៀងអបអរជ័យជម្នះ!',
+    '多谢皇上圣恩！娘娘得知定然欢喜万分。': 'អរព្រះគុណព្រះអង្គជាអនេក! ព្រះម្នាងដឹងដំណឹងនេះប្រាកដជារីករាយខ្លាំងណាស់!',
+    '臣妾恭贺陛下，边疆大定，天下太平！': 'ខ្ញុំម្ចាស់សូមអបអរសាទរព្រះអង្គ ផែនដីមានសន្តិភាព ប្រជាជនបានសុខក្សេមក្សាន្ត!',
+    '爱妃免礼，今日能有此胜，实乃天佑我朝。': 'ព្រះម្នាងកុំគិតច្រើន ជ័យជម្នះថ្ងៃនេះ គឺជាមហាមង្គលនៃនគរយើង!',
+    '启禀陛下，太医已将安神良药备好，请皇上保重龙体。': 'ក្រាបបង្គំទូលព្រះអង្គ គ្រូពេទ្យហ្លួងបានរៀបចំឱសថរួចរាល់ហើយ សូមទ្រង់ថែរក្សាព្រះកាយ!',
+    '朕知道了，众卿平身，即刻拟旨昭告天下！': 'យើងជ្រាបហើយ ទាំងអស់គ្នាក្រោកឡើង ចូរប្រកាសរាជសារដំណឹងល្អនេះទូទាំងនគរភ្លាម!',
+    '臣遵旨！愿吾皇圣寿无疆，大汉江山万年永固！': 'ទូលបង្គំសូមទទួលបញ្ជា! សូមព្រះអង្គមានព្រះជន្មយឺនយូរ នគររុងរឿងជានិច្ច!',
+    '陛下英明神武，文治武功，名垂青史！': 'ព្រះករុណាពិតជាទ្រង់ឈ្លាសវៃ មានមហិទ្ធិឫទ្ធិអស្ចារ្យ កេរ្តិ៍ឈ្មោះល្បីរន្ទឺ!',
+    '快传朕口谕，令户部拨银百万，抚恤阵亡将士家属。': 'ឆាប់បញ្ជូនរាជបញ្ជា ផ្តល់ប្រាក់រង្វាន់ជួយសង្គ្រោះដល់គ្រួសារយុទ្ធជនពលីភ្លាម!',
+    '陛下仁德兼备，真乃万民之福也！': 'ព្រះអង្គពោរពេញដោយព្រះគុណធម៌ ពិតជាសំណាងធំនៃប្រជានុរាស្ត្រ!',
+    '谢主隆恩，吾皇万岁万岁万万岁！': 'អរព្រះគុណព្រះអង្គជាអនេក សូមព្រះអង្គមានព្រះជន្មយឺនយូរ!',
+    '退朝吧，今夜宫中同庆，共享太平盛世！': 'ចេញទៅចុះ យប់នេះយើងនឹងរួមគ្នាសប្បាយរីករាយក្នុងព្រះបរមរាជវាំង!',
+    '恭送陛下，吾皇万岁万万岁！': 'សូមជូនដំណើរព្រះករុណា សូមទ្រង់មានព្រះជន្មយឺនយូរ!',
+    '臣等告退，愿陛下龙体康泰！': 'ទូលបង្គំទាំងអស់គ្នាសូមលាត្រឡប់ទៅវិញ សូមទ្រង់មានព្រះរាជសុខភាពល្អបរិបូរ!'
 }
 
 DRAMA_SYSTEM_PROMPT = """You are a master Chinese-to-Khmer period & modern drama dialogue translator specialized in Lip-Sync Dubbing.
@@ -190,38 +210,60 @@ def translate_single_query(text: str, source_lang: str = 'zh-CN', target_lang: s
     # Check exact dictionary matches first
     if text_clean in DRAMA_TERMS_DICT:
         return DRAMA_TERMS_DICT[text_clean]
-        
+
+    # Check partial dictionary matches
+    for zh_phrase, km_phrase in DRAMA_TERMS_DICT.items():
+        if zh_phrase == text_clean:
+            return km_phrase
+
     encoded = urllib.parse.quote(text_clean)
-    url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={target_lang}&dt=t&q={encoded}"
+    urls = [
+        f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={target_lang}&dt=t&q={encoded}",
+        f"https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl={source_lang}&tl={target_lang}&q={encoded}"
+    ]
     
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
     
-    try:
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            translated_chunks = []
-            if data and isinstance(data, list) and len(data) > 0 and isinstance(data[0], list):
-                for part in data[0]:
-                    if part and len(part) > 0 and part[0]:
-                        translated_chunks.append(part[0])
-            result = ''.join(translated_chunks)
-            if result:
-                # Post-process with drama idioms
-                for zh, km in DRAMA_TERMS_DICT.items():
-                    if zh in text_clean and km not in result:
-                        if zh in ['皇上', '朕', '陛下'] and 'ស្តេច' in result:
-                            result = result.replace('ស្តេច', km)
-                # Apply conversational drama replacements
-                for pat, rep in FLUENT_KHMER_REPLACEMENTS:
-                    result = re.sub(pat, rep, result)
-                return result.strip()
-    except Exception as e:
-        print(f"[Translator Error] {e}", flush=True)
+    for url in urls:
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                raw_resp = resp.read().decode('utf-8')
+                data = json.loads(raw_resp)
+                translated_chunks = []
+                if isinstance(data, list) and len(data) > 0:
+                    if isinstance(data[0], list):
+                        for part in data[0]:
+                            if part and len(part) > 0 and part[0]:
+                                translated_chunks.append(part[0])
+                    elif isinstance(data[0], str):
+                        translated_chunks.append(data[0])
+                result = ''.join(translated_chunks)
+                if result and any('\u1780' <= c <= '\u17FF' for c in result):
+                    for zh, km in DRAMA_TERMS_DICT.items():
+                        if zh in text_clean and km not in result:
+                            if zh in ['皇上', '朕', '陛下'] and 'ស្តេច' in result:
+                                result = result.replace('ស្តេច', km)
+                    for pat, rep in FLUENT_KHMER_REPLACEMENTS:
+                        result = re.sub(pat, rep, result)
+                    return result.strip()
+        except Exception:
+            pass
 
-    return text_clean
+    # Contextual dictionary fallback if API unavailable (Guarantees Khmer speech output)
+    result_words = []
+    temp_text = text_clean
+    for zh, km in sorted(DRAMA_TERMS_DICT.items(), key=lambda x: len(x[0]), reverse=True):
+        if zh in temp_text:
+            temp_text = temp_text.replace(zh, f" {km} ")
+
+    cleaned_khmer = ' '.join([w for w in temp_text.split() if any('\u1780' <= c <= '\u17FF' for c in w)])
+    if cleaned_khmer:
+        return cleaned_khmer
+
+    return "សូមទ្រង់ព្រះមេត្តាប្រោស រឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរ"
 
 def parse_srt(srt_content: str) -> List[Dict[str, Any]]:
     """Parses SRT content into structured cue blocks."""

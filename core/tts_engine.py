@@ -10,6 +10,7 @@
 
 import os
 import sys
+import shutil
 import asyncio
 import subprocess
 import tempfile
@@ -62,7 +63,7 @@ def synthesize_khmer_voice(
 ) -> bool:
     """
     Synthesizes natural Khmer speech to an MP3 file.
-    Uses Edge-TTS with fallback to Google Khmer TTS.
+    Uses Edge-TTS with robust fallback to Google Khmer TTS.
     Guarantees audible Khmer voice and never silent output.
     """
     if not text or not text.strip():
@@ -94,29 +95,42 @@ def synthesize_khmer_voice(
     except Exception as e:
         print(f"[TTS Edge Warning] {e}, falling back to Google Khmer TTS...", flush=True)
 
-    # 2. Fallback: Google Translate TTS API for Khmer
+    # 2. Fallback: Google Translate TTS API for Khmer (chunking if needed)
     try:
-        encoded_text = urllib.parse.quote(text_clean[:200])
-        url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_text}&tl=km&total=1&idx=0&textlen={len(text_clean[:200])}&client=tw-ob"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            data = resp.read()
-            if len(data) > 300:
-                with open(output_path, 'wb') as f:
-                    f.write(data)
-    # 3. Guaranteed Fallback: Bundled natural Khmer speech sample
-    try:
-        sample_path = Path(__file__).parent / "sample_khmer.mp3"
-        if not sample_path.exists():
-            sample_path = Path(__file__).parent.parent / "sample_khmer.mp3"
-        if sample_path.exists():
-            shutil.copy(str(sample_path), output_path)
+        words = text_clean.split(' ')
+        chunks = []
+        cur_chunk = ""
+        for w in words:
+            if len(cur_chunk) + len(w) + 1 <= 150:
+                cur_chunk = (cur_chunk + " " + w).strip()
+            else:
+                if cur_chunk:
+                    chunks.append(cur_chunk)
+                cur_chunk = w
+        if cur_chunk:
+            chunks.append(cur_chunk)
+        if not chunks:
+            chunks = [text_clean[:150]]
+
+        all_audio_bytes = bytearray()
+        for chk in chunks:
+            encoded_text = urllib.parse.quote(chk)
+            url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={encoded_text}&tl=km&total=1&idx=0&textlen={len(chk)}&client=tw-ob"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                data = resp.read()
+                if len(data) > 100:
+                    all_audio_bytes.extend(data)
+
+        if len(all_audio_bytes) > 300:
+            with open(output_path, 'wb') as f:
+                f.write(all_audio_bytes)
             return True
-    except Exception as e_sample:
-        print(f"[TTS Sample Fallback Error] {e_sample}", flush=True)
+    except Exception as e_google:
+        print(f"[TTS Google Fallback Error] {e_google}", flush=True)
 
     return False
 
@@ -154,9 +168,9 @@ def apply_audio_ducking(
         # [0:a] is original Chinese dialogue / BGM, [1:a] is Khmer voiceover
         # sidechaincompress aggressively dips Chinese speech (ratio=16, attack=5ms) whenever Khmer speaks
         filter_complex = (
-            f"[0:a]volume=0.38[bg];"
-            f"[bg][1:a]sidechaincompress=threshold=0.05:ratio=16:attack=5:release=250[ducked];"
-            f"[1:a]volume=1.9[voice];"
+            f"[0:a]volume=0.04[bg];"
+            f"[bg][1:a]sidechaincompress=threshold=0.03:ratio=24:attack=5:release=350[ducked];"
+            f"[1:a]volume=2.2[voice];"
             f"[ducked][voice]amix=inputs=2:duration=first:dropout_transition=1[out]"
         )
         

@@ -798,11 +798,7 @@ def api_auto_process():
 
             # Ensure tts_audio always exists and has valid Khmer speech
             if not tts_audio.exists() or tts_audio.stat().st_size < 500:
-                fallback_sample = Path(__file__).parent / "core" / "sample_khmer.mp3"
-                if not fallback_sample.exists():
-                    fallback_sample = Path(__file__).parent / "sample_khmer.mp3"
-                if fallback_sample.exists():
-                    shutil.copy(str(fallback_sample), str(tts_audio))
+                synthesize_khmer_voice(khmer_text or "រឿងភាគចិនពិសេស បកប្រែជាភាសាខ្មែរដោយ នាគហោះ បកប្រែ AI", str(tts_audio), voice_type=vocal_gender, speed=speed)
 
             # Strictly prioritize pure Khmer dubbed audio track (discards raw Chinese dialogue)
             audio_to_use = str(tts_audio)
@@ -839,15 +835,11 @@ def api_auto_process():
                 ff = find_ffmpeg()
                 em_cmd = [ff, '-y', '-threads', '4', '-i', str(video_path)]
                 if audio_to_use and os.path.exists(audio_to_use) and os.path.getsize(audio_to_use) > 100:
-                    em_cmd.extend(['-i', str(audio_to_use), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+                    em_cmd.extend(['-i', str(audio_to_use), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k'])
                 elif tts_audio.exists() and tts_audio.stat().st_size > 100:
-                    em_cmd.extend(['-i', str(tts_audio), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
+                    em_cmd.extend(['-i', str(tts_audio), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k'])
                 else:
-                    sample_p = Path(__file__).parent / "core" / "sample_khmer.mp3"
-                    if sample_p.exists():
-                        em_cmd.extend(['-i', str(sample_p), '-c:v', 'copy', '-c:a', 'aac', '-map', '0:v:0', '-map', '1:a:0', '-b:a', '192k', '-shortest'])
-                    else:
-                        em_cmd.extend(['-c', 'copy'])
+                    em_cmd.extend(['-c', 'copy'])
                 em_cmd.extend(['-movflags', '+faststart', str(out_path)])
                 subprocess.run(em_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=45)
 

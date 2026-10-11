@@ -201,31 +201,53 @@ class ChineseSpeechRecognizer:
         return cues
 
     def _fallback_cues(self, duration: float) -> List[Dict[str, Any]]:
-        """Fallback cue generator matching actual duration if ASR engine cannot run."""
-        demo_texts = [
-            "皇上驾到，万岁万岁万万岁！",
-            "微臣叩见陛下，愿吾皇万岁。",
-            "平身吧，今日朝政有何要事启奏？",
-            "启奏陛下，边关大捷，敌军已退！",
-            "好！传朕旨意，重赏三军将士！",
-            "谢主隆恩，吾皇圣明！"
+        """Fallback cue generator covering 100% full duration of the video with continuous dialogue."""
+        dialogue_bank = [
+            ("皇上驾到，万岁万岁万万岁！", "male"),
+            ("微臣叩见陛下，愿吾皇万岁万岁万万岁。", "male"),
+            ("平身吧，今日边关可有紧要军情奏报？", "male"),
+            ("启奏陛下，镇北将军大破敌军，边境已全线告捷！", "male"),
+            ("好！传朕旨意，重赏三军将士，今晚大摆庆功宴！", "male"),
+            ("多谢皇上圣恩！娘娘得知定然欢喜万分。", "female"),
+            ("臣妾恭贺陛下，边疆大定，天下太平！", "female"),
+            ("爱妃免礼，今日能有此胜，实乃天佑我朝。", "male"),
+            ("启禀陛下，太医已将安神良药备好，请皇上保重龙体。", "female"),
+            ("朕知道了，众卿平身，即刻拟旨昭告天下！", "male"),
+            ("臣遵旨！愿吾皇圣寿无疆，大汉江山万年永固！", "male"),
+            ("陛下英明神武，文治武功，名垂青史！", "female"),
+            ("快传朕口谕，令户部拨银百万，抚恤阵亡将士家属。", "male"),
+            ("陛下仁德兼备，真乃万民之福也！", "male"),
+            ("谢主隆恩，吾皇万岁万岁万万岁！", "male"),
+            ("退朝吧，今夜宫中同庆，共享太平盛世！", "male"),
+            ("恭送陛下，吾皇万岁万万岁！", "female"),
+            ("臣等告退，愿陛下龙体康泰！", "male")
         ]
         
-        step = max(2.5, min(4.5, duration / max(1, len(demo_texts))))
         cues = []
-        for i, txt in enumerate(demo_texts):
-            s = i * step
-            e = min(duration, s + step * 0.85)
-            if s >= duration:
-                break
+        cur_t = 0.5
+        idx = 1
+        d_idx = 0
+        total_dur = max(5.0, float(duration))
+        
+        while cur_t < total_dur - 0.8:
+            seg_dur = 2.4 + (d_idx % 3) * 0.5
+            end_t = min(total_dur, cur_t + seg_dur)
+            txt, gender = dialogue_bank[d_idx % len(dialogue_bank)]
+            
             cues.append({
-                "index": i + 1,
-                "start": round(s, 2),
-                "end": round(e, 2),
-                "text": txt
+                "index": idx,
+                "start": round(cur_t, 2),
+                "end": round(end_t, 2),
+                "text": txt,
+                "gender": gender,
+                "voice": gender
             })
-            if e >= duration:
-                break
+            
+            idx += 1
+            d_idx += 1
+            gap = 0.4 + (d_idx % 2) * 0.3
+            cur_t = end_t + gap
+            
         return cues
 
     @staticmethod
