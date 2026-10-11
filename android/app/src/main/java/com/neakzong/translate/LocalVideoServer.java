@@ -231,11 +231,51 @@ public class LocalVideoServer {
                 return;
             }
 
-            // Handle status / ping
-            if (path.startsWith("/status") || path.startsWith("/ping")) {
-                boolean hasVid = currentVideoFile != null && currentVideoFile.exists() && currentVideoFile.length() > 0;
-                long sz = hasVid ? currentVideoFile.length() : 0;
-                String json = "{\"status\":\"ok\",\"hasVideo\":" + hasVid + ",\"size\":" + sz + ",\"url\":\"" + getVideoUrl() + "\"}";
+            // Handle /sync_dubbed background download
+            if (path.startsWith("/sync_dubbed")) {
+                String downloadUrl = null;
+                if (path.contains("url=")) {
+                    try {
+                        String rawUrl = path.substring(path.indexOf("url=") + 4);
+                        if (rawUrl.contains("&")) rawUrl = rawUrl.substring(0, rawUrl.indexOf("&"));
+                        downloadUrl = URLDecoder.decode(rawUrl, "UTF-8");
+                    } catch (Exception ignored) {}
+                }
+                if (downloadUrl == null || downloadUrl.isEmpty()) {
+                    downloadUrl = "https://neak-zong-translate.onrender.com/exports/NeakZong_Dubbed.mp4";
+                }
+                final String finalSyncUrl = downloadUrl;
+                if (appContext != null) {
+                    new Thread(() -> {
+                        try {
+                            File dubbedCache = new File(appContext.getCacheDir(), "NeakZong_Dubbed.mp4");
+                            File tmpFile = new File(appContext.getCacheDir(), "dubbed_sync_tmp.mp4");
+                            URL u = new URL(finalSyncUrl);
+                            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+                            conn.setConnectTimeout(8000);
+                            conn.setReadTimeout(30000);
+                            if (conn.getResponseCode() == 200) {
+                                try (InputStream in = conn.getInputStream(); FileOutputStream fos = new FileOutputStream(tmpFile)) {
+                                    byte[] buf = new byte[65536];
+                                    int read;
+                                    while ((read = in.read(buf)) != -1) {
+                                        fos.write(buf, 0, read);
+                                    }
+                                    fos.flush();
+                                }
+                                if (tmpFile.exists() && tmpFile.length() > 1000) {
+                                    if (dubbedCache.exists()) dubbedCache.delete();
+                                    tmpFile.renameTo(dubbedCache);
+                                    Log.i(TAG, "Dubbed video background synced successfully: " + dubbedCache.length() + " bytes");
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.w(TAG, "Background sync note: " + e.getMessage());
+                        }
+                    }, "Dubbed-Sync-Thread").start();
+                }
+
+                String json = "{\"status\":\"ok\",\"syncing\":true}";
                 byte[] jsonBytes = json.getBytes("UTF-8");
                 String resp = "HTTP/1.1 200 OK\r\n" +
                         "Content-Type: application/json\r\n" +
@@ -254,17 +294,18 @@ public class LocalVideoServer {
             if (path.contains("exports") || path.contains("Dubbed")) {
                 if (appContext != null) {
                     File dubbedCache = new File(appContext.getCacheDir(), "NeakZong_Dubbed.mp4");
-                    // Fetch latest dubbed video with Khmer audio from cloud server only if needed
-                    boolean needsFetch = !dubbedCache.exists() || (System.currentTimeMillis() - dubbedCache.lastModified() > 20000);
-                    if (needsFetch) {
+                    if (dubbedCache.exists() && dubbedCache.length() > 1000) {
+                        videoFile = dubbedCache;
+                    } else {
+                        // Quick sync fetch if not already cached
                         String cleanPath = path.contains("?") ? path.substring(0, path.indexOf("?")) : path;
                         if (!cleanPath.startsWith("/")) cleanPath = "/" + cleanPath;
                         String cloudUrl = "https://neak-zong-translate.onrender.com" + cleanPath;
                         try {
                             URL u = new URL(cloudUrl);
                             HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-                            conn.setConnectTimeout(8000);
-                            conn.setReadTimeout(20000);
+                            conn.setConnectTimeout(4000);
+                            conn.setReadTimeout(12000);
                             if (conn.getResponseCode() == 200) {
                                 File tmpFile = new File(appContext.getCacheDir(), "dubbed_download.tmp");
                                 try (InputStream in = conn.getInputStream(); FileOutputStream fos = new FileOutputStream(tmpFile)) {
@@ -278,20 +319,18 @@ public class LocalVideoServer {
                                 if (tmpFile.exists() && tmpFile.length() > 1000) {
                                     if (dubbedCache.exists()) dubbedCache.delete();
                                     tmpFile.renameTo(dubbedCache);
+                                    videoFile = dubbedCache;
                                 }
                             }
                         } catch (Exception e) {
                             Log.w(TAG, "Cloud dubbed fetch note: " + e.getMessage());
                         }
                     }
-
-                    if (dubbedCache.exists() && dubbedCache.length() > 1000) {
-                        videoFile = dubbedCache;
-                    }
                 }
             }
 
-            if (videoFile == null) {
+            // If dubbed video still unavailable, fallback to current local video so player never shows black screen
+            if (videoFile == null || !videoFile.exists() || videoFile.length() == 0) {
                 videoFile = currentVideoFile;
             }
 
@@ -305,6 +344,12 @@ public class LocalVideoServer {
                         if (check.exists() && check.length() > 0) {
                             currentVideoFile = check;
                             videoFile = check;
+                        } else {
+                            File[] candidates = appContext.getCacheDir().listFiles((d, n) -> n.endsWith(".mp4"));
+                            if (candidates != null && candidates.length > 0) {
+                                Arrays.sort(candidates, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+                                videoFile = candidates[0];
+                            }
                         }
                     }
                 }

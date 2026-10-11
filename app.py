@@ -296,6 +296,14 @@ def service_worker():
 @app.route('/exports/<path:filename>')
 def download_export(filename):
     as_att = request.args.get('download', '0') == '1'
+    target = EXPORTS_DIR / filename
+    if (not target.exists() or target.stat().st_size == 0) and ('Dubbed' in filename or filename == 'NeakZong_Dubbed.mp4'):
+        mp4s = sorted(EXPORTS_DIR.glob('*.mp4'), key=lambda p: p.stat().st_mtime, reverse=True)
+        if mp4s:
+            return send_from_directory(EXPORTS_DIR, mp4s[0].name, as_attachment=as_att, conditional=True)
+        up_mp4s = sorted(UPLOADS_DIR.glob('*.mp4'), key=lambda p: p.stat().st_mtime, reverse=True)
+        if up_mp4s:
+            return send_from_directory(UPLOADS_DIR, up_mp4s[0].name, as_attachment=as_att, conditional=True)
     return send_from_directory(EXPORTS_DIR, filename, as_attachment=as_att, conditional=True)
 
 # ══════════════════════════════════════════════════════════════
@@ -662,6 +670,10 @@ def api_render():
                 PROCESSING_JOBS[job_id]['progress'] = 100
                 PROCESSING_JOBS[job_id]['step'] = 'Done!'
                 PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
+                try:
+                    shutil.copyfile(str(out_path), str(EXPORTS_DIR / "NeakZong_Dubbed.mp4"))
+                except Exception:
+                    pass
             else:
                 PROCESSING_JOBS[job_id]['status'] = 'failed'
                 PROCESSING_JOBS[job_id]['error'] = 'FFmpeg render error'
@@ -815,6 +827,10 @@ def api_auto_process():
                 PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
                 PROCESSING_JOBS[job_id]['save_path'] = str(out_path)
                 PROCESSING_JOBS[job_id]['filename'] = out_filename
+                try:
+                    shutil.copyfile(str(out_path), str(EXPORTS_DIR / "NeakZong_Dubbed.mp4"))
+                except Exception:
+                    pass
             else:
                 ff = find_ffmpeg()
                 em_cmd = [ff, '-y', '-threads', '4', '-i', str(video_path)]
@@ -839,6 +855,10 @@ def api_auto_process():
                     PROCESSING_JOBS[job_id]['download_url'] = f"/exports/{out_filename}"
                     PROCESSING_JOBS[job_id]['save_path'] = str(out_path)
                     PROCESSING_JOBS[job_id]['filename'] = out_filename
+                    try:
+                        shutil.copyfile(str(out_path), str(EXPORTS_DIR / "NeakZong_Dubbed.mp4"))
+                    except Exception:
+                        pass
                 else:
                     PROCESSING_JOBS[job_id]['status'] = 'failed'
                     PROCESSING_JOBS[job_id]['error'] = 'Video rendering failed'

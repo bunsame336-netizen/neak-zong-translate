@@ -1347,10 +1347,11 @@ header.app-header {
   top: 12px !important;
 }
 .sponsor-banner-bar {
-  max-width: 80% !important;
+  max-width: 70% !important;
+  font-size: 11px !important;
   width: auto !important;
   margin: 0 auto !important;
-  background: rgba(8, 6, 18, 0.88) !important;
+  background: rgba(8, 6, 18, 0.90) !important;
   border: 1.5px solid #f59e0b !important;
   border-radius: 8px !important;
   backdrop-filter: blur(8px) !important;
@@ -1367,9 +1368,10 @@ header.app-header {
   animation: glow-pulse 2s infinite ease-in-out;
   transform-origin: center center !important;
   will-change: transform, opacity !important;
+  overflow: hidden !important;
 }
 .sponsor-banner-bar.sponsor-entering {
-  animation: sponsor-unroll-open 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: sponsor-unroll-open 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
 }
 .sponsor-banner-bar.sponsor-exiting {
   animation: sponsor-rollup-close 0.5s ease-in forwards !important;
@@ -1387,7 +1389,7 @@ header.app-header {
 .sponsor-contact-tag {
   color: #22d3ee !important;
   font-weight: 700 !important;
-  font-size: 10.5px !important;
+  font-size: 11px !important;
   line-height: 1.15 !important;
   letter-spacing: 0.1px !important;
   white-space: nowrap !important;

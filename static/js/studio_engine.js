@@ -786,13 +786,18 @@ function setTextMotion(mode) {
   showToast(mode === 'none' ? 'អក្សរនៅមួយកន្លែង (Static)' : (mode === 'up' ? '⬆️ អក្សររត់ពីក្រោមឡើងលើ' : '⬇️ អក្សររត់ពីលើចុះក្រោម'));
 }
 
+function handleTextSpeedSlider(val) {
+  const duration = 28 - parseInt(val);
+  setTextSpeedSeconds(duration);
+}
+
 function setTextSpeedSeconds(sec) {
-  const val = parseFloat(sec) || 8.0;
+  const val = Math.max(3, Math.min(25, parseFloat(sec) || 8.0));
   state.textOverlay.speedSec = val;
   const valEl = document.getElementById('text-speed-val');
   if (valEl) valEl.innerText = `${val}s`;
   const slider = document.getElementById('text-speed-slider');
-  if (slider && parseFloat(slider.value) !== val) slider.value = val;
+  if (slider) slider.value = 28 - val;
   applyTextMotionStyles();
 }
 
@@ -906,8 +911,8 @@ function getVideoDimensions() {
 function updateBlurBoxLimits() {
   const video = document.getElementById('previewVideo') || previewVideo;
   const { w: vidW, h: vidH } = getVideoDimensions();
-  const actualVidW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
-  const actualVidH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
+  const maxW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
+  const maxH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
 
   const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
@@ -916,29 +921,33 @@ function updateBlurBoxLimits() {
   
   if (wSlider) {
     wSlider.min = 20;
-    wSlider.max = actualVidW;
-    if (parseInt(wSlider.value) > actualVidW) {
-      wSlider.value = actualVidW;
+    wSlider.max = maxW;
+    if (parseInt(wSlider.value) > maxW) {
+      wSlider.value = maxW;
       const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
-      if (wVal) wVal.innerText = `${actualVidW}px`;
+      if (wVal) wVal.innerText = `${maxW}px`;
     }
+  }
+  const blurOverlayBox = document.getElementById('blur-overlay-box') || blurBox;
+  if (blurOverlayBox) {
+    blurOverlayBox.style.maxWidth = maxW + 'px';
   }
   if (hSlider) {
     hSlider.min = 10;
-    hSlider.max = actualVidH;
-    if (parseInt(hSlider.value) > actualVidH) {
-      hSlider.value = actualVidH;
+    hSlider.max = maxH;
+    if (parseInt(hSlider.value) > maxH) {
+      hSlider.value = maxH;
       const hVal = document.getElementById('blur-h-val') || document.getElementById('blurHeightVal');
-      if (hVal) hVal.innerText = `${actualVidH}px`;
+      if (hVal) hVal.innerText = `${maxH}px`;
     }
   }
 
-  const curW = parseInt(wSlider?.value || state.blurMask.w || 140);
-  const curH = parseInt(hSlider?.value || state.blurMask.h || 45);
+  const curW = Math.min(maxW, parseInt(wSlider?.value || state.blurMask.w || 140));
+  const curH = Math.min(maxH, parseInt(hSlider?.value || state.blurMask.h || 45));
 
   if (xSlider) {
     xSlider.min = 0;
-    xSlider.max = Math.max(0, actualVidW - curW);
+    xSlider.max = Math.max(0, maxW - curW);
     if (parseInt(xSlider.value) > xSlider.max) {
       xSlider.value = xSlider.max;
       const xVal = document.getElementById('blur-x-val') || document.getElementById('blurXVal');
@@ -947,7 +956,7 @@ function updateBlurBoxLimits() {
   }
   if (ySlider) {
     ySlider.min = 0;
-    ySlider.max = Math.max(0, actualVidH - curH);
+    ySlider.max = Math.max(0, maxH - curH);
     if (parseInt(ySlider.value) > ySlider.max) {
       ySlider.value = ySlider.max;
       const yVal = document.getElementById('blur-y-val') || document.getElementById('blurYVal');
@@ -969,8 +978,8 @@ function updateBlurBoxFromSliders() {
 
   const video = document.getElementById('previewVideo') || previewVideo;
   const { w: vidW, h: vidH } = getVideoDimensions();
-  const actualVidW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
-  const actualVidH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
+  const maxW = (video && video.clientWidth > 0) ? video.clientWidth : vidW;
+  const maxH = (video && video.clientHeight > 0) ? video.clientHeight : vidH;
 
   const wSlider = document.getElementById('blurWidthSlider') || document.getElementById('blur-w-slider');
   const hSlider = document.getElementById('blurHeightSlider') || document.getElementById('blur-h-slider');
@@ -978,8 +987,8 @@ function updateBlurBoxFromSliders() {
   const ySlider = document.getElementById('blurYSlider') || document.getElementById('blur-y-slider');
 
   // Hard clamp slider max to actual video frame
-  if (wSlider) wSlider.max = actualVidW;
-  if (hSlider) hSlider.max = actualVidH;
+  if (wSlider) wSlider.max = maxW;
+  if (hSlider) hSlider.max = maxH;
 
   let w = parseInt(wSlider?.value || 140);
   let h = parseInt(hSlider?.value || 45);
@@ -987,24 +996,25 @@ function updateBlurBoxFromSliders() {
   let y = parseInt(ySlider?.value || 15);
 
   // Clamp strictly within video bounds (Never spill outside video frame)
-  w = Math.max(20, Math.min(actualVidW, w));
-  h = Math.max(10, Math.min(actualVidH, h));
-  x = Math.max(0, Math.min(actualVidW - w, x));
-  y = Math.max(0, Math.min(actualVidH - h, y));
+  w = Math.max(20, Math.min(maxW, w));
+  h = Math.max(10, Math.min(maxH, h));
+  x = Math.max(0, Math.min(maxW - w, x));
+  y = Math.max(0, Math.min(maxH - h, y));
 
   state.blurMask.x = x;
   state.blurMask.y = y;
   state.blurMask.w = w;
   state.blurMask.h = h;
 
-  if (blurBox) {
-    blurBox.style.left = `${x}px`;
-    blurBox.style.top = `${y}px`;
-    blurBox.style.width = `${w}px`;
-    blurBox.style.height = `${h}px`;
-    blurBox.style.maxWidth = `${actualVidW}px`;
-    blurBox.style.maxHeight = `${actualVidH}px`;
-    blurBox.style.boxSizing = 'border-box';
+  const blurOverlayBox = document.getElementById('blur-overlay-box') || blurBox;
+  if (blurOverlayBox) {
+    blurOverlayBox.style.left = `${x}px`;
+    blurOverlayBox.style.top = `${y}px`;
+    blurOverlayBox.style.width = `${w}px`;
+    blurOverlayBox.style.height = `${h}px`;
+    blurOverlayBox.style.maxWidth = `${maxW}px`;
+    blurOverlayBox.style.maxHeight = `${maxH}px`;
+    blurOverlayBox.style.boxSizing = 'border-box';
   }
 
   const wVal = document.getElementById('blur-w-val') || document.getElementById('blurWidthVal');
@@ -1192,14 +1202,14 @@ function updateSponsorContent() {
   const topText = (document.getElementById('sponsor-top-input')?.value || document.getElementById('sponsor-brand-input')?.value || '📢 ទទួលផ្សាយពាណិជ្ជកម្ម / Sponsor').trim();
   const bottomText = (document.getElementById('sponsor-bottom-input')?.value || document.getElementById('sponsor-contact-input')?.value || '📱 088 9 111 400 | Telegram').trim();
   const color = document.getElementById('sponsor-color-picker')?.value || '#f59e0b';
-  const size = parseInt(document.getElementById('sponsor-size-slider')?.value || 11);
+  const size = 11;
   const yPercent = parseInt(document.getElementById('sponsor-y-slider')?.value || 88);
   const bg = document.getElementById('sponsor-bg-select')?.value || 'rgba(8, 6, 18, 0.90)';
 
   state.sponsor.topLine = topText;
   state.sponsor.bottomLine = bottomText;
   state.sponsor.color = color;
-  state.sponsor.fontSize = size;
+  state.sponsor.fontSize = 11;
   state.sponsor.yPercent = yPercent;
   state.sponsor.bgColor = bg;
 
@@ -1209,16 +1219,18 @@ function updateSponsorContent() {
   if (topEl) {
     topEl.innerText = topText;
     topEl.style.color = color;
-    topEl.style.fontSize = size + 'px';
+    topEl.style.fontSize = '11px';
   }
   if (bottomEl) {
     bottomEl.innerText = bottomText;
     bottomEl.style.color = '#22d3ee';
-    bottomEl.style.fontSize = Math.max(10, size - 1) + 'px';
+    bottomEl.style.fontSize = '11px';
   }
   const bannerBar = document.getElementById('sponsor-banner-bar');
   if (bannerBar) {
     bannerBar.style.backgroundColor = bg;
+    bannerBar.style.maxWidth = '70%';
+    bannerBar.style.fontSize = '11px';
   }
   if (sponsorElement) {
     sponsorElement.style.bottom = 'auto';
@@ -1285,6 +1297,11 @@ function setMarqueeDirection(dir) {
   updateMarqueeAnimation();
 }
 
+function handleMarqueeSpeedSlider(val) {
+  const duration = 28 - parseInt(val);
+  setMarqueeSpeedSeconds(duration);
+}
+
 function setMarqueeSpeed(preset) {
   let sec = 8;
   if (preset === 'slow') sec = 15;
@@ -1294,12 +1311,12 @@ function setMarqueeSpeed(preset) {
 }
 
 function setMarqueeSpeedSeconds(sec) {
-  const val = parseInt(sec) || 8;
+  const val = Math.max(3, Math.min(25, parseInt(sec) || 8));
   state.marquee.speedSec = val;
   const valEl = document.getElementById('marquee-speed-val');
   if (valEl) valEl.innerText = `${val}s`;
   const slider = document.getElementById('marquee-speed-slider');
-  if (slider && parseInt(slider.value) !== val) slider.value = val;
+  if (slider) slider.value = 28 - val;
 
   ['slow', 'normal', 'fast'].forEach(p => {
     const btn = document.getElementById(`btn-speed-${p}`);
@@ -1737,30 +1754,27 @@ function playExportedVideo() {
 
   if (video) {
     video.style.display = 'block';
-    const dubbedUrl = "http://127.0.0.1:8080/exports/NeakZong_Dubbed.mp4?t=" + Date.now();
-    video.src = dubbedUrl;
+    video.src = "http://127.0.0.1:8080/exports/NeakZong_Dubbed.mp4?t=" + Date.now();
     video.removeAttribute('poster');
     video.controls = true;
-    video.muted = false;
     video.load();
-
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise.catch((err) => {
-        console.warn("Autoplay with sound prevented, retrying muted:", err);
-        video.muted = true;
-        video.play().catch(() => {});
-      });
-    }
+    video.play().catch(e => {
+      video.muted = true;
+      video.play();
+    });
 
     video.onerror = function() {
-      if (video.src && video.src.includes('127.0.0.1:8080')) {
-        console.warn("Local streaming 8080 unavailable, falling back to export url");
-        const fallbackUrl = state.lastExportUrl || ("https://neak-zong-translate.onrender.com/exports/NeakZong_Dubbed.mp4?t=" + Date.now());
-        video.src = fallbackUrl;
-        video.load();
-        video.play().catch(() => {});
-      }
+      console.warn("Local streaming 8080 unavailable, falling back to full cloud url");
+      const fullFallback = (state.lastExportUrl && state.lastExportUrl.startsWith('http') && !state.lastExportUrl.includes('127.0.0.1'))
+        ? state.lastExportUrl
+        : ("https://neak-zong-translate.onrender.com/exports/NeakZong_Dubbed.mp4?t=" + Date.now());
+      video.src = fullFallback;
+      video.removeAttribute('poster');
+      video.load();
+      video.play().catch(e => {
+        video.muted = true;
+        video.play();
+      });
     };
 
     showToast('✓ កំពុងចាក់វីដេអូដែលបកប្រែរួច (Dubbed Video Playing)!');
@@ -1848,9 +1862,12 @@ function pollJobStatus(jobId) {
           state.lastExportUrl = job.download_url || `/exports/${job.filename || 'NeakZong_Dubbed.mp4'}`;
           state.lastExportFilename = job.filename || 'NeakZong_Dubbed.mp4';
 
+          const syncUrl = state.lastExportUrl.startsWith('http') ? state.lastExportUrl : ("https://neak-zong-translate.onrender.com" + state.lastExportUrl);
+          fetch('http://127.0.0.1:8080/sync_dubbed?url=' + encodeURIComponent(syncUrl)).catch(() => {});
+
           if (successRow) successRow.style.display = 'flex';
           if (downloadBtn) {
-            downloadBtn.href = state.lastExportUrl;
+            downloadBtn.href = syncUrl;
             downloadBtn.setAttribute('download', state.lastExportFilename);
           }
           if (savePathInfo) {
@@ -1874,13 +1891,18 @@ function pollJobStatus(jobId) {
         state.lastExportUrl = job.download_url;
         state.lastExportFilename = job.filename || 'NeakZong_Dubbed.mp4';
 
+        const syncUrl = state.lastExportUrl.startsWith('http') ? state.lastExportUrl : ("https://neak-zong-translate.onrender.com" + state.lastExportUrl);
+        fetch('http://127.0.0.1:8080/sync_dubbed?url=' + encodeURIComponent(syncUrl)).catch(() => {});
+
         if (successRow) successRow.style.display = 'flex';
         if (downloadBtn) {
-          downloadBtn.href = job.download_url;
+          downloadBtn.href = syncUrl;
           downloadBtn.setAttribute('download', state.lastExportFilename);
         }
         if (savePathInfo) {
           savePathInfo.style.display = 'block';
+          savePathInfo.innerHTML = `📁 <b>ទីតាំងរក្សាទុក:</b> ${job.save_path || ('/exports/' + state.lastExportFilename)}`;
+        }
           savePathInfo.innerHTML = `📁 <b>ទីតាំងរក្សាទុក:</b> ${job.save_path || ('/exports/' + state.lastExportFilename)}`;
         }
 
@@ -2002,3 +2024,5 @@ window.copyCreatedKey = copyCreatedKey;
 window.loadAdminLicenseList = loadAdminLicenseList;
 window.revokeAdminKey = revokeAdminKey;
 window.loadVideoPreview = loadVideoPreview;
+window.handleTextSpeedSlider = handleTextSpeedSlider;
+window.handleMarqueeSpeedSlider = handleMarqueeSpeedSlider;
